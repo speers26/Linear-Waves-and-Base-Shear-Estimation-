@@ -1,4 +1,6 @@
 import numpy as np
+from scipy import optimize
+import matplotlib.pyplot as plt
 
 
 def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray,
@@ -6,9 +8,9 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
     """ Generate Stokes kinematic profiles
 
     Args:
-        k (np.ndarray):  wave number (coming from Stokes disp.)
+        k (np.ndarray): wave number (coming from Stokes disp.)
         h (np.ndarray): wave depth TODO: rename to d
-        A (np.ndarray):  wave amplitude: A = H/2 -> you will get an asymmetric profile
+        A (np.ndarray): wave amplitude: A = H/2 -> you will get an asymmetric profile
         x (np.ndarray): spatial position [m]
         omega (np.ndarray): angular frequency [rad/s]
         t (np.ndarray): time [s]
@@ -28,7 +30,7 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
     # !e Initialisation
     S = 1 / np.cosh(2 * kd)
     # Calculation of the A coefficients
-    Aco = np.empty(8)
+    Aco = np.empty(9)
     Aco[0] = 1 / np.sinh(kd)
     Aco[1] = 3 * (S ** 2) / (2 * ((1. - S) ** 2))
     Aco[2] = (-4 - 20 * S + 10 * (S ** 2) - 13 * (S ** 3)) / (8 * np.sinh(kd) * ((1 - S) ** 3))
@@ -43,7 +45,7 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
         / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
     # Calculation of the B coefficients
     Bco = np.empty(6)
-    Bco[0] = (1 / np.tanh(kd)) * (1 + 2 * S) / (2 * (1-S))
+    Bco[0] = (1 / np.tanh(kd)) * (1 + 2 * S) / (2 * (1 - S))
     Bco[1] = -3 * (1 + 3 * S + 3 * (S ** 2) + 2 * (S ** 3)) / (8 * ((1 - S) ** 3))
     Bco[2] = (1 / np.tanh(kd)) * (6 - 26 * S - 182 * (S ** 2) - 204 * (S ** 3) - 25 * (S ** 4) + 26 * (S ** 5)) \
         / (6 * (3 + 2 * S) * ((1 - S) ** 4))
@@ -107,9 +109,9 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * np.cos(4 * psi)
-           + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h)) * np.cos(psi) \
-        + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi) \
-        + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi)
+           + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * np.cos(psi) \
+           + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi) \
+           + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
     # w calculation
     w = (C0 * np.sqrt(g / k ** 3)) * k \
         * (A11 * epsilon * np.sinh(k_z_plus_h)*np.sin(psi)
@@ -144,6 +146,9 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * omega * -np.cos(3 * psi)
            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * omega * -np.cos(5 * psi))
 
+    if z > eta:
+        u = w = dudt = dwdt = 0
+
     return eta, u, w, dudt, dwdt
 
 
@@ -163,11 +168,108 @@ def fDispersionSTOKES5(h, H1, T):
     g = 9.81
     omega = 2 * np.pi / T
 
-    p = omega ** 2 * h / g
-    q = (np.tanh(p ** 0.75)) ** (-2 / 3)
-    k0 = (4 * np.pi ** 2) / (g * T ** 2)
+    f = lambda k: progressive_dispersion_(k, H1, omega)
 
-    #TODO: fix fzero
-    [k , F] = fzero(@(k) 1+(H1**2*k**2)/8+(H1**4*k**4)/128-omega/((9.81*k)**0.5),k0)
+    k = optimize.bisect(f, 1e-7, 1)
 
-    return k
+    return k, omega
+
+def progressive_dispersion_(k, H1, omega):
+    g = 9.81
+    return 1 + (H1 ** 2 * k ** 2) / 8+(H1 ** 4 * k ** 4) / 128 - omega / ((g * k) ** 0.5)
+
+
+def morison_load(u, du, diameter = 1.0, rho = 1024.0, c_m = 1.0, c_d = 1.0):
+    """compute unit Morison load for a vertical cylinder
+
+    Args:
+        u (np.ndarray): horizontal velocity [m/s]
+        du (np.ndarray): horizontal acceleration [m/s^2]
+        diameter (float, optional): _description_. Defaults to 1.0. [m]
+        rho (float, optional): _description_. Defaults to 1024.0. [kg/m^3]
+        c_m (float, optional): _description_. Defaults to 1.0. [unitless]
+        c_d (float, optional): _description_. Defaults to 1.0. [unitless]
+
+    Returns:
+        np.ndarray: horizontal unit morrison load [N/m]
+    """
+
+    return rho * c_m * (np.pi / 4) * (diameter ** 2) * du + 0.5 * rho * c_d * diameter * u * np.abs(u)
+
+
+if __name__ == '__main__':
+    # Execute when the module is not initialized from an import statement
+
+    h = 100 # depth
+    T = 20 # period
+    H = 35 # wave height
+
+    k, omega = fDispersionSTOKES5(h, H, T)
+
+    A = H / 2
+    theta = 0
+    x = 0
+    n_depth = 151
+    z_range = np.linspace(-h, 50, n_depth)
+    dz = z_range[1] - z_range[0]
+
+    n_time = 200
+    time = np.linspace(-20, 20, 200)
+
+    eta = np.empty(n_time)
+    u = np.empty((n_time, n_depth))
+    w = np.empty((n_time, n_depth))
+    du = np.empty((n_time, n_depth))
+    dw = np.empty((n_time, n_depth))
+    F = np.empty((n_time, n_depth))
+
+    for i_t, t in enumerate(time):
+        for i_z, z in enumerate(z_range):
+            eta[i_t], u[i_t, i_z], w[i_t, i_z], du[i_t, i_z], dw[i_t, i_z] = stokes_kinematics(k, h, A, x, omega,
+                                                                                               t, theta, z)
+            F[i_t, i_z] = morison_load(u[i_t, i_z], du[i_t, i_z])
+
+    base_shear = np.sum(F, axis=1) * dz / 1e6 # 1e6 converts to MN from N
+
+    plt.figure()
+    plt.subplot(2, 2, 1)
+    z_range_grid, time_grid = np.meshgrid(z_range, time)
+
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=u.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('u')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=w.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('w')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=du.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('du')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=dw.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('dw')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.figure()
+    plt.plot(time_grid, base_shear)
+    plt.ylabel('Force [MN]')
+    plt.xlabel('Time')
+
+    plt.show()
+
