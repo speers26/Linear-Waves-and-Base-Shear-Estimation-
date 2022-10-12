@@ -1,0 +1,7 @@
+{
+    "python.linting.pycodestyleEnabled": true,
+    "autoDocstring.docstringFormat": "google",
+    "python.linting.pycodestyleArgs": ["--max-line-length=120"],
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
+}
