@@ -41,7 +41,7 @@ def d_jonswap(f, hs, tp):
     return density
 
 def random_waves_kinematics(h, x, t, z): ##TODO finish this
-    n_freq = 1000
+    n_freq = 50
     f_seq = np.linspace(1e-3,f_p*5,n_freq)
 
     f_dens = np.empty(n_freq)
@@ -49,12 +49,28 @@ def random_waves_kinematics(h, x, t, z): ##TODO finish this
     g = 9.81
     
     for i_f, f in enumerate(f_seq):
-        f_dens[i_f] = jonswap(f, hs ,tp)
+        f_dens[i_f] = d_jonswap(f, hs ,tp)
 
-   
-    k, omega = f_seq * 2 * np.pi
+    k = np.empty(n_freq)
+    omega = np.empty(n_freq)
 
+    for i_f,f in enumerate(f_seq):
+        k[i_f], omega[i_f] = airy_dispersion(h, 1/f)
+    
     eta = np.sum(f_dens * np.sin(omega * t - k * x))
+
+    return eta
+
+def dispersion_diff(k:np.ndarray,h:np.ndarray,omega:np.ndarray):
+    """function to optimise in airy_dispersion
+
+    Args:
+        k (np.ndarray): wave number
+        h (np.ndarray): water depth
+        omega (np.ndarray): angular frequency
+    """
+    g = 9.81 
+    return omega ** 2 - g * k * np.tanh(k * h)
 
 def airy_dispersion(h:np.ndarray,T:np.ndarray):
     """solves dispersion relation for wave number
@@ -102,3 +118,13 @@ if __name__ == "__main__":
 
     n_time = 200
     time = np.linspace(-20, 20, 200)
+
+    eta = np.empty(n_time)
+
+    for i_t, t in enumerate(time):
+        for i_z, z in enumerate(z_range):
+            eta[i_t] = random_waves_kinematics(h,x,t,z)
+
+    plt.figure()
+    plt.plot(time,eta,"-k")
+    plt.show()
