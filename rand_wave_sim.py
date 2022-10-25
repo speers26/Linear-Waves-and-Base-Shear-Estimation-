@@ -59,7 +59,18 @@ def random_waves_kinematics(h, x, t, z): ##TODO finish this
     
     eta = np.sum(f_dens * np.sin(omega * t - k * x))
 
-    return eta
+    u = np.sum(omega * f_dens * ((np.cosh(k * (h + z))) / (np.sinh(k * h))) * np.sin(omega * t - k * x))
+
+    w = np.sum(omega * f_dens * ((np.sinh(k * (h + z))) / (np.sinh(k * h))) * np.cos(omega * t - k * x))
+    
+    du = np.sum(omega ** 2 * f_dens * ((np.cosh(k * (h + z))) / (np.sinh(k * h))) * np.cos(omega * t - k * x))
+
+    dw = np.sum(-omega ** 2 * f_dens * ((np.sinh(k * (h + z))) / (np.sinh(k * h))) * np.sin(omega * t - k * x))
+    
+    if z > eta:
+        u = w = du = dw = 0
+
+    return eta, u, w, du, dw
 
 def dispersion_diff(k:np.ndarray,h:np.ndarray,omega:np.ndarray):
     """function to optimise in airy_dispersion
@@ -120,11 +131,50 @@ if __name__ == "__main__":
     time = np.linspace(-20, 20, 200)
 
     eta = np.empty(n_time)
+    u = np.empty((n_time, n_depth))
+    w = np.empty((n_time, n_depth))
+    du = np.empty((n_time, n_depth))
+    dw = np.empty((n_time, n_depth))
+    F = np.empty((n_time, n_depth))
+    
 
     for i_t, t in enumerate(time):
         for i_z, z in enumerate(z_range):
-            eta[i_t] = random_waves_kinematics(h,x,t,z)
+            eta[i_t], u[i_t,i_z], w[i_t, i_z], du[i_t,i_z], dw[i_t, i_z] = random_waves_kinematics(h,x,t,z)
 
     plt.figure()
-    plt.plot(time,eta,"-k")
+    plt.subplot(2, 2, 1)
+    z_range_grid, time_grid = np.meshgrid(z_range, time)
+
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=u.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('u')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=w.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('w')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=du.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('du')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.scatter(time_grid.flatten(), z_range_grid.flatten(), s=1, c=dw.flatten())
+    plt.plot(time, eta, '-k')
+    plt.title('dw')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
+
     plt.show()
