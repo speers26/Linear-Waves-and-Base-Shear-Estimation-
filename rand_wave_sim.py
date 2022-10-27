@@ -1,8 +1,7 @@
 from math import e
 import numpy as np
-from scipy import optimize
+from scipy.integrate import quad
 import matplotlib.pyplot as plt
-import stringari_jonswap as sj
 
 def djonswap(f, hs, tp):
     """
@@ -38,8 +37,8 @@ def random_waves_surface(t):
 
 if __name__ == "__main__":
 
-    hs = 35
-    tp = 20
+    hs = 15
+    tp = 10
     f_p = 1/tp
 
     n_freq = 500
@@ -51,8 +50,16 @@ if __name__ == "__main__":
     for i_f, f in enumerate(f_seq):
         dens[i_f] = djonswap(f,hs,tp)
 
-    alpha = df * sum(dens)
-    dens = dens / alpha
+    area = quad(djonswap, f_seq[0], f_seq[n_freq-1], args=(hs,tp))[0]
+    #area = df * sum(dens)
+    alpha = (hs ** 2. / 16.) / area
+    dens = dens * alpha
+
+    area_norm = area * alpha
+
+    estHs = 4 * np.sqrt(area_norm)
+
+    print(estHs)
 
     plt.figure()
     plt.plot(f_seq,dens)
