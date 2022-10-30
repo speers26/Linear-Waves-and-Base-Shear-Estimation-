@@ -1,4 +1,3 @@
-from math import e
 import numpy as np
 from scipy.integrate import quad
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ def djonswap(f, hs, tp):
     sigma_a = 0.07 
     sigma_b = 0.09
 
-    sigma = (f < fp) *  sigma_a + (f > fp) * sigma_b
+    sigma = (f < fp) *  sigma_a + (f >= fp) * sigma_b
 
     gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2)) 
     unn_dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
@@ -29,14 +28,14 @@ def djonswap(f, hs, tp):
     return n_dens
 
 def random_waves_surface(f,t):
-    A = np.random.normal(0,1,n_freq) *  np.sqrt(djonswap(f,hs,tp)*df) 
-    B = np.random.normal(0,1,n_freq) *  np.sqrt(djonswap(f,hs,tp)*df) 
-    eta = sum(A * np.cos(2*np.pi*t) * B * np.sin(2*np.pi*t))
+    A = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
+    B = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
+    eta = sum(A * np.cos(2*np.pi*t*f) * B * np.sin(2*np.pi*t*f))
     return eta
 
 if __name__ == "__main__":
 
-    hs = 15
+    hs = 35
     tp = 10
     f_p = 1/tp
 
@@ -55,7 +54,7 @@ if __name__ == "__main__":
 
     area_norm = area * alpha
 
-    estHs = 4 * np.sqrt(area_norm)
+    spectral_estHs = 4 * np.sqrt(area_norm)
 
     n_time = 100
     time = np.linspace(1e-3,tp*5,n_time)
@@ -65,12 +64,15 @@ if __name__ == "__main__":
     for i_t,t in enumerate(time):
         eta[i_t] = random_waves_surface(f_seq,t)
 
-    print(estHs)
+    surface_estHs = 4 * np.std(eta)
 
-    # plt.figure()
-    # plt.plot(f_seq,dens)
-    # plt.show
+    print(spectral_estHs,surface_estHs)
+    
 
     plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(f_seq,dens)
+    
+    plt.subplot(2,1,2)
     plt.plot(time,eta)
-    plt.show
+    plt.show()
