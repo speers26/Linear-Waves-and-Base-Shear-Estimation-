@@ -20,10 +20,7 @@ def djonswap(f, hs, tp):
     sigma_a = 0.07 
     sigma_b = 0.09
 
-    if f <= fp:
-        sigma = sigma_a
-    else :
-        sigma = sigma_b
+    sigma = (f < fp) *  sigma_a + (f > fp) * sigma_b
 
     gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2)) 
     unn_dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
@@ -47,8 +44,7 @@ if __name__ == "__main__":
 
     dens = np.empty(n_freq)
 
-    for i_f, f in enumerate(f_seq):
-        dens[i_f] = djonswap(f,hs,tp)
+    dens=djonswap(f_seq,hs,tp)
 
     area = quad(djonswap, f_seq[0], f_seq[n_freq-1], args=(hs,tp))[0]
     #area = df * sum(dens)
