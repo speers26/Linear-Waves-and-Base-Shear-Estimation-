@@ -28,8 +28,10 @@ def djonswap(f, hs, tp):
 
     return n_dens
 
-def random_waves_surface(t): 
-    eta = 0
+def random_waves_surface(f,t):
+    A = np.random.normal(0,1,n_freq) *  np.sqrt(djonswap(f,hs,tp)*df) 
+    B = np.random.normal(0,1,n_freq) *  np.sqrt(djonswap(f,hs,tp)*df) 
+    eta = sum(A * np.cos(2*np.pi*t) * B * np.sin(2*np.pi*t))
     return eta
 
 if __name__ == "__main__":
@@ -55,8 +57,20 @@ if __name__ == "__main__":
 
     estHs = 4 * np.sqrt(area_norm)
 
+    n_time = 100
+    time = np.linspace(1e-3,tp*5,n_time)
+
+    eta = np.empty(n_time)
+
+    for i_t,t in enumerate(time):
+        eta[i_t] = random_waves_surface(f_seq,t)
+
     print(estHs)
 
+    # plt.figure()
+    # plt.plot(f_seq,dens)
+    # plt.show
+
     plt.figure()
-    plt.plot(f_seq,dens)
-    plt.show()
+    plt.plot(time,eta)
+    plt.show
