@@ -22,15 +22,20 @@ def djonswap(f, hs, tp):
     sigma = (f < fp) *  sigma_a + (f >= fp) * sigma_b
 
     gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2)) 
-    unn_dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
-    n_dens = unn_dens
+    dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
+    
+    area = sum(dens*df)
 
-    return n_dens
+    dens *= hs ** 2 / (16 * area)
+
+    return dens
 
 def random_waves_surface(f,t):
+
     A = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
     B = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
-    eta = sum(A * np.cos(2*np.pi*t*f) * B * np.sin(2*np.pi*t*f))
+    eta = sum(A * np.cos(2*np.pi*t*f) + B * np.sin(2*np.pi*t*f))
+
     return eta
 
 if __name__ == "__main__":
@@ -43,18 +48,10 @@ if __name__ == "__main__":
     f_seq = np.linspace(1e-3,f_p*5,n_freq)
     df = f_seq[1] - f_seq[0]
 
-    dens = np.empty(n_freq)
+    dens = djonswap(f_seq, hs, tp)
+    area = sum(dens * df)
 
-    dens=djonswap(f_seq,hs,tp)
-
-    area = quad(djonswap, f_seq[0], f_seq[n_freq-1], args=(hs,tp))[0]
-    #area = df * sum(dens)
-    alpha = (hs ** 2. / 16.) / area
-    dens = dens * alpha
-
-    area_norm = area * alpha
-
-    spectral_estHs = 4 * np.sqrt(area_norm)
+    spectral_estHs = 4 * np.sqrt(area)
 
     n_time = 100
     time = np.linspace(1e-3,tp*5,n_time)
