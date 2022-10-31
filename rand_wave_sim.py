@@ -32,9 +32,10 @@ def djonswap(f, hs, tp):
 
 def random_waves_surface(f,t):
 
-    A = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
-    B = np.random.normal(0,1,n_freq) *  np.sqrt(dens*df) 
-    eta = sum(A * np.cos(2*np.pi*t*f) + B * np.sin(2*np.pi*t*f))
+    A = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
+    B = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
+    outer_tf = np.outer(t,f) 
+    eta = np.sum(A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf), axis=1)
 
     return eta
 
@@ -53,13 +54,12 @@ if __name__ == "__main__":
 
     spectral_estHs = 4 * np.sqrt(area)
 
-    n_time = 100
-    time = np.linspace(1e-3,tp*5,n_time)
-
-    eta = np.empty(n_time)
-
-    for i_t,t in enumerate(time):
-        eta[i_t] = random_waves_surface(f_seq,t)
+    n_seconds = 100
+    freq = 4
+    n_time = freq*n_seconds
+    time = np.linspace(0,n_seconds,n_time)
+        
+    eta = random_waves_surface(f_seq,time)
 
     surface_estHs = 4 * np.std(eta)
 
