@@ -39,6 +39,13 @@ def random_waves_surface(f,t):
 
     return eta
 
+def random_waves_acf(tau,f_seq):
+    dens = djonswap(f_seq, hs, tp)
+
+    acf = np.sum(np.cos(2 * np.pi * f_seq * tau) * dens * 2 * np.pi * df)
+
+    return acf
+
 if __name__ == "__main__":
 
     hs = 35
@@ -65,11 +72,22 @@ if __name__ == "__main__":
 
     print(spectral_estHs,surface_estHs)
     
+    tau_length = 100
+
+    tau_seq = np.linspace(-2*np.pi,2*np.pi,tau_length) 
+
+    acf = np.empty(tau_length)
+
+    for i_t,t in enumerate(tau_seq):
+        acf[i_t] = random_waves_acf(t, f_seq) 
 
     plt.figure()
-    plt.subplot(2, 1, 1)
+    plt.subplot(3, 1, 1)
     plt.plot(f_seq,dens)
     
-    plt.subplot(2,1,2)
+    plt.subplot(3,1,2)
     plt.plot(time,eta)
+
+    plt.subplot(3,1,3)
+    plt.plot(tau_seq,acf)
     plt.show()
