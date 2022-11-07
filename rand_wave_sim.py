@@ -39,12 +39,17 @@ def random_waves_surface(f,t):
 
     return eta
 
-def random_waves_acf(tau,f_seq):
-    dens = djonswap(f_seq, hs, tp)
+def random_waves_acf(tau, f_seq, dens, area):
 
-    acf = np.sum(np.cos(2 * np.pi * f_seq * tau) * dens * df)
+    acf = np.sum(np.cos(2 * np.pi * f_seq * tau) * dens * df) /area
 
     return acf
+
+def kth_moment(k,f_seq):
+   
+    integral = dens * f_seq ** k * df
+
+    return integral
 
 if __name__ == "__main__":
 
@@ -54,34 +59,31 @@ if __name__ == "__main__":
 
     n_freq = 500
     f_seq = np.linspace(1e-3,f_p*5,n_freq)
-    df = f_seq[1] - f_seq[0]
-
-    dens = djonswap(f_seq, hs, tp)
-    area = sum(dens * df)
-
-    spectral_estHs = 4 * np.sqrt(area)
-
     n_seconds = 100
     freq = 4
     n_time = freq*n_seconds
     time = np.linspace(0,n_seconds,n_time)
-        
+
+    df = f_seq[1] - f_seq[0]
+    dens = djonswap(f_seq, hs, tp)
+    area = sum(dens * df)
+
     eta = random_waves_surface(f_seq,time)
 
+    spectral_estHs = 4 * np.sqrt(area)
     surface_estHs = 4 * np.std(eta)
 
     print(spectral_estHs,surface_estHs)
+
+    print(4 * np.sqrt(kth_moment(0,f_seq)))
     
     tau_length = 100
-
-    tau_seq = np.linspace(-100,100,tau_length) 
+    tau_seq = np.linspace(-100,100,tau_length) ## not sure about how to pick tau range
 
     acf = np.empty(tau_length)
-
     for i_t,t in enumerate(tau_seq):
-        acf[i_t] = random_waves_acf(t, f_seq) 
+        acf[i_t] = random_waves_acf(t, f_seq, dens, area) 
 
-    acf = acf/area
     plt.figure()
     plt.subplot(3, 1, 1)
     plt.plot(f_seq,dens)
