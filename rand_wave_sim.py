@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.fft import fft
 
 def djonswap(f, hs, tp):
     """
@@ -30,7 +31,8 @@ def djonswap(f, hs, tp):
     return dens
 
 def random_waves_surface(f,t):
-
+    np.random.seed(1)
+    
     A = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
     B = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
     outer_tf = np.outer(t,f) 
@@ -38,12 +40,33 @@ def random_waves_surface(f,t):
 
     return eta
 
-def random_waves_acf(tau, f, dens, area):
+def fft_random_waves(period):
+    np.random.seed(1)
+    
+    nT = np.floor(period*freq)
 
-    outer_ft = np.outer(f,tau)
+    fft_f_seq = np.linspace(1e-3, nT - 1, int(nT) ) / (nT / freq)
 
-    acf_mat = np.cos(2 * np.pi * outer_ft) * dens[:, np.newaxis] * df / area
-    acf = np.sum(acf_mat, axis=0) 
+    fft_dens = djonswap(fft_f_seq, hs, tp)
+    fft_n_freq = len(fft_f_seq)
+
+    A = np.random.normal(0, 1, size=(1,fft_n_freq)) *  np.sqrt(fft_dens*df) 
+    B = np.random.normal(0, 1, size=(1,fft_n_freq)) *  np.sqrt(fft_dens*df) 
+    
+    i = complex(0,1)
+    Z = A + B * i
+
+    eta = np.real(fft(Z,fft_n_freq))
+
+    time = np.linspace(-nT/2,nT/2 -1, int(nT))
+    return eta, time
+
+def random_waves_acf(tau, f):
+
+    outer_ft = np.outer(f,tau) ## (n_freq x tau_length)
+
+    acf_mat = np.cos(2 * np.pi * outer_ft) * dens[:, np.newaxis] * df / area ## (n_freq x tau_length) 
+    acf = np.sum(acf_mat, axis=0) ## sum over columns to give (1 x tau_length)
 
     return acf
 
@@ -58,19 +81,21 @@ if __name__ == "__main__":
     hs = 35
     tp = 10
     f_p = 1/tp
-
     n_freq = 500
-    f_seq = np.linspace(1e-3,f_p*5,n_freq)
+    f_seq = np.linspace(1e-3, f_p*5, n_freq)
     n_seconds = 100
     freq = 4
-    n_time = freq*n_seconds
-    time = np.linspace(0,n_seconds,n_time)
+
+    n_time = freq * n_seconds
+    time = np.linspace(0, n_seconds, n_time)
 
     df = f_seq[1] - f_seq[0]
     dens = djonswap(f_seq, hs, tp)
-    area = kth_moment(0,f_seq)
+    area = kth_moment(0, f_seq)
 
-    eta = random_waves_surface(f_seq,time)
+    # eta = random_waves_surface(f_seq, time)
+    period = 100 ## why set this as 100?
+    eta,time = fft_random_waves(period)
 
     spectral_estHs = 4 * np.sqrt(area)
     surface_estHs = 4 * np.std(eta)
@@ -78,17 +103,20 @@ if __name__ == "__main__":
     print(spectral_estHs,surface_estHs)
     
     tau_length = 250
-    tau_seq = np.linspace(-100,100,tau_length) ## not sure about how to pick tau range
+    tau_seq = np.linspace(-100, 100, tau_length) ## not sure about how to pick tau range
 
-    acf = random_waves_acf(tau_seq, f_seq, dens, area)
+    acf = random_waves_acf(tau_seq, f_seq)
 
     plt.figure()
-    plt.subplot(3, 1, 1)
-    plt.plot(f_seq,dens)
+    plt.subplot(4, 1, 1)
+    plt.plot(f_seq, dens)
     
-    plt.subplot(3,1,2)
-    plt.plot(time,eta)
+    plt.subplot(4, 1, 2)
+    plt.plot(time, eta[0])
 
-    plt.subplot(3,1,3)
-    plt.plot(tau_seq,acf)
+    plt.subplot(4, 1, 3)
+    plt.plot(tau_seq, acf)
+
+    plt.subplot(4, 1, 4)
+    plt.plot(time, eta[0])
     plt.show()
