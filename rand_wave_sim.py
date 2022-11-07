@@ -42,7 +42,7 @@ def random_waves_surface(f,t):
 def random_waves_acf(tau,f_seq):
     dens = djonswap(f_seq, hs, tp)
 
-    acf = np.sum(np.cos(2 * np.pi * f_seq * tau) * dens * 2 * np.pi * df)
+    acf = np.sum(np.cos(2 * np.pi * f_seq * tau) * dens * df)
 
     return acf
 
@@ -74,13 +74,14 @@ if __name__ == "__main__":
     
     tau_length = 100
 
-    tau_seq = np.linspace(-2*np.pi,2*np.pi,tau_length) 
+    tau_seq = np.linspace(-100,100,tau_length) 
 
     acf = np.empty(tau_length)
 
     for i_t,t in enumerate(tau_seq):
         acf[i_t] = random_waves_acf(t, f_seq) 
 
+    acf = acf/area
     plt.figure()
     plt.subplot(3, 1, 1)
     plt.plot(f_seq,dens)
