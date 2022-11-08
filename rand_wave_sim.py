@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftshift
+import time 
 
 def djonswap(f, hs, tp):
     """
@@ -84,7 +85,7 @@ if __name__ == "__main__":
     nT = np.floor(period*freq)
 
     f_seq = np.linspace(1e-3, nT - 1, int(nT) ) / (nT / freq)
-    time = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt
+    times = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt
 
     dens = djonswap(f_seq, hs, tp)
     n_freq = len(f_seq)
@@ -94,8 +95,17 @@ if __name__ == "__main__":
     dens = djonswap(f_seq, hs, tp)
     area = kth_moment(0, f_seq)
 
-    eta = random_waves_surface(f_seq, time)
+    t = time.time()
+    eta = random_waves_surface(f_seq, times)
+    t2 = time.time()
+    dt = t2- t
+    print(dt)
+
+    t = time.time()
     eta_fft = fftshift(fft_random_waves())
+    t2 = time.time()
+    dt = t2 - t
+    print(dt)
 
     spectral_estHs = 4 * np.sqrt(area)
     surface_estHs = 4 * np.std(eta)
@@ -112,11 +122,11 @@ if __name__ == "__main__":
     plt.plot(f_seq, dens)
     
     plt.subplot(4, 1, 2)
-    plt.plot(time, eta)
+    plt.plot(times, eta)
 
     plt.subplot(4, 1, 3)
     plt.plot(tau_seq, acf)
 
     plt.subplot(4, 1, 4)
-    plt.plot(time, eta_fft[0])
+    plt.plot(times, eta_fft[0])
     plt.show()
