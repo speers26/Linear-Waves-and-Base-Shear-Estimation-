@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+import os
+import imageio
 
 import airy as a1
 
@@ -25,26 +26,41 @@ if __name__ == '__main__':
     T = 20
     A = 35/2
     theta = np.pi/4
+    k, omega = a1.airy_dispersion(h, T)
 
     numx = 30
     numy = 30
 
     xrange = np.linspace(-500, 500, numx)
     yrange = np.linspace(-500, 500, numy)
-    t = 10
-
-    k, omega = a1.airy_dispersion(h, T)
-
-    eta = airy_wave_surface(k, A, xrange, yrange, omega, t, theta)
-
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
     X, Y = np.meshgrid(xrange, yrange)
-    surf = ax.plot_surface(X, Y, eta)
 
-    
+    nt = 100
+    trange = np.linspace(0,100,nt)
+    names = []
 
-   # plt.contourf(xrange, yrange, eta)
+    for t in trange:
+        eta = airy_wave_surface(k, A, xrange, yrange, omega, t, theta)
+
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+        surf = ax.plot_surface(X, Y, eta)
+
+        name = f'time_{t}.png'
+        names.append(name)
+
+        plt.savefig(name)
+        plt.close()
+
+    with imageio.get_writer('mygif.gif', mode='I') as writer:
+        for filename in names:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    for name in set(names):
+        os.remove(name)
 
 
-    plt.show()
+
+
+
