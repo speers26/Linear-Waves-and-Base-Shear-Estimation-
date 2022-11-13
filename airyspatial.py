@@ -52,7 +52,7 @@ if __name__ == '__main__':
         plt.savefig(name)
         plt.close()
 
-    with imageio.get_writer('mygif.gif', mode='I') as writer:
+    with imageio.get_writer('airymoving.gif', mode='I') as writer:
         for filename in names:
             image = imageio.imread(filename)
             writer.append_data(image)
