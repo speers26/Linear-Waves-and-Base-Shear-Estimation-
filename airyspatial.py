@@ -13,6 +13,7 @@ def airy_wave_surface(k, A, xrange, yrange, omega, t, theta):
     xpoints, ypoints = np.meshgrid(xrange, yrange)
 
     omega = np.tile(omega, numx * numy).reshape(numx, numy)
+    psi = omega * t - kx * xpoints - ky * ypoints
     eta = A * np.sin(omega * t - kx * xpoints - ky * ypoints)
 
     eta.shape = (numx, numy)

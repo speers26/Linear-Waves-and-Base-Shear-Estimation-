@@ -81,8 +81,9 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
     # Wave steepness
     epsilon = A * k
     #
+    
     psi = -(omega * t - kx * xpoints - ky * ypoints)
-    omega = np.tile(omega, numx * numy).reshape(numx, numy)
+    
     # z
     eta = (1 / k) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
                      + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
@@ -122,3 +123,5 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
     surf = ax.plot_surface(X, Y, eta)
+
+    plt.show()
