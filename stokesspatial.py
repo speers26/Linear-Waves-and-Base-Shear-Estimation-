@@ -2,11 +2,12 @@ import numpy as np
 from scipy import optimize
 import matplotlib.pyplot as plt
 import stokes as sk1
+import os
+import imageio
 
 def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
 
-    g = 9.81
-
+  
     kx = k * np.cos(theta)
     ky = k * np.sin(theta)
 
@@ -14,8 +15,8 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
 
     omega = np.tile(omega, numx * numy).reshape(numx, numy)
 
-    #kd = kx * h + ky * h
-    kd = k * h
+    # kd = kx * h + ky * h
+    kd = k * h #TODO
 
     S = 1 / np.cosh(2 * kd)
     # Calculation of the A coefficients
@@ -78,13 +79,14 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
     B53 = Bco[4]
     B55 = Bco[5]
     C0 = Cco[0]
+    
     # Wave steepness
-    epsilon = A * k
+    epsilon = A * k #TODO
+    # epsilon = A * (kx + ky)
     #
     
     psi = -(omega * t - kx * xpoints - ky * ypoints)
     
-    # z
     eta = (1 / k) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
                      + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
                      + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
@@ -107,7 +109,7 @@ if __name__ == '__main__':
     k, omega = sk1.fDispersionSTOKES5(h, H, T)
 
     A = H / 2
-    theta = 0
+    theta = np.pi/4
 
     numx = 30
     numy = 30
@@ -116,12 +118,27 @@ if __name__ == '__main__':
     yrange = np.linspace(-500, 500, numy)
     X, Y = np.meshgrid(xrange, yrange)
 
-    t = 0
+    nt = 100
+    trange = np.linspace(0,100,nt)
+    names = []
 
-    eta = stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta)
+    for t in trange:
+        eta = stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta)
 
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-    surf = ax.plot_surface(X, Y, eta)
+        surf = ax.plot_surface(X, Y, eta)
 
-    plt.show()
+        name = f'time_{t}.png'
+        names.append(name)
+
+        plt.savefig(name)
+        plt.close()
+
+    with imageio.get_writer('stokesmoving.gif', mode='I') as writer:
+        for filename in names:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    for name in set(names):
+        os.remove(name)
