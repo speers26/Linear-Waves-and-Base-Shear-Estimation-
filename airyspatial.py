@@ -12,11 +12,11 @@ def airy_wave_surface(k, A, xrange, yrange, omega, t, theta):
 
     xpoints, ypoints = np.meshgrid(xrange, yrange)
 
-    omega = np.tile(omega, numx * numy).reshape(numx, numy)
+    omega = np.tile(omega, numx * numy).reshape(numy, numx)
     psi = omega * t - kx * xpoints - ky * ypoints
     eta = A * np.sin(omega * t - kx * xpoints - ky * ypoints)
 
-    eta.shape = (numx, numy)
+    eta.shape = (numy, numx)
     
     return eta
 
@@ -26,13 +26,13 @@ if __name__ == '__main__':
     h = 100
     T = 20
     A = 35/2
-    theta = np.pi/4
+    theta = 0
     k, omega = a1.airy_dispersion(h, T)
 
     numx = 30
     numy = 30
 
-    xrange = np.linspace(-500, 500, numx)
+    xrange = np.linspace(-100, 100, numx)
     yrange = np.linspace(-500, 500, numy)
     X, Y = np.meshgrid(xrange, yrange)
 
