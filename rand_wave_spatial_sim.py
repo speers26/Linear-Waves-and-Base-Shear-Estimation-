@@ -94,44 +94,34 @@ if __name__ == '__main__':
     phi_num = 100
     phi_range = np.linspace(start = 0, stop = 3, num = phi_num)
 
-    D_sprd = np.empty((om_num, phi_num))
+    
+    # ### plotting contours
 
+    D_sprd = np.empty((om_num, phi_num))
     for i_m, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             D_sprd[i_m, i_p] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
-    ### plotting spreading function surface
-    
-    OM, PHI = np.meshgrid(om_range, phi_range)
-
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf = ax.plot_surface(OM, PHI, D_sprd)
-
-    plt.show()
-
     jnswp_dns = np.empty(om_num)
-
     for i_o, om in enumerate(om_range):
         jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
 
-    d_om = om_range[1] - om_range[0]
-    area = sum(d_om * jnswp_dns)
-    hs_est = 4 * np.sqrt(area)
-    print(hs_est)
-
-    plt.figure()
-    plt.plot(om_range, jnswp_dns)
-    plt.show()
-
     Dr_spctrm = np.empty((om_num, phi_num))
-
     for i_m, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             Dr_spctrm[i_m, i_p] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
 
-    ### plotting freq-direction spectrum surface
+    OM, PHI = np.meshgrid(om_range, phi_range)
 
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-    surf = ax.plot_surface(OM, PHI, Dr_spctrm)
+    plt.figure()
+
+    plt.subplot(1,3,1)
+    plt.contour(PHI, OM, Dr_spctrm, levels = 20)
+
+    plt.subplot(1,3,2)
+    plt.plot(om_range, jnswp_dns)
+
+    plt.subplot(1,3,3)
+    plt.contour(PHI, OM, D_sprd, levels = 20)
 
     plt.show()
