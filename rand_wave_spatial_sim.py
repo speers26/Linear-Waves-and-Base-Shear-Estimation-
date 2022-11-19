@@ -20,7 +20,9 @@ def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarr
 
     eta = np.empty(y_range, x_range)
 
-    
+    for i_x, x in enumerate(x_range):
+        for i_y, y in enumerate(y_range):
+            eta[i_y, i_x] = ##TODO finish this
 
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
