@@ -6,7 +6,7 @@ def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.nd
     """returns frequency direction spectrum
 
     Args:
-        omega (np.ndarray): _description_
+        omega (np.ndarray): angular frequency
         phi (np.ndarray): _description_
         alpha (np.ndarray): _description_
         om_p (np.ndarray): _description_
