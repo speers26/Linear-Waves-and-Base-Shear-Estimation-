@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import rand_wave_sim as r1
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
                     r:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
