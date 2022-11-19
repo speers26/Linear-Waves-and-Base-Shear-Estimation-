@@ -19,6 +19,9 @@ def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.nd
         sig_l (np.ndarray): _description_
         sig_r (np.ndarray): _description_
     """
+    dens = sprd_fnc(omega, phi, om_p, phi_m, beta, nu, sig_l, sig_r) * d_jonswap(omega, alpha, om_p, gamma, r)
+
+    return dens
 
 def sprd_fnc(omega:np.ndarray, phi:np.ndarray, om_p:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
     """returns bimodal wrapped Gaussian spreading function D(omega, phi)
@@ -70,6 +73,7 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 
     return dens
 
+
 if __name__ == '__main__':
 
     ### pars set accoring to 'classic example' given in 
@@ -96,14 +100,38 @@ if __name__ == '__main__':
         for i_p, phi in enumerate(phi_range):
             D_sprd[i_m, i_p] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
-    ### plotting surface
+    ### plotting spreading function surface
     
     OM, PHI = np.meshgrid(om_range, phi_range)
 
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
     surf = ax.plot_surface(OM, PHI, D_sprd)
 
     plt.show()
 
+    jnswp_dns = np.empty(om_num)
 
+    for i_o, om in enumerate(om_range):
+        jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
+
+    d_om = om_range[1] - om_range[0]
+    area = sum(d_om * jnswp_dns)
+    hs_est = 4 * np.sqrt(area)
+    print(hs_est)
+
+    plt.figure()
+    plt.plot(om_range, jnswp_dns)
+    plt.show()
+
+    Dr_spctrm = np.empty((om_num, phi_num))
+
+    for i_m, om in enumerate(om_range):
+        for i_p, phi in enumerate(phi_range):
+            Dr_spctrm[i_m, i_p] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
+
+    ### plotting freq-direction spectrum surface
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(OM, PHI, Dr_spctrm)
+
+    plt.show()
