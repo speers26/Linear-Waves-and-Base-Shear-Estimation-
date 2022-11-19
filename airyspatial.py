@@ -32,7 +32,7 @@ if __name__ == '__main__':
     numx = 30
     numy = 30
 
-    xrange = np.linspace(-100, 100, numx)
+    xrange = np.linspace(-500, 500, numx)
     yrange = np.linspace(-500, 500, numy)
     X, Y = np.meshgrid(xrange, yrange)
 
