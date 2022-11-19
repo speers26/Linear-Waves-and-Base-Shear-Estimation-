@@ -88,12 +88,11 @@ if __name__ == '__main__':
     sig_r = 0.26
 
     om_num = 100
-    om_range = np.linspace(start = 1e-3, stop = 2 * np.pi , num = om_num)
+    om_range = np.linspace(start = 1e-3, stop = 2 * np.pi, num = om_num)
 
     phi_num = 100
     phi_range = np.linspace(start = 0, stop = 3, num = phi_num)
 
-    
     # ### plotting contours
 
     D_sprd = np.empty((om_num, phi_num))
@@ -101,14 +100,26 @@ if __name__ == '__main__':
         for i_p, phi in enumerate(phi_range):
             D_sprd[i_m, i_p] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
+    d_om = om_range[1] - om_range[0]
+    d_phi = phi_range[1] - phi_range[0]
+
+    sprd_vol = sum(d_om * d_phi * D_sprd)
+    print(sprd_vol)
+
     jnswp_dns = np.empty(om_num)
     for i_o, om in enumerate(om_range):
         jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
+
+    jnswp_area = sum(d_om * jnswp_dns)
+    print(jnswp_area)
 
     Dr_spctrm = np.empty((om_num, phi_num))
     for i_m, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             Dr_spctrm[i_m, i_p] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
+
+    spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+    print(spctrm_vol)
 
     OM, PHI = np.meshgrid(om_range, phi_range)
 
