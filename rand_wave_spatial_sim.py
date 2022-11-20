@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import optimize
 
 def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray, x_range:np.ndarray, y_range:np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
@@ -16,13 +17,43 @@ def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarr
     A = np.multiply(np.random(0, 1, size = (phi_num, om_num)), np.sqrt(Dr_spctrm * d_om * d_phi)) 
     B = np.multiply(np.random(0, 1, size = (phi_num, om_num)), np.sqrt(Dr_spctrm * d_om * d_phi)) 
 
+    k = np.empty(om_num)
+    for i_om, om in enumerate(omega_range):
+        k[i_om] = solve_dispersion(om)
+    k = np.tile(k, reps = phi_num)
+
     X, Y = np.meshgrid(x_range, y_range)
 
-    eta = np.empty(y_range, x_range)
+    eta = np.empty(x_range, y_range)
 
-    for i_x, x in enumerate(x_range):
-        for i_y, y in enumerate(y_range):
-            eta[i_y, i_x] = ##TODO finish this
+    # for i_x, x in enumerate(x_range):
+    #     for i_y, y in enumerate(y_range):
+    #         kx = 
+    #         eta[i_x, i_y] = 
+
+def solve_dispersion(omega:np.ndarray):
+    """returns wave number k for given angular frequency omega
+
+    Args:
+        omega (np.ndarray): angular frequency
+    """
+    f = lambda k: dispersion_diff(k, h, omega)
+ 
+    k = optimize.bisect(f, 1e-7, 1)
+
+    return k
+
+
+def dispersion_diff(k:np.ndarray, h:np.ndarray, omega:np.ndarray):
+    """function to optimise in solve_dispersion
+
+    Args:
+        k (np.ndarray): wave number
+        h (np.ndarray): water depth
+        omega (np.ndarray): angular frequency
+    """
+    g = 9.81 
+    return omega ** 2 - g * k * np.tanh(k * h)
 
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
@@ -98,6 +129,8 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 
 
 if __name__ == '__main__':
+
+    h = 100
 
     ### pars set accoring to 'classic example' given in 
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
