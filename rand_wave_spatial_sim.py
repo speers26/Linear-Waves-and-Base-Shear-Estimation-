@@ -24,36 +24,11 @@ def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarr
 
     X, Y = np.meshgrid(x_range, y_range)
 
-    eta = np.empty(x_range, y_range)
+    eta = np.empty(y_range, x_range)
 
-    # for i_x, x in enumerate(x_range):
-    #     for i_y, y in enumerate(y_range):
-    #         kx = 
-    #         eta[i_x, i_y] = 
-
-def solve_dispersion(omega:np.ndarray):
-    """returns wave number k for given angular frequency omega
-
-    Args:
-        omega (np.ndarray): angular frequency
-    """
-    f = lambda k: dispersion_diff(k, h, omega)
- 
-    k = optimize.bisect(f, 1e-7, 1)
-
-    return k
-
-
-def dispersion_diff(k:np.ndarray, h:np.ndarray, omega:np.ndarray):
-    """function to optimise in solve_dispersion
-
-    Args:
-        k (np.ndarray): wave number
-        h (np.ndarray): water depth
-        omega (np.ndarray): angular frequency
-    """
-    g = 9.81 
-    return omega ** 2 - g * k * np.tanh(k * h)
+    for i_x, x in enumerate(x_range):
+        for i_y, y in enumerate(y_range):
+            eta[i_y, i_x] = ##TODO finish this
 
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,

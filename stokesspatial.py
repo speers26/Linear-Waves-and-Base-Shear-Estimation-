@@ -7,16 +7,13 @@ import imageio
 
 def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
 
-  
-    kx = k * np.cos(theta)
-    ky = k * np.sin(theta)
 
     xpoints, ypoints = np.meshgrid(xrange, yrange)
 
     omega = np.tile(omega, numx * numy).reshape(numy, numx)
 
     # kd = kx * h + ky * h
-    kd = k * h #TODO
+    kd = k * h 
 
     S = 1 / np.cosh(2 * kd)
     # Calculation of the A coefficients
@@ -81,9 +78,12 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
     C0 = Cco[0]
     
     # Wave steepness
-    epsilon = A * k #TODO
+    epsilon = A * k
     # epsilon = A * (kx + ky)
     #
+
+    kx = k * np.cos(theta)
+    ky = k * np.sin(theta)
     
     psi = -(omega * t - kx * xpoints - ky * ypoints)
     
@@ -109,12 +109,12 @@ if __name__ == '__main__':
     k, omega = sk1.fDispersionSTOKES5(h, H, T)
 
     A = H / 2
-    theta = 0
+    theta = np.pi/5
 
-    numx = 30
+    numx = 36
     numy = 30
 
-    xrange = np.linspace(-500, 500, numx)
+    xrange = np.linspace(-250, 250, numx)
     yrange = np.linspace(-500, 500, numy)
     X, Y = np.meshgrid(xrange, yrange)
 
