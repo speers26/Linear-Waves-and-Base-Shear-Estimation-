@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
+import os
+import imageio
 
 def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray, x_range:np.ndarray, y_range:np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
@@ -12,7 +14,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
     """
-    #np.random.seed(1)
+    np.random.seed(1)
 
     A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
     B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
@@ -27,7 +29,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         for i_y, y in enumerate(y_range):
             k_x = np.outer(np.cos(phi_range), k)
             k_y = np.outer(np.sin(phi_range), k)
-            om_t = np.tile(om_range * t, phi_num).reshape(phi_num, om_num)
+            om_t = np.tile(om_range * t, (phi_num, 1))
 
             eta[i_y, i_x] = np.sum(A * np.cos(k_x * x + k_y * y - om_t) + B * np.sin(k_x * x + k_y * y - om_t))
 
@@ -130,7 +132,7 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 if __name__ == '__main__':
 
     h = 100
-    t = 10
+    #t = 10
 
     ### pars set accoring to 'classic example' given in 
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
@@ -138,7 +140,7 @@ if __name__ == '__main__':
     om_p = 0.8
     gamma = 3.3
     r = 5
-    phi_m = np.pi 
+    phi_m = np.pi / 4
     beta = 4
     nu = 2.7
     sig_l = 0.55 
@@ -151,10 +153,10 @@ if __name__ == '__main__':
     phi_range = np.linspace(start = 0, stop = 2 * np.pi, num = phi_num)
 
     x_num = 100
-    x_range = np.linspace(start = -75, stop = 75, num = x_num)
+    x_range = np.linspace(start = -50, stop = 50, num = x_num)
 
     y_num = 100
-    y_range = np.linspace(start = -75, stop = 75, num = y_num)
+    y_range = np.linspace(start = -50, stop = 50, num = y_num)
 
     # ### plotting contours
 
@@ -166,8 +168,8 @@ if __name__ == '__main__':
     d_om = om_range[1] - om_range[0]
     d_phi = phi_range[1] - phi_range[0]
 
-    # sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
-    # print(sum(sprd_areas)) ## should this integrate to 1?
+    sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
+    print(sum(sprd_areas)) ## should this integrate to 1?
 
     jnswp_dns = np.empty(om_num)
     for i_o, om in enumerate(om_range):
@@ -186,29 +188,57 @@ if __name__ == '__main__':
 
     X, Y = np.meshgrid(om_range, phi_range)
 
-    # plt.figure()
+    plt.figure()
 
-    # plt.subplot(1,3,1)
-    # plt.contour(X, Y, Dr_spctrm, levels = 20)
+    plt.subplot(1,3,1)
+    plt.contour(X, Y, Dr_spctrm, levels = 20)
 
-    # plt.subplot(1,3,2)
-    # plt.plot(om_range, jnswp_dns)
+    plt.subplot(1,3,2)
+    plt.plot(om_range, jnswp_dns)
 
-    # plt.subplot(1,3,3)
-    # plt.contour(X, Y,  D_sprd, levels = 20)
-
-    # plt.show()
-
-    eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
-
-    est_var = np.var(eta)
-    print(est_var)
-
-    X, Y = np.meshgrid(x_range, y_range)
-
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
-    surf = ax.plot_surface(X, Y, eta)
+    plt.subplot(1,3,3)
+    plt.contour(X, Y,  D_sprd, levels = 20)
 
     plt.show()
+
+    nt = 100
+    trange = np.linspace(0,100,nt)
+    names = []
+    X, Y = np.meshgrid(x_range, y_range)
+
+    for t in trange:
+        eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
+
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+        surf = ax.plot_surface(X, Y, eta)
+
+        ax.set_zlim(-1.75, 1.75)
+
+        name = f'time_{t}.png'
+        names.append(name)
+
+        plt.savefig(name)
+        plt.close()
+
+    with imageio.get_writer('random-waves-moving.gif', mode='I') as writer:
+        for filename in names:
+            image = imageio.imread(filename)
+            writer.append_data(image)
+
+    for name in set(names):
+        os.remove(name)
+
+    # eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
+
+    # est_var = np.var(eta)
+    # print(est_var)
+
+    # X, Y = np.meshgrid(x_range, y_range)
+
+    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    # surf = ax.plot_surface(X, Y, eta)
+
+    # plt.show()
 

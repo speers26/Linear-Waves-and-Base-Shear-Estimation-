@@ -5,7 +5,7 @@ import imageio
 
 import airy as a1
 
-def airy_wave_surface_and_kinematics(k, A, xrange, yrange, omega, t, theta):
+def airy_wave_surface(k, A, xrange, yrange, omega, t, theta):
     
     kx = k * np.cos(theta)
     ky = k * np.sin(theta)
