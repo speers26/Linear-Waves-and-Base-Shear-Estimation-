@@ -10,7 +10,7 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
 
     xpoints, ypoints = np.meshgrid(xrange, yrange)
 
-    omega = np.tile(omega, numx * numy).reshape(numx, numy)
+    omega = np.tile(omega, numx * numy).reshape(numy, numx)
 
     # kd = kx * h + ky * h
     kd = k * h 
@@ -93,7 +93,7 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
                      + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
                      + B55 * np.cos(5 * psi)))
 
-    eta.shape = (numx, numy)                  
+    eta.shape = (numy, numx)                  
 
     return eta
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     k, omega = sk1.fDispersionSTOKES5(h, H, T)
 
     A = H / 2
-    theta =  5 *np.pi / 4 
+    theta = np.pi/4
 
     numx = 30
     numy = 30
