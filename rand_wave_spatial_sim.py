@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 
-def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray, x_range:np.ndarray, y_range:np.ndarray):
+def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray, x_range:np.ndarray, y_range:np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -14,11 +14,11 @@ def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarr
     """
     np.random.seed(1)
 
-    A = np.random(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
-    B = np.random(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
+    A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
+    B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
 
     k = np.empty(om_num)
-    for i_om, om in enumerate(omega_range):
+    for i_om, om in enumerate(om_range):
         k[i_om] = solve_dispersion(om)
 
     X, Y = np.meshgrid(x_range, y_range)
@@ -54,6 +54,28 @@ def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.nd
     dens = sprd_fnc(omega, phi, om_p, phi_m, beta, nu, sig_l, sig_r) * d_jonswap(omega, alpha, om_p, gamma, r)
 
     return dens
+
+def solve_dispersion(omega:np.ndarray):
+    """returns wave number k for given angular frequency omega
+    Args:
+        omega (np.ndarray): angular frequency
+    """
+    f = lambda k: dispersion_diff(k, h, omega)
+
+    k = optimize.bisect(f, 1e-7, 1)
+
+    return k
+
+def dispersion_diff(k:np.ndarray, h:np.ndarray, omega:np.ndarray):
+    """function to optimise in solve_dispersion
+    Args:
+        k (np.ndarray): wave number
+        h (np.ndarray): water depth
+        omega (np.ndarray): angular frequency
+    """
+    g = 9.81 
+    return omega ** 2 - g * k * np.tanh(k * h)
+
 
 def sprd_fnc(omega:np.ndarray, phi:np.ndarray, om_p:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
     """returns bimodal wrapped Gaussian spreading function D(omega, phi)
@@ -109,6 +131,7 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 if __name__ == '__main__':
 
     h = 100
+    t = 0
 
     ### pars set accoring to 'classic example' given in 
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
@@ -128,46 +151,54 @@ if __name__ == '__main__':
     phi_num = 100
     phi_range = np.linspace(start = 0, stop = 2 * np.pi, num = phi_num)
 
+    x_num = 50
+    x_range = np.linspace(start = -500, stop = 500, num = x_num)
+
+    
+    y_num = 50
+    y_range = np.linspace(start = -500, stop = 500, num = y_num)
+
     # ### plotting contours
 
-    D_sprd = np.empty((phi_num, om_num))
-    for i_o, om in enumerate(om_range):
-        for i_p, phi in enumerate(phi_range):
-            D_sprd[i_p, i_o] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
+    # D_sprd = np.empty((phi_num, om_num))
+    # for i_o, om in enumerate(om_range):
+    #     for i_p, phi in enumerate(phi_range):
+    #         D_sprd[i_p, i_o] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
     d_om = om_range[1] - om_range[0]
     d_phi = phi_range[1] - phi_range[0]
 
-    sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
-    print(sum(sprd_areas)) ## should this integrate to 1?
+    # sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
+    # print(sum(sprd_areas)) ## should this integrate to 1?
 
-    jnswp_dns = np.empty(om_num)
-    for i_o, om in enumerate(om_range):
-        jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
+    # jnswp_dns = np.empty(om_num)
+    # for i_o, om in enumerate(om_range):
+    #     jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
 
-    jnswp_area = sum(d_om * jnswp_dns)
-    print(jnswp_area)
+    # jnswp_area = sum(d_om * jnswp_dns)
+    # print(jnswp_area)
 
     Dr_spctrm = np.empty((phi_num, om_num))
     for i_o, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             Dr_spctrm[i_p, i_o] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
 
-    spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
-    print(spctrm_vol)
+    # spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+    # print(spctrm_vol)
 
     X, Y = np.meshgrid(om_range, phi_range)
 
-    plt.figure()
+    # plt.figure()
 
-    plt.subplot(1,3,1)
-    plt.contour(X, Y, Dr_spctrm, levels = 20)
+    # plt.subplot(1,3,1)
+    # plt.contour(X, Y, Dr_spctrm, levels = 20)
 
-    plt.subplot(1,3,2)
-    plt.plot(om_range, jnswp_dns)
+    # plt.subplot(1,3,2)
+    # plt.plot(om_range, jnswp_dns)
 
-    plt.subplot(1,3,3)
-    plt.contour(X, Y,  D_sprd, levels = 20)
+    # plt.subplot(1,3,3)
+    # plt.contour(X, Y,  D_sprd, levels = 20)
 
-    plt.show()
+    # plt.show()
 
+    eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
