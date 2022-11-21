@@ -42,7 +42,7 @@ def airy_dispersion(h:np.ndarray,T:np.ndarray):
 
     omega = 2* np.pi / T
 
-    f = lambda k: dispersion_diff(k,h,omega)
+    f = lambda k: dispersion_diff(k, h, omega)
 
     k = optimize.bisect(f, 1e-7, 1)
 
