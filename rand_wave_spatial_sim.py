@@ -12,7 +12,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
     """
-    np.random.seed(1)
+    #np.random.seed(1)
 
     A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
     B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
@@ -21,16 +21,15 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
     for i_om, om in enumerate(om_range):
         k[i_om] = solve_dispersion(om)
 
-    X, Y = np.meshgrid(x_range, y_range)
-
-    eta = np.empty(x_range, y_range)
+    eta = np.empty([y_num, x_num])
 
     for i_x, x in enumerate(x_range):
         for i_y, y in enumerate(y_range):
             k_x = np.outer(np.cos(phi_range), k)
             k_y = np.outer(np.sin(phi_range), k)
+            om_t = np.tile(om_range * t, phi_num).reshape(phi_num, om_num)
 
-            eta[i_x, i_y] = np.sum(A * np.cos(k_x * x + k_y * y - om_range * t) + B * np.sin(k_x * x + k_y * y - om_range * t))
+            eta[i_y, i_x] = np.sum(A * np.cos(k_x * x + k_y * y - om_t) + B * np.sin(k_x * x + k_y * y - om_t))
 
     return (eta)
 
@@ -121,7 +120,7 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
         r (np.ndarray): spectral tail decay index
     """
 
-    delta = np.exp( -(2 * (0.07 + 0.02 * (om_p > np.abs(omega)) )) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
+    delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)) )) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
 
     dens = alpha * omega ** -r * np.exp( -r / 4 * (np.abs(omega) / om_p ) ** -4) * gamma ** delta
 
@@ -131,7 +130,7 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 if __name__ == '__main__':
 
     h = 100
-    t = 0
+    t = 10
 
     ### pars set accoring to 'classic example' given in 
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
@@ -139,11 +138,11 @@ if __name__ == '__main__':
     om_p = 0.8
     gamma = 3.3
     r = 5
-    phi_m = np.pi
+    phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55
-    sig_r = 0.26
+    sig_l = 0.55 
+    sig_r = 0.26 
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -151,19 +150,18 @@ if __name__ == '__main__':
     phi_num = 100
     phi_range = np.linspace(start = 0, stop = 2 * np.pi, num = phi_num)
 
-    x_num = 50
-    x_range = np.linspace(start = -500, stop = 500, num = x_num)
+    x_num = 100
+    x_range = np.linspace(start = -75, stop = 75, num = x_num)
 
-    
-    y_num = 50
-    y_range = np.linspace(start = -500, stop = 500, num = y_num)
+    y_num = 100
+    y_range = np.linspace(start = -75, stop = 75, num = y_num)
 
     # ### plotting contours
 
-    # D_sprd = np.empty((phi_num, om_num))
-    # for i_o, om in enumerate(om_range):
-    #     for i_p, phi in enumerate(phi_range):
-    #         D_sprd[i_p, i_o] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
+    D_sprd = np.empty((phi_num, om_num))
+    for i_o, om in enumerate(om_range):
+        for i_p, phi in enumerate(phi_range):
+            D_sprd[i_p, i_o] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
     d_om = om_range[1] - om_range[0]
     d_phi = phi_range[1] - phi_range[0]
@@ -171,20 +169,20 @@ if __name__ == '__main__':
     # sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
     # print(sum(sprd_areas)) ## should this integrate to 1?
 
-    # jnswp_dns = np.empty(om_num)
-    # for i_o, om in enumerate(om_range):
-    #     jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
+    jnswp_dns = np.empty(om_num)
+    for i_o, om in enumerate(om_range):
+        jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
 
-    # jnswp_area = sum(d_om * jnswp_dns)
-    # print(jnswp_area)
+    jnswp_area = sum(d_om * jnswp_dns)
+    print(jnswp_area)
 
     Dr_spctrm = np.empty((phi_num, om_num))
     for i_o, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             Dr_spctrm[i_p, i_o] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
 
-    # spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
-    # print(spctrm_vol)
+    spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+    print(spctrm_vol)
 
     X, Y = np.meshgrid(om_range, phi_range)
 
@@ -202,3 +200,15 @@ if __name__ == '__main__':
     # plt.show()
 
     eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
+
+    est_var = np.var(eta)
+    print(est_var)
+
+    X, Y = np.meshgrid(x_range, y_range)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+
+    surf = ax.plot_surface(X, Y, eta)
+
+    plt.show()
+
