@@ -14,22 +14,25 @@ def random_wave_surface(omega_range:np.ndarray, phi_range:np.ndarray, t:np.ndarr
     """
     np.random.seed(1)
 
-    A = np.multiply(np.random(0, 1, size = (phi_num, om_num)), np.sqrt(Dr_spctrm * d_om * d_phi)) 
-    B = np.multiply(np.random(0, 1, size = (phi_num, om_num)), np.sqrt(Dr_spctrm * d_om * d_phi)) 
+    A = np.random(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
+    B = np.random(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
 
     k = np.empty(om_num)
     for i_om, om in enumerate(omega_range):
         k[i_om] = solve_dispersion(om)
-    k = np.tile(k, reps = phi_num)
 
     X, Y = np.meshgrid(x_range, y_range)
 
-    eta = np.empty(y_range, x_range)
+    eta = np.empty(x_range, y_range)
 
     for i_x, x in enumerate(x_range):
         for i_y, y in enumerate(y_range):
-            eta[i_y, i_x] = ##TODO finish this
+            k_x = np.outer(np.cos(phi_range), k)
+            k_y = np.outer(np.sin(phi_range), k)
 
+            eta[i_x, i_y] = np.sum(A * np.cos(k_x * x + k_y * y - om_range * t) + B * np.sin(k_x * x + k_y * y - om_range * t))
+
+    return (eta)
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
                     r:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
