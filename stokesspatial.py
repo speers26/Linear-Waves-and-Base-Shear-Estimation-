@@ -109,12 +109,12 @@ if __name__ == '__main__':
     k, omega = sk1.fDispersionSTOKES5(h, H, T)
 
     A = H / 2
-    theta = np.pi/4
+    theta = np.pi/5
 
-    numx = 30
+    numx = 36
     numy = 30
 
-    xrange = np.linspace(-500, 500, numx)
+    xrange = np.linspace(-250, 250, numx)
     yrange = np.linspace(-500, 500, numy)
     X, Y = np.meshgrid(xrange, yrange)
 
