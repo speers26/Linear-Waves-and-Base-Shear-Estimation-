@@ -138,13 +138,13 @@ if __name__ == '__main__':
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3
+    gamma = 3.3 * 100
     r = 5
-    phi_m = np.pi / 4
+    phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55 
-    sig_r = 0.26 
+    sig_l = 0.55 * 0.01
+    sig_r = 0.26 * 0 
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -202,7 +202,7 @@ if __name__ == '__main__':
     plt.show()
 
     nt = 100
-    trange = np.linspace(0,100,nt)
+    trange = np.linspace(0,20,nt)
     names = []
     X, Y = np.meshgrid(x_range, y_range)
 
@@ -213,7 +213,7 @@ if __name__ == '__main__':
 
         surf = ax.plot_surface(X, Y, eta)
 
-        ax.set_zlim(-1.75, 1.75)
+       # ax.set_zlim(-1.75, 1.75)
 
         name = f'time_{t}.png'
         names.append(name)
