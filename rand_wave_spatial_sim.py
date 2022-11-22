@@ -14,7 +14,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
     """
-    np.random.seed(1)
+    np.random.seed(2)
 
     A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
     B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
@@ -138,13 +138,13 @@ if __name__ == '__main__':
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3 ## make larger to decrease width of Jonswap
+    gamma = 3.3 * 100 ## make larger to decrease width of Jonswap
     r = 5
     phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55 ## make smaller to decrease directional spreading
-    sig_r = 0.26 ## make smaller to decrease directional spreading
+    sig_l = 0.55 * .01 ## make smaller to decrease directional spreading
+    sig_r = 0.26 * 0 ## make zero to decrease directional spreading
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -177,8 +177,8 @@ if __name__ == '__main__':
 
     jnswp_area = sum(d_om * jnswp_dns)
 
-    # jnswp_dns *= hs ** 2 / (16 * jnswp_area) ## rescale to provide given hs
-    # jnswp_area = sum(d_om * jnswp_dns)
+    jnswp_dns *= hs ** 2 / (16 * jnswp_area) ## rescale to provide given hs
+    jnswp_area = sum(d_om * jnswp_dns)
 
     print(jnswp_area)
 
@@ -189,8 +189,8 @@ if __name__ == '__main__':
 
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
-    # Dr_spctrm *= hs ** 2 / (16 * spctrm_vol)## rescale to provide given hs
-    # spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+    Dr_spctrm *= hs ** 2 / (16 * spctrm_vol)## rescale to provide given hs
+    spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
     print(spctrm_vol)
 
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     plt.show()
 
     nt = 100
-    trange = np.linspace(0,1000,nt)
+    trange = np.linspace(0,15,nt)
     names = []
     X, Y = np.meshgrid(x_range, y_range)
 
