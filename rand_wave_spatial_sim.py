@@ -132,19 +132,19 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
 if __name__ == '__main__':
 
     h = 100
-    #t = 10
+    hs = 30
 
     ### pars set accoring to 'classic example' given in 
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3 * 100
+    gamma = 3.3 ## make larger to decrease width of Jonswap
     r = 5
     phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55 * 0.01
-    sig_r = 0.26 * 0 
+    sig_l = 0.55 ## make smaller to decrease directional spreading
+    sig_r = 0.26 ## make smaller to decrease directional spreading
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -169,13 +169,17 @@ if __name__ == '__main__':
     d_phi = phi_range[1] - phi_range[0]
 
     sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
-    print(sum(sprd_areas)) ## should this integrate to 1?
+    # print(sum(sprd_areas)) ## should this integrate to 1?
 
     jnswp_dns = np.empty(om_num)
     for i_o, om in enumerate(om_range):
         jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
 
     jnswp_area = sum(d_om * jnswp_dns)
+
+    # jnswp_dns *= hs ** 2 / (16 * jnswp_area) ## rescale to provide given hs
+    # jnswp_area = sum(d_om * jnswp_dns)
+
     print(jnswp_area)
 
     Dr_spctrm = np.empty((phi_num, om_num))
@@ -184,6 +188,10 @@ if __name__ == '__main__':
             Dr_spctrm[i_p, i_o] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
 
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+
+    # Dr_spctrm *= hs ** 2 / (16 * spctrm_vol)## rescale to provide given hs
+    # spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
+
     print(spctrm_vol)
 
     X, Y = np.meshgrid(om_range, phi_range)
@@ -202,18 +210,20 @@ if __name__ == '__main__':
     plt.show()
 
     nt = 100
-    trange = np.linspace(0,20,nt)
+    trange = np.linspace(0,1000,nt)
     names = []
     X, Y = np.meshgrid(x_range, y_range)
 
     for t in trange:
         eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
 
+        print(np.var(eta))
+
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
         surf = ax.plot_surface(X, Y, eta)
 
-       # ax.set_zlim(-1.75, 1.75)
+        ax.set_zlim(-40, 40)
 
         name = f'time_{t}.png'
         names.append(name)
@@ -228,17 +238,3 @@ if __name__ == '__main__':
 
     for name in set(names):
         os.remove(name)
-
-    # eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
-
-    # est_var = np.var(eta)
-    # print(est_var)
-
-    # X, Y = np.meshgrid(x_range, y_range)
-
-    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
-    # surf = ax.plot_surface(X, Y, eta)
-
-    # plt.show()
-
