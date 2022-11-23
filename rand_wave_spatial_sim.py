@@ -14,7 +14,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
     """
-    np.random.seed(2)
+    np.random.seed(1452)
 
     A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
     B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
@@ -138,13 +138,13 @@ if __name__ == '__main__':
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3 * 10 ## make larger to decrease width of Jonswap
+    gamma = 3.3 ## make larger to decrease width of Jonswap
     r = 5
     phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55 * .1 ## make smaller to decrease directional spreading
-    sig_r = 0.26 * 0 ## make zero to decrease directional spreading
+    sig_l = 0.55  ## make smaller to decrease directional spreading
+    sig_r = 0.26  ## make zero to decrease directional spreading
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
 
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
-    Dr_spctrm *= hs ** 2 / (16 * spctrm_vol)## rescale to provide given hs
+    Dr_spctrm *= hs ** 2 / (16 * spctrm_vol) ## rescale to provide given hs
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
     print(spctrm_vol)
@@ -214,15 +214,7 @@ if __name__ == '__main__':
     names = []
     X, Y = np.meshgrid(x_range, y_range)
 
-    # phim_range = np.linspace(0, 2 * np.pi, nt)
-
     for it,t in enumerate(trange):
-        # phi_m = phim_range[it - 1]
-
-        # Dr_spctrm = np.empty((phi_num, om_num))
-        # for i_o, om in enumerate(om_range):
-        #     for i_p, phi in enumerate(phi_range):
-        #         Dr_spctrm[i_p, i_o] = frq_dr_spctrm(om, phi, alpha, om_p, gamma, r, phi_m, beta, nu, sig_l, sig_r)
 
         eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
 
@@ -234,7 +226,7 @@ if __name__ == '__main__':
 
         ax.set_zlim(-40, 40)
 
-        name = f'time_{t}.png'
+        name = f'time_{it}.png'
         names.append(name)
 
         plt.savefig(name)
@@ -245,5 +237,5 @@ if __name__ == '__main__':
             image = imageio.imread(filename)
             writer.append_data(image)
 
-    for name in set(names):
-        os.remove(name)
+    # for name in set(names):
+    #     os.remove(name)
