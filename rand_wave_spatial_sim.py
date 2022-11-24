@@ -138,13 +138,13 @@ if __name__ == '__main__':
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3 * 100 ## make larger to decrease width of Jonswap
+    gamma = 3.3 ## make larger to decrease width of Jonswap
     r = 5
     phi_m = np.pi 
     beta = 4
     nu = 2.7
-    sig_l = 0.55 *.01 ## make smaller to decrease directional spreading
-    sig_r = 0.26 * 0 ## make zero to decrease directional spreading
+    sig_l = 0.55 ## make smaller to decrease directional spreading
+    sig_r = 0.26  ## make zero to decrease directional spreading
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -199,9 +199,13 @@ if __name__ == '__main__':
     plt.figure()
 
     plt.subplot(1,3,1)
-    #plt.contour(X, Y, Dr_spctrm, levels = [800,1600,2400,3200,4000,4800,5600,6400,7200]) simple case
+    #plt.contour(X, Y, Dr_spctrm, levels = [800,1600,2400,3200,4000,4800,5600,6400,7200]) #simple case
+    #plt.contour(X,Y, Dr_spctrm, levels= [300, 600, 1200, 1800, 2400, 3600, 4200]) # omega
+    #plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240, 270]) ## phi
+    plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240]) ## typical
     plt.xlabel("angular freq")
     plt.ylabel("direction")
+    #plt.colorbar()
 
     plt.subplot(1,3,2)
     plt.plot(om_range, jnswp_dns)
@@ -210,10 +214,12 @@ if __name__ == '__main__':
 
 
     plt.subplot(1,3,3)
-    #plt.contour(X, Y,  D_sprd, levels = [4, 8, 12, 16, 20, 24, 28, 32, 36]) simple case
+    #plt.contour(X, Y,  D_sprd, levels = [4, 8, 12, 16, 20, 24, 28, 32, 36]) #simple case
+    #plt.contour(X,Y, D_sprd, levels= [4, 8, 12, 16, 20, 24, 28, 32, 36]) # omega 
+    plt.contour(X,Y, D_sprd, levels= 20)
     plt.xlabel("angular freq")
     plt.ylabel("direction")
-    plt.colorbar()
+    #plt.colorbar()
 
 
     plt.show()
