@@ -199,13 +199,9 @@ if __name__ == '__main__':
     plt.figure()
 
     plt.subplot(1,3,1)
-    #plt.contour(X, Y, Dr_spctrm, levels = [800,1600,2400,3200,4000,4800,5600,6400,7200]) #simple case
-    #plt.contour(X,Y, Dr_spctrm, levels= [300, 600, 1200, 1800, 2400, 3600, 4200]) # omega
-    #plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240, 270]) ## phi
-    plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240]) ## typical
+    plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240])
     plt.xlabel("angular freq")
     plt.ylabel("direction")
-    #plt.colorbar()
 
     plt.subplot(1,3,2)
     plt.plot(om_range, jnswp_dns)
@@ -214,12 +210,10 @@ if __name__ == '__main__':
 
 
     plt.subplot(1,3,3)
-    #plt.contour(X, Y,  D_sprd, levels = [4, 8, 12, 16, 20, 24, 28, 32, 36]) #simple case
-    #plt.contour(X,Y, D_sprd, levels= [4, 8, 12, 16, 20, 24, 28, 32, 36]) # omega 
     plt.contour(X,Y, D_sprd, levels= 20)
     plt.xlabel("angular freq")
     plt.ylabel("direction")
-    #plt.colorbar()
+  
 
 
     plt.show()
