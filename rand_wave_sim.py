@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftshift
 import time 
+import rand_wave_spatial_sim as rws
 
 def djonswap(f, hs, tp):
     """
@@ -32,11 +33,26 @@ def djonswap(f, hs, tp):
 
     return dens
 
-def random_waves_surface(f,t):
+def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray):
+    """Generates random wave kinematics and surface (with x = 0)
+
+    Args:
+        f (np.ndarray): frequency [hertz]
+        t (np.ndarray): time [seconds]
+        z (np.ndarray): depth [metres]
+    """
+
     np.random.seed(1)
-    
+
+    # k = np.empty(n_freq) 
+    # for i_f, f in enumerate(f):
+    #     k[i_f] = rws.solve_dispersion(2 * np.pi * f)
+
     A = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
     B = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
+
+    Amp = np.sqrt(A ** 2 + B ** 2).reshape((1, n_freq))
+
     outer_tf = np.outer(t,f) 
     eta = np.sum(A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf), axis=1)
 
@@ -45,7 +61,6 @@ def random_waves_surface(f,t):
 def fft_random_waves():
     np.random.seed(1)
     
-  
     A = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
     B = np.random.normal(0, 1, size=(1,n_freq)) *  np.sqrt(dens*df) 
     
@@ -53,7 +68,6 @@ def fft_random_waves():
     Z = A + B * i
 
     eta = np.real(fft(Z,n_freq))
-
   
     return eta
 
@@ -73,6 +87,9 @@ def kth_moment(k, f_seq):
     return integral
 
 if __name__ == "__main__":
+
+    h = 100
+    z = 0
 
     hs = 35
     tp = 10
@@ -96,7 +113,7 @@ if __name__ == "__main__":
     area = kth_moment(0, f_seq)
 
     t = time.time()
-    eta = random_waves_surface(f_seq, times)
+    eta = random_waves_surface(f_seq, times, z)
     t2 = time.time()
     dt = t2- t
     print(dt)
