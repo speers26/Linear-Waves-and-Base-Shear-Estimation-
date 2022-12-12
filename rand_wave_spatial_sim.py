@@ -37,7 +37,7 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
 
 def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
                     r:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
-    """returns frequency direction spectrum
+    """returns frequency direction spectrum.
 
     Args:
         omega (np.ndarray): angular frequency
@@ -141,10 +141,10 @@ if __name__ == '__main__':
     gamma = 3.3 ## make larger to decrease width of Jonswap
     r = 5
     phi_m = np.pi 
-    beta = 4
+    beta = 4 * 0
     nu = 2.7
-    sig_l = 0.55 ## make smaller to decrease directional spreading
-    sig_r = 0.26  ## make zero to decrease directional spreading
+    sig_l = 0.3 #0.55 ## make smaller to decrease directional spreading
+    sig_r = 0.26 * 0 ## make zero to decrease directional spreading
 
     om_num = 50
     om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
@@ -213,6 +213,7 @@ if __name__ == '__main__':
     plt.contour(X,Y, D_sprd, levels= 20)
     plt.xlabel("angular freq")
     plt.ylabel("direction")
+    plt.colorbar()
   
 
 
