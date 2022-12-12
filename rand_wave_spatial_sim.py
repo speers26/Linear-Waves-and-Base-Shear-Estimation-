@@ -247,5 +247,5 @@ if __name__ == '__main__':
             image = imageio.imread(filename)
             writer.append_data(image)
 
-    # for name in set(names):
-    #     os.remove(name)
+    for name in set(names):
+        os.remove(name)
