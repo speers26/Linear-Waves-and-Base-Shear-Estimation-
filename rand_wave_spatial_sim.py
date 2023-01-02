@@ -6,7 +6,7 @@ import imageio
 
 
 def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
-                        y_range: np.ndarray):
+                        y_range: np.ndarray, h: np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -15,6 +15,7 @@ def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarr
         t (np.ndarray): time (scalar)
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
+        h (np.ndarray): water depth [metres]
 
     Returns:
         eta (np.ndarray): random wave surface height [metres] (y_num, x_num)
@@ -26,7 +27,7 @@ def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarr
 
     k = np.empty(om_num)
     for i_om, om in enumerate(om_range):
-        k[i_om] = solve_dispersion(om)
+        k[i_om] = solve_dispersion(om, h)
 
     eta = np.empty([y_num, x_num])
 
@@ -43,7 +44,7 @@ def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarr
 def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.ndarray,
                   r: np.ndarray, phi_m: np.ndarray, beta: np.ndarray, nu: np.ndarray, sig_l: np.ndarray,
                   sig_r: np.ndarray):
-    """returns frequency direction spectrum.
+    """returns frequency direction spectrum for a single angular frequency and direction.
 
     Args:
         omega (np.ndarray): angular frequency
@@ -65,13 +66,15 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: n
 
     return dens
 
-def solve_dispersion(omega:np.ndarray):
+
+def solve_dispersion(omega: np.ndarray, h: np.ndarray):
     """returns wave number k for given angular frequency omega
     Args:
-        omega (np.ndarray): angular frequency
+        omega (np.ndarray): angular frequency [s^-1]
+        h (np.ndarray): water depth [metres]
 
     Returns:
-        k (np.ndarray): wave number [m^-1]
+        k (_type_): wave number [m^-1]
     """
     f = lambda k: dispersion_diff(k, h, omega)
 
@@ -79,19 +82,27 @@ def solve_dispersion(omega:np.ndarray):
 
     return k
 
-def dispersion_diff(k:np.ndarray, h:np.ndarray, omega:np.ndarray):
+
+def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
     """function to optimise in solve_dispersion
     Args:
         k (np.ndarray): wave number
         h (np.ndarray): water depth
         omega (np.ndarray): angular frequency
+
+    Returns:
+        diff (_type_): difference to find zero in solve_dispersion 
     """
-    g = 9.81 
-    return omega ** 2 - g * k * np.tanh(k * h)
+    g = 9.81
+
+    diff = omega ** 2 - g * k * np.tanh(k * h)
+
+    return diff
 
 
-def sprd_fnc(omega:np.ndarray, phi:np.ndarray, om_p:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
-    """returns bimodal wrapped Gaussian spreading function D(omega, phi)
+def sprd_fnc(omega: np.ndarray, phi: np.ndarray, om_p: np.ndarray, phi_m: np.ndarray, beta: np.ndarray, nu: np.ndarray,
+             sig_l: np.ndarray, sig_r: np.ndarray):
+    """returns bimodal wrapped Gaussian spreading function D(omega, phi) at a single point
 
     Args:
         omega (np.ndarray): angular frequency
@@ -102,9 +113,12 @@ def sprd_fnc(omega:np.ndarray, phi:np.ndarray, om_p:np.ndarray, phi_m:np.ndarray
         nu (np.ndarray): peak separation shape
         sig_l (np.ndarray): limiting angular width
         sig_r (np.ndarray): angular width shape
+    
+    Returns:
+        dens (_type_): D(omega, phi) for given omega and phi
     """
     k_num = 200
-    k_range = np.linspace(start = -k_num/2, stop = k_num/2, num = k_num + 1)
+    k_range = np.linspace(start=-k_num/2, stop=k_num/2, num=k_num + 1)
 
     phi_m1 = phi_m + beta * np.exp(-nu * min(om_p / np.abs(omega), 1)) / 2
     phi_m2 = phi_m - beta * np.exp(-nu * min(om_p / np.abs(omega), 1)) / 2
@@ -116,14 +130,15 @@ def sprd_fnc(omega:np.ndarray, phi:np.ndarray, om_p:np.ndarray, phi_m:np.ndarray
     dens_k = np.empty(k_num + 1)
 
     for i_k, k in enumerate(k_range):
-        exp_term = np.exp( -0.5 * ((phi - phi_arr - 2 * np.pi * k) / sigma) ** 2)
+        exp_term = np.exp(-0.5 * ((phi - phi_arr - 2 * np.pi * k) / sigma) ** 2)
         dens_k[i_k] = np.sum(exp_term)
 
     dens = nrm_cnst * np.sum(dens_k)
 
     return dens
 
-def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray, r:np.ndarray):
+
+def d_jonswap(omega: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.ndarray, r: np.ndarray):
     """jonswap density using formulation used in Jake's paper
 
     Args:
@@ -132,64 +147,64 @@ def d_jonswap(omega:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndar
         om_p (np.ndarray): peak ang freq
         gamma (np.ndarray): peak enhancement factor
         r (np.ndarray): spectral tail decay index
+
+    Returns:
+        dens (_type_): JONSWAP density for given omega
     """
 
-    delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)) )) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
+    delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)))) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
 
-    dens = alpha * omega ** -r * np.exp( -r / 4 * (np.abs(omega) / om_p ) ** -4) * gamma ** delta
+    dens = alpha * omega ** -r * np.exp(-r / 4 * (np.abs(omega) / om_p) ** -4) * gamma ** delta
 
     return dens
 
 
 if __name__ == '__main__':
 
-    h = 100
+    depth = 100
     hs = 30
 
-    ### pars set accoring to 'classic example' given in 
+    # pars set accoring to 'classic example' given in
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
+    # play with these to change form of wave surface
     alpha = 0.7
     om_p = 0.8
-    gamma = 3.3 ## make larger to decrease width of Jonswap
+    gamma = 3.3  # make larger to decrease width of Jonswap
     r = 5
-    phi_m = np.pi 
+    phi_m = np.pi
     beta = 4 * 0
     nu = 2.7
-    sig_l = 0.3 #0.55 ## make smaller to decrease directional spreading
-    sig_r = 0.26 * 0 ## make zero to decrease directional spreading
+    sig_l = 0.55  # make smaller to decrease directional spreading
+    sig_r = 0.26  # make zero to decrease directional spreading
 
     om_num = 50
-    om_range = np.linspace(start = 1e-3, stop = 3, num = om_num)
+    om_range = np.linspace(start=1e-3, stop=3, num=om_num)
 
     phi_num = 100
-    phi_range = np.linspace(start = 0, stop = 2 * np.pi, num = phi_num)
+    phi_range = np.linspace(start=0, stop=2 * np.pi, num=phi_num)
 
     x_num = 100
-    x_range = np.linspace(start = -50, stop = 50, num = x_num)
+    x_range = np.linspace(start=-50, stop=50, num=x_num)
 
     y_num = 100
-    y_range = np.linspace(start = -50, stop = 50, num = y_num)
+    y_range = np.linspace(start=-50, stop=50, num=y_num)
 
-    # ### plotting contours
+    d_om = om_range[1] - om_range[0]
+    d_phi = phi_range[1] - phi_range[0]
+
+    # plotting contours
 
     D_sprd = np.empty((phi_num, om_num))
     for i_o, om in enumerate(om_range):
         for i_p, phi in enumerate(phi_range):
             D_sprd[i_p, i_o] = sprd_fnc(om, phi, om_p, phi_m, beta, nu, sig_l, sig_r)
 
-    d_om = om_range[1] - om_range[0]
-    d_phi = phi_range[1] - phi_range[0]
-
-    sprd_areas = np.sum(d_om * d_phi * D_sprd, axis=1)
-    # print(sum(sprd_areas)) ## should this integrate to 1?
-
     jnswp_dns = np.empty(om_num)
     for i_o, om in enumerate(om_range):
         jnswp_dns[i_o] = d_jonswap(om, alpha, om_p, gamma, r)
 
     jnswp_area = sum(d_om * jnswp_dns)
-
-    jnswp_dns *= hs ** 2 / (16 * jnswp_area) ## rescale to provide given hs
+    jnswp_dns *= hs ** 2 / (16 * jnswp_area)  # rescale to provide given hs
     jnswp_area = sum(d_om * jnswp_dns)
 
     print(jnswp_area)
@@ -201,50 +216,46 @@ if __name__ == '__main__':
 
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
-    Dr_spctrm *= hs ** 2 / (16 * spctrm_vol) ## rescale to provide given hs
+    Dr_spctrm *= hs ** 2 / (16 * spctrm_vol)  # rescale to provide given hs
     spctrm_vol = sum(sum(d_om * d_phi * Dr_spctrm))
 
     print(spctrm_vol)
 
-    X, Y = np.meshgrid(om_range, phi_range)
+    omega_grid, phi_grid = np.meshgrid(om_range, phi_range)  # expand omega and phi axis onto a grid to plot contours
 
     plt.figure()
 
-    plt.subplot(1,3,1)
-    plt.contour(X,Y, Dr_spctrm, levels= [15, 30, 60, 90, 120, 150, 180, 210, 240])
+    plt.subplot(1, 3, 1)
+    plt.contour(omega_grid, phi_grid, Dr_spctrm, levels=[15, 30, 60, 90, 120, 150, 180, 210, 240])
     plt.xlabel("angular freq")
     plt.ylabel("direction")
 
-    plt.subplot(1,3,2)
+    plt.subplot(1, 3, 2)
     plt.plot(om_range, jnswp_dns)
     plt.xlabel("angular freq")
     plt.ylabel("density")
 
-
-    plt.subplot(1,3,3)
-    plt.contour(X,Y, D_sprd, levels= 20)
+    plt.subplot(1, 3, 3)
+    plt.contour(omega_grid, phi_grid, D_sprd, levels=20)
     plt.xlabel("angular freq")
     plt.ylabel("direction")
-    plt.colorbar()
-  
-
 
     plt.show()
 
     nt = 100
-    trange = np.linspace(0,15,nt)
+    trange = np.linspace(0, 15, nt)
     names = []
-    X, Y = np.meshgrid(x_range, y_range)
+    x_grid, y_grid = np.meshgrid(x_range, y_range)  # expand x and y axis onto a grid to plot eta over
 
-    for it,t in enumerate(trange):
+    for it, t in enumerate(trange):
 
-        eta = random_wave_surface(om_range, phi_range, t, x_range, y_range)
+        eta = random_wave_surface(om_range, phi_range, t, x_range, y_range, depth)
 
         print(np.var(eta))
 
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-        surf = ax.plot_surface(X, Y, eta)
+        surf = ax.plot_surface(x_grid, y_grid, eta)
 
         ax.set_zlim(-40, 40)
 

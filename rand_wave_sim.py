@@ -2,7 +2,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftshift
-import rand_wave_spatial_sim as rws
+# import rand_wave_spatial_sim as rws  # don't need this yet
 
 
 def djonswap(f, hs, tp):
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     tp = 10  # sig wave period
     f_p = 1/tp  # peak frequency
 
-    freq = 4.0  # desired wave frequency
+    freq = 4.0  # frequency of observations
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
 
