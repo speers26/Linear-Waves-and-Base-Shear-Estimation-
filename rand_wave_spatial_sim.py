@@ -1,10 +1,12 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
-import os
 import imageio
 
-def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray, x_range:np.ndarray, y_range:np.ndarray):
+
+def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
+                        y_range: np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -13,11 +15,14 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
         t (np.ndarray): time (scalar)
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
+
+    Returns:
+        eta (np.ndarray): random wave surface height [metres] (y_num, x_num)
     """
     np.random.seed(1452)
 
-    A = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi) 
-    B = np.random.normal(0, 1, size = (phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
+    A = np.random.normal(0, 1, size=(phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
+    B = np.random.normal(0, 1, size=(phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
 
     k = np.empty(om_num)
     for i_om, om in enumerate(om_range):
@@ -30,13 +35,14 @@ def random_wave_surface(om_range:np.ndarray, phi_range:np.ndarray, t:np.ndarray,
             k_x = np.outer(np.cos(phi_range), k)
             k_y = np.outer(np.sin(phi_range), k)
             om_t = np.tile(om_range * t, (phi_num, 1))
-
             eta[i_y, i_x] = np.sum(A * np.cos(k_x * x + k_y * y - om_t) + B * np.sin(k_x * x + k_y * y - om_t))
 
-    return (eta)
+    return eta
 
-def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.ndarray, gamma:np.ndarray,
-                    r:np.ndarray, phi_m:np.ndarray, beta:np.ndarray, nu:np.ndarray, sig_l:np.ndarray, sig_r:np.ndarray):
+
+def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.ndarray,
+                  r: np.ndarray, phi_m: np.ndarray, beta: np.ndarray, nu: np.ndarray, sig_l: np.ndarray,
+                  sig_r: np.ndarray):
     """returns frequency direction spectrum.
 
     Args:
@@ -51,6 +57,9 @@ def frq_dr_spctrm(omega:np.ndarray, phi:np.ndarray, alpha:np.ndarray, om_p:np.nd
         nu (np.ndarray): peak separation shape
         sig_l (np.ndarray): limiting angular width
         sig_r (np.ndarray): angular width shape
+
+    Returns:
+        dens (np.ndarray): freq direction spectrum [] (??, ??)
     """
     dens = sprd_fnc(omega, phi, om_p, phi_m, beta, nu, sig_l, sig_r) * d_jonswap(omega, alpha, om_p, gamma, r)
 
@@ -60,6 +69,9 @@ def solve_dispersion(omega:np.ndarray):
     """returns wave number k for given angular frequency omega
     Args:
         omega (np.ndarray): angular frequency
+
+    Returns:
+        k (np.ndarray): wave number [m^-1]
     """
     f = lambda k: dispersion_diff(k, h, omega)
 

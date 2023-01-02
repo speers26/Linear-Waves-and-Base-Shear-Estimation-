@@ -75,7 +75,7 @@ def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray, spctrl_den
     A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
     B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
 
-    outer_tf = np.outer(t, f) 
+    outer_tf = np.outer(t, f)
 
     eta = np.sum(A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf), axis=1)
 
