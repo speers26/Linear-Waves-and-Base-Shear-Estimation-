@@ -1,12 +1,26 @@
-import numpy as np
-from scipy import optimize
-import matplotlib.pyplot as plt
-import stokes as sk1
 import os
+import numpy as np
+import matplotlib.pyplot as plt
 import imageio
+import stokes as sk1
+
 
 def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
+    """_summary_
 
+    Args:
+        k (_type_): _description_
+        h (_type_): _description_
+        A (_type_): _description_
+        xrange (_type_): _description_
+        yrange (_type_): _description_
+        omega (_type_): _description_
+        t (_type_): _description_
+        theta (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     xpoints, ypoints = np.meshgrid(xrange, yrange)
 
@@ -60,66 +74,63 @@ def stokes_wave_surface(k, h, A, xrange, yrange, omega, t, theta):
 
     # calculate properties
     # Initialising coefficients
-    A11 = Aco[0]
-    A22 = Aco[1]
-    A31 = Aco[2]
-    A33 = Aco[3]
-    A42 = Aco[4]
-    A44 = Aco[5]
-    A51 = Aco[6]
-    A53 = Aco[7]
-    A55 = Aco[8]
+    # Unused are commented - needed for kinematics
+    # A11 = Aco[0]
+    # A22 = Aco[1]
+    # A31 = Aco[2]
+    # A33 = Aco[3]
+    # A42 = Aco[4]
+    # A44 = Aco[5]
+    # A51 = Aco[6]
+    # A53 = Aco[7]
+    # A55 = Aco[8]
     B22 = Bco[0]
     B31 = Bco[1]
     B42 = Bco[2]
     B44 = Bco[3]
     B53 = Bco[4]
     B55 = Bco[5]
-    C0 = Cco[0]
-    
+    # C0 = Cco[0]
+
     # Wave steepness
     epsilon = A * k
-    # epsilon = A * (kx + ky)
-    #
 
     kx = k * np.cos(theta)
     ky = k * np.sin(theta)
-    
+
     psi = -(omega * t - kx * xpoints - ky * ypoints)
-    
+
     eta = (1 / k) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
                      + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
                      + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
                      + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
                      + B55 * np.cos(5 * psi)))
 
-    eta.shape = (numy, numx)                  
+    eta.shape = (numy, numx)
 
     return eta
 
 
-    
 if __name__ == '__main__':
 
-    
-    h = 100 # depth
-    T = 20 # period
-    H = 35 # wave height
-    
+    h = 100  # depth
+    T = 20  # period
+    H = 35  # wave height
+
     k, omega = sk1.fDispersionSTOKES5(h, H, T)
 
     A = H / 2
-    theta = np.pi/5
+    theta = np.pi/4
 
     numx = 36
     numy = 30
 
     xrange = np.linspace(-250, 250, numx)
     yrange = np.linspace(-500, 500, numy)
-    X, Y = np.meshgrid(xrange, yrange)
+    X_grid, Y_grid = np.meshgrid(xrange, yrange)
 
     nt = 100
-    trange = np.linspace(0,100,nt)
+    trange = np.linspace(0, 100, nt)
     names = []
 
     for t in trange:
@@ -127,7 +138,7 @@ if __name__ == '__main__':
 
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 
-        surf = ax.plot_surface(X, Y, eta)
+        surf = ax.plot_surface(X_grid, Y_grid, eta)
 
         name = f'time_{t}.png'
         names.append(name)
