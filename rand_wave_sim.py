@@ -51,22 +51,6 @@ def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray, spctrl_den
     Returns:
         eta (np.ndarray): wave surface height [metres]
     """
-    # old code
-
-    # k = np.empty(n_freq) 
-    # for i_f, f in enumerate(f):
-    #     k[i_f] = rws.solve_dispersion(2 * np.pi * f)
-
-    # R = np.sqrt(A ** 2 + B ** 2).reshape((1, n_freq)) 
-    # outer_tf = np.outer(t,f) 
-    # AoB = A / B
-    # AoB = np.nan_to_num(AoB, nan = np.inf)
-
-    # eta = np.sum(R * np.sin(outer_tf + np.arctan(AoB)), axis = 1)
-
-    # Amp = np.sqrt(A ** 2 + B ** 2).reshape((1, n_freq)) ## not sure about this step, shouldn't affect the rest though
-    # omega = 2 * np.pi * f
-
     np.random.seed(1)
 
     n_freq = len(f)
