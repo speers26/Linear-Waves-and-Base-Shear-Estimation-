@@ -39,13 +39,14 @@ def djonswap(f, hs, tp):
     return dens
 
 
-def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray):
+def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray, spctrl_dens: np.ndarray):
     """Generates random wave kinematics and surface (with x = 0)
 
     Args:
         f (np.ndarray): frequency [hertz]
         t (np.ndarray): time [seconds]
         z (np.ndarray): depth [metres]
+        spctrl_dens (np.ndarray): spectral densities for given frequencies []
 
     Returns:
         eta (np.ndarray): wave surface height [metres]
@@ -68,8 +69,11 @@ def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray):
 
     np.random.seed(1)
 
-    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(dens*df)
-    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(dens*df)
+    n_freq = len(f)
+    df = f[1] - f[0]
+
+    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
+    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
 
     outer_tf = np.outer(t, f) 
 
@@ -78,16 +82,23 @@ def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray):
     return eta
 
 
-def fft_random_waves():
-    """performs fft version of random wave surface calculation 
+def fft_random_waves(f: np.ndarray, spctrl_dens: np.ndarray):
+    """performs fft version of random wave surface calculation
+
+    Args:
+        f (np.ndarray): frequency [hertz]
+        spctrl_dens (np.ndarray): spectral densities for given frequencies []
 
     Returns:
         eta (np.ndarray): wave surface height [metres]
     """
     np.random.seed(1)
 
-    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(dens*df) 
-    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(dens*df) 
+    n_freq = len(f)
+    df = f[1] - f[0]
+
+    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df) 
+    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df) 
 
     i = complex(0, 1)
     Z = A + B * i
@@ -97,27 +108,31 @@ def fft_random_waves():
     return eta
 
 
-def random_waves_acf(tau, f):
-    """find acf function of the gaussian random wave surface
+def random_waves_acf(tau: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
+    """find acf function of the gaussian random wave surface with given spectrum
 
     Args:
         tau (np.ndarray): lags []
         f (np.ndarray): contributing frequencies [hertz]
+        spctrl_dens (np.ndarray): spectral densities for given frequencies []
 
     Returns:
         acf (np.ndarray): auto correlation
     """
 
+    df = f[1] - f[0]
+    spctrl_area = np.sum(spctrl_dens * df)
+
     outer_ft = np.outer(f, tau)    # (n_freq x tau_length)
 
-    acf_mat = np.cos(2 * np.pi * outer_ft) * dens[:, np.newaxis] * df / area    # (n_freq x tau_length)
-    acf = np.sum(acf_mat, axis=0)   # sum over columns to give (1 x tau_length)
+    acf_mat = np.cos(2 * np.pi * outer_ft) * spctrl_dens[:, np.newaxis] * df / spctrl_area    # (n_freq x tau_length)
+    acf_vec = np.sum(acf_mat, axis=0)   # sum over columns to give (1 x tau_length)
 
-    return acf
+    return acf_vec
 
 
-def kth_moment(k, f_seq):
-    """function to return the kth moment of the JONSWAP spectrum evaulated at given frequencies
+def kth_moment(k: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
+    """function to return the kth moment of the given spectrum evaulated at given frequencies
 
     Args:
         k (np.ndarray): moment
@@ -127,7 +142,9 @@ def kth_moment(k, f_seq):
         k_integral (_type_): integral equal to the kth moment
     """
 
-    k_integral = np.sum(dens * f_seq ** k * df)
+    df = f[1] - f[0]
+
+    k_integral = np.sum(spctrl_dens * f ** k * df)
 
     return k_integral
 
@@ -135,54 +152,50 @@ def kth_moment(k, f_seq):
 if __name__ == "__main__":
 
     h = 100  # water depth
+    z = 0  # placeholder for now
 
     hs = 35  # sig wave height
     tp = 10  # sig wave period
     f_p = 1/tp  # peak frequency
 
-    freq = 4.0
-    dt = 1/freq
-    period = 100 
+    freq = 4.0  # desired wave frequency
+    period = 100  # total time range
+    nT = np.floor(period*freq)  # number of time points to evaluate
 
-    nT = np.floor(period*freq)
+    dt = 1/freq  # time step is determined by frequency
+    times = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
 
-    f_seq = np.linspace(1e-3, nT - 1, int(nT) ) / (nT / freq)
-    times = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt
+    f_seq = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # frequencies must relate to time points
 
-    dens = djonswap(f_seq, hs, tp)
-    n_freq = len(f_seq)
-
-
-    df = f_seq[1] - f_seq[0]
-    dens = djonswap(f_seq, hs, tp)
-    area = kth_moment(0, f_seq)
+    jswp_density = djonswap(f_seq, hs, tp)  # finding JONSWAP density to use as spectrum for wave surface
+    jswp_area = kth_moment(0, f_seq, jswp_density)  # find area of spectrum
 
     t = time.time()
-    eta = random_waves_surface(f_seq, times, z)
-    t2 = time.time()
-    dt = t2- t
-    print(dt)
-
-    t = time.time()
-    eta_fft = fftshift(fft_random_waves())
+    eta = random_waves_surface(f_seq, times, z, jswp_density)
     t2 = time.time()
     dt = t2 - t
-    print(dt)
+    print(dt)  # print time for wave surface to be generated
 
-    spectral_estHs = 4 * np.sqrt(area)
+    t = time.time()
+    eta_fft = fftshift(fft_random_waves(f_seq, jswp_density))
+    t2 = time.time()
+    dt = t2 - t
+    print(dt)  # print time for wave surface to be generated
+
+    spectral_estHs = 4 * np.sqrt(jswp_area)
     surface_estHs = 4 * np.std(eta)
 
-    print(spectral_estHs, surface_estHs)
-    
-    tau_length = 250
-    tau_seq = np.linspace(-50, 50, tau_length) ## not sure about how to pick tau range
+    print(spectral_estHs, surface_estHs)  # compare estimate of Hs to theory
 
-    acf = random_waves_acf(tau_seq, f_seq)
+    tau_length = 250
+    tau_seq = np.linspace(-50, 50, tau_length)
+
+    acf = random_waves_acf(tau_seq, f_seq, jswp_density)
 
     plt.figure()
     plt.subplot(4, 1, 1)
-    plt.plot(f_seq, dens)
-    
+    plt.plot(f_seq, jswp_density)
+
     plt.subplot(4, 1, 2)
     plt.plot(times, eta)
 
