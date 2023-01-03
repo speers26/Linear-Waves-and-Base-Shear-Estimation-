@@ -32,7 +32,7 @@ def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarr
 
     k = np.empty(om_num)
     for i_om, om in enumerate(om_range):
-        k[i_om] = solve_dispersion(om, h)
+        k[i_om] = solve_dispersion(om, h, upp=1)
 
     eta = np.empty([y_num, x_num])
 
@@ -72,17 +72,18 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: n
     return dens
 
 
-def solve_dispersion(omega: np.ndarray, h: np.ndarray):
+def solve_dispersion(omega: np.ndarray, h: np.ndarray, upp: float):
     """returns wave number k for given angular frequency omega
     Args:
         omega (np.ndarray): angular frequency [s^-1]
         h (np.ndarray): water depth [metres]
+        upp (float): upper limit of interval to find k over []
 
     Returns:
         k (_type_): wave number [m^-1]
     """
 
-    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=1, args=(h, omega))
+    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=upp, args=(h, omega))
 
     return k
 

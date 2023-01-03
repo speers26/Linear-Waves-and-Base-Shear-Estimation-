@@ -70,7 +70,7 @@ def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray
 
     for i_om, om in enumerate(om_range):
         print(i_om)
-        k[i_om] = rws.solve_dispersion(omega=om, h=d)
+        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=75)  # not sure if getting such big k's makes sense
 
     for i_z, z in enumerate(z_range):
 
