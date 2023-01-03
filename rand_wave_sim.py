@@ -2,7 +2,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftshift
-# import rand_wave_spatial_sim as rws  # don't need this yet
+import rand_wave_spatial_sim as rws  # for dispersion relation
 
 
 def djonswap(f, hs, tp):
@@ -39,13 +39,15 @@ def djonswap(f, hs, tp):
     return dens
 
 
-def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray, spctrl_dens: np.ndarray):
+def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray, z_range: np.ndarray, d: np.ndarray,
+                                        spctrl_dens: np.ndarray):
     """Generates random wave kinematics and surface (with x = 0)
 
     Args:
-        f (np.ndarray): frequency [hertz]
-        t (np.ndarray): time [seconds]
-        z (np.ndarray): depth [metres]
+        f_range (np.ndarray): frequencies [hertz]
+        t_range (np.ndarray): times [seconds]
+        z_range (np.ndarray): depths [metres]
+        d (np.ndarray): water depth [metres]
         spctrl_dens (np.ndarray): spectral densities for given frequencies []
 
     Returns:
@@ -53,17 +55,29 @@ def random_waves_surface(f: np.ndarray, t: np.ndarray, z: np.ndarray, spctrl_den
     """
     np.random.seed(1)
 
-    n_freq = len(f)
-    df = f[1] - f[0]
+    n_freq = len(f_range)
+    df = f_range[1] - f_range[0]
 
     A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
     B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
 
-    outer_tf = np.outer(t, f)
+    outer_tf = np.outer(t_range, f_range)
 
     eta = np.sum(A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf), axis=1)
 
-    return eta
+    om_range = 2*np.pi*f_range
+    k = np.empty(n_freq)
+
+    for i_om, om in enumerate(om_range):
+        print(i_om)
+        k[i_om] = rws.solve_dispersion(omega=om, h=d)
+
+    for i_z, z in enumerate(z_range):
+
+        u_x = np.sum((A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf))
+                     * 2*np.pi*f * (np.cosh(k*(z+d))) / (np.sinh(k*d)), axis=1)
+
+    return eta, u_x
 
 
 def fft_random_waves(f: np.ndarray, spctrl_dens: np.ndarray):
@@ -135,8 +149,9 @@ def kth_moment(k: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
 
 if __name__ == "__main__":
 
-    h = 100  # water depth
-    z = 0  # placeholder for now
+    depth = 100  # water depth
+    z_num = 151
+    z_range = np.linspace(-depth, 50, z_num)
 
     hs = 35  # sig wave height
     tp = 10  # sig wave period
@@ -154,16 +169,16 @@ if __name__ == "__main__":
     jswp_density = djonswap(f_seq, hs, tp)  # finding JONSWAP density to use as spectrum for wave surface
     jswp_area = kth_moment(0, f_seq, jswp_density)  # find area of spectrum
 
-    t = time.time()
-    eta = random_waves_surface(f_seq, times, z, jswp_density)
-    t2 = time.time()
-    dt = t2 - t
+    timer1 = time.time()
+    eta = random_waves_surface_and_kinematics(f_seq, times, z_range=z_range, d=depth, spctrl_dens=jswp_density)
+    timer2 = time.time()
+    dt = timer2 - timer1
     print(dt)  # print time for wave surface to be generated
 
-    t = time.time()
+    timer1 = time.time()
     eta_fft = fftshift(fft_random_waves(f_seq, jswp_density))
-    t2 = time.time()
-    dt = t2 - t
+    timer2 = time.time()
+    dt = timer2 - timer1
     print(dt)  # print time for wave surface to be generated
 
     spectral_estHs = 4 * np.sqrt(jswp_area)

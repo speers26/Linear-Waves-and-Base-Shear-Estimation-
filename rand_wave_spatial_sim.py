@@ -5,7 +5,7 @@ from scipy import optimize
 import imageio
 
 
-def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
+def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
                         y_range: np.ndarray, h: np.ndarray):
     """returns random wave surface with frequency direction spectrum defined below
 
@@ -21,6 +21,11 @@ def random_wave_surface(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarr
         eta (np.ndarray): random wave surface height [metres] (y_num, x_num)
     """
     np.random.seed(1452)
+
+    om_num = len(om_range)
+    phi_num = len(phi_range)
+    x_num = len(x_range)
+    y_num = len(y_range)
 
     A = np.random.normal(0, 1, size=(phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
     B = np.random.normal(0, 1, size=(phi_num, om_num)) * np.sqrt(Dr_spctrm * d_om * d_phi)
@@ -248,7 +253,7 @@ if __name__ == '__main__':
 
     for it, t in enumerate(trange):
 
-        eta = random_wave_surface(om_range, phi_range, t, x_range, y_range, depth)
+        eta = random_wave_surface_and_kinematics(om_range, phi_range, t, x_range, y_range, depth)
 
         print(np.var(eta))
 
