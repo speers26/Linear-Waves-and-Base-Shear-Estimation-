@@ -76,9 +76,8 @@ def solve_dispersion(omega: np.ndarray, h: np.ndarray):
     Returns:
         k (_type_): wave number [m^-1]
     """
-    f = lambda k: dispersion_diff(k, h, omega)
 
-    k = optimize.bisect(f, 1e-7, 1)
+    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=1, args=(h, omega))
 
     return k
 
@@ -113,7 +112,7 @@ def sprd_fnc(omega: np.ndarray, phi: np.ndarray, om_p: np.ndarray, phi_m: np.nda
         nu (np.ndarray): peak separation shape
         sig_l (np.ndarray): limiting angular width
         sig_r (np.ndarray): angular width shape
-    
+
     Returns:
         dens (_type_): D(omega, phi) for given omega and phi
     """
