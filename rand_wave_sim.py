@@ -55,6 +55,8 @@ def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray
     """
     np.random.seed(1)
 
+    n_times = len(t_range)
+    n_z = len(z_range)
     n_freq = len(f_range)
     df = f_range[1] - f_range[0]
 
@@ -69,13 +71,15 @@ def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray
     k = np.empty(n_freq)
 
     for i_om, om in enumerate(om_range):
-        print(i_om)
-        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=75)  # not sure if getting such big k's makes sense
+        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=75)
 
+    u_x = np.empty((n_z, n_times))
     for i_z, z in enumerate(z_range):
-
-        u_x = np.sum((A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf))
-                     * 2*np.pi*f * (np.cosh(k*(z+d))) / (np.sinh(k*d)), axis=1)
+        u_x[i_z, :] = np.sum((A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf))
+                             * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)), axis=1)
+        for i_t, _ in enumerate(t_range):
+            if eta[i_t] < z:
+                u_x[i_z, i_t] = 0
 
     return eta, u_x
 
@@ -157,20 +161,20 @@ if __name__ == "__main__":
     tp = 10  # sig wave period
     f_p = 1/tp  # peak frequency
 
-    freq = 4.0  # frequency of observations
+    freq = 3. / (2*np.pi)
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
 
     dt = 1/freq  # time step is determined by frequency
     times = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
 
-    f_seq = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # frequencies must relate to time points
+    f_seq = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
 
     jswp_density = djonswap(f_seq, hs, tp)  # finding JONSWAP density to use as spectrum for wave surface
     jswp_area = kth_moment(0, f_seq, jswp_density)  # find area of spectrum
 
     timer1 = time.time()
-    eta = random_waves_surface_and_kinematics(f_seq, times, z_range=z_range, d=depth, spctrl_dens=jswp_density)
+    eta, u_x = random_waves_surface_and_kinematics(f_seq, times, z_range=z_range, d=depth, spctrl_dens=jswp_density)
     timer2 = time.time()
     dt = timer2 - timer1
     print(dt)  # print time for wave surface to be generated
@@ -203,4 +207,11 @@ if __name__ == "__main__":
 
     plt.subplot(4, 1, 4)
     plt.plot(times, eta_fft[0])
+    plt.show()
+
+    plt.figure()
+    z_grid, t_grid = np.meshgrid(z_range, times)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    plt.plot(times, eta, '-k')
+    plt.colorbar()
     plt.show()
