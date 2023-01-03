@@ -19,6 +19,11 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
         u_x (float):
     """
 
+    z_init = z
+
+    if z > 0:  # kinematic stretching
+        z = 0
+
     np.random.seed(1)
 
     f_num = len(om_range)
@@ -29,7 +34,16 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
 
     eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
 
-    return eta
+    k = np.empty(f_num)
+    for i_om, om in enumerate(om_range):
+        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=1)
+
+    u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
+
+    if z_init > eta:
+        u_x = 0
+
+    return eta, u_x
 
 
 if __name__ == "__main__":
@@ -53,17 +67,20 @@ if __name__ == "__main__":
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
     eta = np.empty(t_num)
+    u_x = np.empty((t_num, z_num))
 
     for i_t, t in enumerate(t_range):
-        z = 0
-        eta[i_t] = ptws_random_wave_sim(t=t, z=0, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+        for i_z, z in enumerate(z_range):
+            eta[i_t], u_x[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
 
     print(np.std(eta)*4)
 
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(om_range, jnswp_dens / 2*np.pi)
+    z_grid, t_grid = np.meshgrid(z_range, t_range)
 
-    plt.subplot(2, 1, 2)
-    plt.plot(t_range, eta)
+    plt.figure()
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.colorbar()
     plt.show()
