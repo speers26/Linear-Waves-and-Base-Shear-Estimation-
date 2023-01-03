@@ -2,8 +2,9 @@ import numpy as np
 from scipy import optimize
 import matplotlib.pyplot as plt
 
+
 def airy_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray,
-                      omega: np.ndarray, t: np.ndarray, z: np.ndarray):
+                    omega: np.ndarray, t: np.ndarray, z: np.ndarray):
     """Generates Airy kinematics
 
     Args:
@@ -32,7 +33,8 @@ def airy_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray,
 
     return eta, u, w, du, dw
 
-def airy_dispersion(h:np.ndarray,T:np.ndarray):
+
+def airy_dispersion(h: np.ndarray, T: np.ndarray):
     """solves dispersion relation for wave number
 
     Args:
@@ -40,7 +42,7 @@ def airy_dispersion(h:np.ndarray,T:np.ndarray):
         T (np.ndarray): period [s]
     """
 
-    omega = 2* np.pi / T
+    omega = 2 * np.pi / T
 
     f = lambda k: dispersion_diff(k, h, omega)
 
@@ -49,7 +51,7 @@ def airy_dispersion(h:np.ndarray,T:np.ndarray):
     return k, omega
 
 
-def dispersion_diff(k:np.ndarray,h:np.ndarray,omega:np.ndarray):
+def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
     """function to optimise in airy_dispersion
 
     Args:
@@ -57,10 +59,11 @@ def dispersion_diff(k:np.ndarray,h:np.ndarray,omega:np.ndarray):
         h (np.ndarray): water depth
         omega (np.ndarray): angular frequency
     """
-    g = 9.81 
+    g = 9.81
     return omega ** 2 - g * k * np.tanh(k * h)
 
-def morison_load(u, du, diameter = 1.0, rho = 1024.0, c_m = 1.0, c_d = 1.0):
+
+def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
     """compute unit Morison load for a vertical cylinder
 
     Args:
@@ -77,16 +80,17 @@ def morison_load(u, du, diameter = 1.0, rho = 1024.0, c_m = 1.0, c_d = 1.0):
 
     return rho * c_m * (np.pi / 4) * (diameter ** 2) * du + 0.5 * rho * c_d * diameter * u * np.abs(u)
 
+
 if __name__ == '__main__':
 
     h = 100
     T = 20
     A = 35/2
-    
+
     x = 0
     n_depth = 151
     z_range = np.linspace(-h, 50, n_depth)
-    dz = z_range[1] - z_range[0] 
+    dz = z_range[1] - z_range[0]
 
     n_time = 200
     time = np.linspace(-20, 20, 200)
@@ -97,16 +101,16 @@ if __name__ == '__main__':
     du = np.empty((n_time, n_depth))
     dw = np.empty((n_time, n_depth))
     F = np.empty((n_time, n_depth))
-    
-    k, omega = airy_dispersion(h,T)
+
+    k, omega = airy_dispersion(h, T)
 
     for i_t, t in enumerate(time):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u[i_t, i_z], w[i_t, i_z], du[i_t, i_z], dw[i_t, i_z] = airy_kinematics(k,h,A,x,omega,t,z)
+            eta[i_t], u[i_t, i_z], w[i_t, i_z], du[i_t, i_z], dw[i_t, i_z] = airy_kinematics(k, h, A, x, omega, t, z)
 
             F[i_t, i_z] = morison_load(u[i_t, i_z], du[i_t, i_z])
 
-    base_shear = np.sum(F, axis=1) * dz / 1e6 # 1e6 converts to MN from N
+    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     plt.figure()
     plt.subplot(2, 2, 1)
@@ -149,4 +153,3 @@ if __name__ == '__main__':
     plt.xlabel('Time')
 
     plt.show()
-
