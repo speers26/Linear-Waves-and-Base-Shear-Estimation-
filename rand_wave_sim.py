@@ -29,7 +29,7 @@ def djonswap(f, hs, tp):
 
     sigma = (f < fp) * sigma_a + (f >= fp) * sigma_b
 
-    gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2)) 
+    gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2))
     dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
 
     area = sum(dens*df)
@@ -99,8 +99,8 @@ def fft_random_waves(f: np.ndarray, spctrl_dens: np.ndarray):
     n_freq = len(f)
     df = f[1] - f[0]
 
-    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df) 
-    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df) 
+    A = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
+    B = np.random.normal(0, 1, size=(1, n_freq)) * np.sqrt(spctrl_dens*df)
 
     i = complex(0, 1)
     Z = A + B * i

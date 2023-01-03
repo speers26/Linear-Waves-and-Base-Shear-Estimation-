@@ -6,7 +6,7 @@ import imageio
 
 
 def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
-                        y_range: np.ndarray, h: float):
+                                       y_range: np.ndarray, h: float):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
