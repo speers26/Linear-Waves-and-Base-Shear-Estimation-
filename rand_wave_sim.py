@@ -161,7 +161,7 @@ if __name__ == "__main__":
     tp = 10.  # sig wave period
     f_p = 1/tp  # peak frequency
 
-    freq = 3. / (2*np.pi)
+    freq = 3. / (2*np.pi)  # 4.00 
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
 
