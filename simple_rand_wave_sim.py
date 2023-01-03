@@ -19,11 +19,6 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
         u_x (float):
     """
 
-    z_init = z
-
-    if z > 0:  # kinematic stretching
-        z = 0
-
     np.random.seed(1)
 
     f_num = len(om_range)
@@ -34,16 +29,21 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
 
     eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
 
+    z_init = z
+    if z > 0:  # kinematic stretching
+        z = 0  # or z = (d * (d + z) / (d + eta)) - d for Wheeler stretching
+
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
         k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=1)
 
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
+    u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
 
     if z_init > eta:
-        u_x = 0
+        u_x = u_z = 0
 
-    return eta, u_x
+    return eta, u_x, u_z
 
 
 if __name__ == "__main__":
@@ -68,19 +68,32 @@ if __name__ == "__main__":
 
     eta = np.empty(t_num)
     u_x = np.empty((t_num, z_num))
+    u_z = np.empty((t_num, z_num))
 
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range,
+                                                                          spctrl_dens=jnswp_dens)
 
     print(np.std(eta)*4)
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
     plt.figure()
+    plt.subplot(2, 1, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
     plt.plot(t_range, eta, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
+    plt.title('u')
     plt.colorbar()
+
+    plt.subplot(2, 1, 2)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('v')
+    plt.colorbar()
+
     plt.show()
