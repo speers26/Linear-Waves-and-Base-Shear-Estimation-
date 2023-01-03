@@ -78,7 +78,7 @@ def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray
         u_x[i_z, :] = np.sum((A * np.cos(2*np.pi*outer_tf) + B * np.sin(2*np.pi*outer_tf))
                              * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)), axis=1)
         for i_t, _ in enumerate(t_range):
-            if eta[i_t] < z:
+            if eta[i_t] < z or z > 0:
                 u_x[i_z, i_t] = 0
 
     return eta, u_x
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     tp = 10.  # sig wave period
     f_p = 1/tp  # peak frequency
 
-    freq = 3. / (2*np.pi)  # 4.00 
+    freq = 4.00  # 3. / (2*np.pi)
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
     plt.figure()
     z_grid, t_grid = np.meshgrid(z_range, times)
-    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    plt.scatter(z_grid.flatten(), t_grid.flatten(),  s=1, c=u_x.flatten())
     plt.plot(times, eta, '-k')
     plt.colorbar()
     plt.show()
