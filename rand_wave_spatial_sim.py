@@ -6,7 +6,7 @@ import imageio
 
 
 def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarray, t: np.ndarray, x_range: np.ndarray,
-                        y_range: np.ndarray, h: np.ndarray):
+                        y_range: np.ndarray, h: float):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -15,7 +15,7 @@ def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarr
         t (np.ndarray): time (scalar)
         x_range (np.ndarray): range of x to evaluate over (forms a grid with y_range)
         y_range (np.ndarray): range of y to evaluate over (forms a grid with x_range)
-        h (np.ndarray): water depth [metres]
+        h (float): water depth [metres]
 
     Returns:
         eta (np.ndarray): random wave surface height [metres] (y_num, x_num)
@@ -46,23 +46,23 @@ def random_wave_surface_and_kinematics(om_range: np.ndarray, phi_range: np.ndarr
     return eta
 
 
-def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.ndarray,
-                  r: np.ndarray, phi_m: np.ndarray, beta: np.ndarray, nu: np.ndarray, sig_l: np.ndarray,
-                  sig_r: np.ndarray):
+def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float, gamma: float,
+                  r: float, phi_m: float, beta: float, nu: float, sig_l: float,
+                  sig_r: float):
     """returns frequency direction spectrum for a single angular frequency and direction.
 
     Args:
         omega (np.ndarray): angular frequency
         phi (np.ndarray): direction (from)
-        alpha (np.ndarray): scaling parameter
-        om_p (np.ndarray): peak ang freq
-        gamma (np.ndarray): peak enhancement factor
-        r (np.ndarray): spectral tail decay index
-        phi_m (np.ndarray): mean direction
-        beta (np.ndarray): limiting peak separation
-        nu (np.ndarray): peak separation shape
-        sig_l (np.ndarray): limiting angular width
-        sig_r (np.ndarray): angular width shape
+        alpha (float): scaling parameter
+        om_p (float): peak ang freq
+        gamma (float): peak enhancement factor
+        r (float): spectral tail decay index
+        phi_m (float): mean direction
+        beta (float): limiting peak separation
+        nu (float): peak separation shape
+        sig_l (float): limiting angular width
+        sig_r (float): angular width shape
 
     Returns:
         dens (np.ndarray): freq direction spectrum [] (??, ??)
@@ -72,15 +72,15 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: np.ndarray, om_p: n
     return dens
 
 
-def solve_dispersion(omega: np.ndarray, h: np.ndarray, upp: float):
+def solve_dispersion(omega: float, h: float, upp: float):
     """returns wave number k for given angular frequency omega
     Args:
-        omega (np.ndarray): angular frequency [s^-1]
-        h (np.ndarray): water depth [metres]
+        omega (float): angular frequency [s^-1]
+        h (float): water depth [metres]
         upp (float): upper limit of interval to find k over []
 
     Returns:
-        k (_type_): wave number [m^-1]
+        k (float): wave number [m^-1]
     """
 
     k = optimize.bisect(f=dispersion_diff, a=1e-7, b=upp, args=(h, omega))
@@ -88,15 +88,15 @@ def solve_dispersion(omega: np.ndarray, h: np.ndarray, upp: float):
     return k
 
 
-def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
+def dispersion_diff(k: float, h: float, omega: float):
     """function to optimise in solve_dispersion
     Args:
-        k (np.ndarray): wave number
-        h (np.ndarray): water depth
-        omega (np.ndarray): angular frequency
+        k (float): wave number
+        h (float): water depth
+        omega (float): angular frequency
 
     Returns:
-        diff (_type_): difference to find zero in solve_dispersion 
+        diff (float): difference to find zero in solve_dispersion
     """
     g = 9.81
 
@@ -105,22 +105,22 @@ def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
     return diff
 
 
-def sprd_fnc(omega: np.ndarray, phi: np.ndarray, om_p: np.ndarray, phi_m: np.ndarray, beta: np.ndarray, nu: np.ndarray,
-             sig_l: np.ndarray, sig_r: np.ndarray):
+def sprd_fnc(omega: float, phi: float, om_p: float, phi_m: float, beta: float, nu: float,
+             sig_l: float, sig_r: float):
     """returns bimodal wrapped Gaussian spreading function D(omega, phi) at a single point
 
     Args:
-        omega (np.ndarray): angular frequency
-        phi (np.ndarray): direction (from)
-        om_p (np.ndarray): peak ang freq
-        phi_m (np.ndarray): mean direction
-        beta (np.ndarray): limiting peak separation
-        nu (np.ndarray): peak separation shape
-        sig_l (np.ndarray): limiting angular width
-        sig_r (np.ndarray): angular width shape
+        omega (float): angular frequency
+        phi (float): direction (from)
+        om_p (float): peak ang freq
+        phi_m (float): mean direction
+        beta (float): limiting peak separation
+        nu (float): peak separation shape
+        sig_l (float): limiting angular width
+        sig_r (float): angular width shape
 
     Returns:
-        dens (_type_): D(omega, phi) for given omega and phi
+        dens (float): D(omega, phi) for given omega and phi
     """
     k_num = 200
     k_range = np.linspace(start=-k_num/2, stop=k_num/2, num=k_num + 1)
@@ -143,18 +143,18 @@ def sprd_fnc(omega: np.ndarray, phi: np.ndarray, om_p: np.ndarray, phi_m: np.nda
     return dens
 
 
-def d_jonswap(omega: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.ndarray, r: np.ndarray):
+def d_jonswap(omega: float, alpha: float, om_p: float, gamma: float, r: float):
     """jonswap density using formulation used in Jake's paper
 
     Args:
-        omega (np.ndarray): angular frequency
-        alpha (np.ndarray): scaling parameter
-        om_p (np.ndarray): peak ang freq
-        gamma (np.ndarray): peak enhancement factor
-        r (np.ndarray): spectral tail decay index
+        omega (float): angular frequency
+        alpha (float): scaling parameter
+        om_p (float): peak ang freq
+        gamma (float): peak enhancement factor
+        r (float): spectral tail decay index
 
     Returns:
-        dens (_type_): JONSWAP density for given omega
+        dens (float): JONSWAP density for given omega
     """
 
     delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)))) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
@@ -166,8 +166,8 @@ def d_jonswap(omega: np.ndarray, alpha: np.ndarray, om_p: np.ndarray, gamma: np.
 
 if __name__ == '__main__':
 
-    depth = 100
-    hs = 30
+    depth = 100.
+    hs = 30.
 
     # pars set accoring to 'classic example' given in
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
@@ -175,9 +175,9 @@ if __name__ == '__main__':
     alpha = 0.7
     om_p = 0.8
     gamma = 3.3  # make larger to decrease width of Jonswap
-    r = 5
+    r = 5.
     phi_m = np.pi
-    beta = 4 * 0
+    beta = 4.
     nu = 2.7
     sig_l = 0.55  # make smaller to decrease directional spreading
     sig_r = 0.26  # make zero to decrease directional spreading

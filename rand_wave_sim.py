@@ -39,7 +39,7 @@ def djonswap(f, hs, tp):
     return dens
 
 
-def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray, z_range: np.ndarray, d: np.ndarray,
+def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray, z_range: np.ndarray, d: float,
                                         spctrl_dens: np.ndarray):
     """Generates random wave kinematics and surface (with x = 0)
 
@@ -47,7 +47,7 @@ def random_waves_surface_and_kinematics(f_range: np.ndarray, t_range: np.ndarray
         f_range (np.ndarray): frequencies [hertz]
         t_range (np.ndarray): times [seconds]
         z_range (np.ndarray): depths [metres]
-        d (np.ndarray): water depth [metres]
+        d (float): water depth [metres]
         spctrl_dens (np.ndarray): spectral densities for given frequencies []
 
     Returns:
@@ -133,11 +133,11 @@ def random_waves_acf(tau: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
     return acf_vec
 
 
-def kth_moment(k: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
+def kth_moment(k: int, f: np.ndarray, spctrl_dens: np.ndarray):
     """function to return the kth moment of the given spectrum evaulated at given frequencies
 
     Args:
-        k (np.ndarray): moment
+        k (int): moment
         f_seq (np.ndarray): frequencies [hertz]
 
     Returns:
@@ -153,12 +153,12 @@ def kth_moment(k: np.ndarray, f: np.ndarray, spctrl_dens: np.ndarray):
 
 if __name__ == "__main__":
 
-    depth = 100  # water depth
+    depth = 100.  # water depth
     z_num = 151
     z_range = np.linspace(-depth, 50, z_num)
 
-    hs = 35  # sig wave height
-    tp = 10  # sig wave period
+    hs = 35.  # sig wave height
+    tp = 10.  # sig wave period
     f_p = 1/tp  # peak frequency
 
     freq = 3. / (2*np.pi)
