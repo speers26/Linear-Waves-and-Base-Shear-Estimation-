@@ -17,9 +17,10 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     Returns:
         eta (float):
         u_x (float):
+        u_z (float):
     """
 
-    np.random.seed(1)
+    np.random.seed(1234)
 
     f_num = len(om_range)
     df = (om_range[1] - om_range[0]) / (2*np.pi)
@@ -31,7 +32,8 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
 
     z_init = z
     if z > 0:  # kinematic stretching
-        z = 0  # or z = (d * (d + z) / (d + eta)) - d for Wheeler stretching
+        z = 0
+        # z = (d * (d + z) / (d + eta)) - d   # for Wheeler stretching
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
@@ -51,8 +53,8 @@ if __name__ == "__main__":
     # we will propagate a random wave and its kinematics at a fixed point x=0
 
     depth = 100.
-    hs = 30.
-    tp = 10.
+    hs = 35.
+    tp = 20.
 
     t_num = 200
     t_range = np.linspace(-50, 50, t_num)

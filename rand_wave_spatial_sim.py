@@ -167,13 +167,14 @@ def d_jonswap(omega: float, alpha: float, om_p: float, gamma: float, r: float):
 if __name__ == '__main__':
 
     depth = 100.
-    hs = 30.
+    hs = 35.
+    # tp = 20.  # can set this too if we like
 
     # pars set accoring to 'classic example' given in
     # https://www.mendeley.com/reference-manager/reader/6c295827-d975-39e4-ad43-c73f0f51b060/21c9456c-b9ef-e1bb-1d36-7c1780658222
     # play with these to change form of wave surface
     alpha = 0.7
-    om_p = 0.8
+    om_p = 0.8  # 1/tp * 2*np.pi
     gamma = 3.3  # make larger to decrease width of Jonswap
     r = 5.
     phi_m = np.pi
