@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.fft import fft, fftshift
 import airy as arwave  # for morison eq function
 import rand_wave_sim as rwave  # for JONSWAP
 import rand_wave_spatial_sim as rws  # for dispersion relation
@@ -66,8 +67,28 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
         spctrl_dens (np.ndarray): _description_
 
     Returns:
-        eta (np.ndarray): 
+        eta (np.ndarray): wave surface height [m]
+        u_x (np.ndarray): horizontal velociy at given z [ms^-1]
+        u_v (np.ndarray): vertical velocity at given z [ms^-1]
+        du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
+        du_v (np.ndarray): vertical acceleration at given z [ms^-2]
     """
+
+    np.random.seed(1234)
+
+    f_range = om_range / (2*np.pi)
+    f_num = len(f_range)
+    df = f_range[1] - f_range[0]
+
+    A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
+    B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
+
+    i = complex(0, 1)
+    g = A + B * i
+
+    eta = np.real(fftshift(fft(g, f_num)))
+
+    return eta
 
 
 if __name__ == "__main__":
@@ -81,7 +102,7 @@ if __name__ == "__main__":
     z_num = 150
     z_range = np.linspace(-depth, 50, z_num)
 
-    # don't quite get this bit - for FFT to work 
+    # don't quite get this bit - for FFT to work
     freq = 1.00  # 3. / (2*np.pi)
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
@@ -112,6 +133,8 @@ if __name__ == "__main__":
 
     dz = z_range[1] - z_range[0]
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
+
+    eta_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
@@ -152,5 +175,16 @@ if __name__ == "__main__":
     plt.plot(t_grid, base_shear)
     plt.ylabel('Force [MN]')
     plt.xlabel('Time')
+
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(t_range, eta_fft[0], '-r')
+    plt.ylabel('depth')
+    plt.xlabel('time')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(t_range, eta, '-b')
+    plt.ylabel('depth')
+    plt.xlabel('time')
 
     plt.show()
