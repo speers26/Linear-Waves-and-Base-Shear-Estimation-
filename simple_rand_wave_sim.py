@@ -42,6 +42,8 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
     u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
 
+    # du_x =
+
     if z_init > eta:
         u_x = u_z = 0
 
