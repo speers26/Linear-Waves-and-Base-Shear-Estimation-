@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import airy as arwave  # for morison eq function
 import rand_wave_sim as rwave  # for JONSWAP
 import rand_wave_spatial_sim as rws  # for dispersion relation
 
@@ -42,12 +43,15 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
     u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
 
-    # du_x =
+    du_x = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range**2 * (np.cosh(k*(z+d)))
+                  / (np.sinh(k*d)))
+    du_z = np.sum((-A * np.cos(om_range*t) - B * np.sin(om_range*t)) * om_range**2 * (np.sinh(k*(z+d)))
+                  / (np.sinh(k*d)))
 
     if z_init > eta:
-        u_x = u_z = 0
+        u_x = u_z = du_x = du_z = 0
 
-    return eta, u_x, u_z
+    return eta, u_x, u_z, du_x, du_z
 
 
 if __name__ == "__main__":
@@ -73,18 +77,24 @@ if __name__ == "__main__":
     eta = np.empty(t_num)
     u_x = np.empty((t_num, z_num))
     u_z = np.empty((t_num, z_num))
+    du_x = np.empty((t_num, z_num))
+    du_z = np.empty((t_num, z_num))
+    F = np.empty((t_num, z_num))
 
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range,
-                                                                          spctrl_dens=jnswp_dens)
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+            F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
 
     print(np.std(eta)*4)
+
+    dz = z_range[1] - z_range[0]
+    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
     plt.figure()
-    plt.subplot(2, 1, 1)
+    plt.subplot(2, 2, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
     plt.plot(t_range, eta, '-k')
     plt.xlabel('time')
@@ -92,12 +102,33 @@ if __name__ == "__main__":
     plt.title('u')
     plt.colorbar()
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 2, 2)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
     plt.plot(t_range, eta, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('v')
     plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('du')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('dv')
+    plt.colorbar()
+
+    plt.figure()
+    plt.plot(t_grid, base_shear)
+    plt.ylabel('Force [MN]')
+    plt.xlabel('Time')
 
     plt.show()
