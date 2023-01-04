@@ -40,7 +40,7 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
-        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=1)
+        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=75)
 
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
     u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
@@ -64,6 +64,9 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
         d (np.ndarray): _description_
         om_range (np.ndarray): _description_
         spctrl_dens (np.ndarray): _description_
+
+    Returns:
+        eta (np.ndarray): 
     """
 
 
@@ -75,16 +78,22 @@ if __name__ == "__main__":
     hs = 35.
     tp = 20.
 
-    t_num = 200
-    t_range = np.linspace(-50, 50, t_num)
-
     z_num = 150
     z_range = np.linspace(-depth, 50, z_num)
 
-    om_num = 50
-    om_range = np.linspace(start=1e-3, stop=3, num=om_num)
+    # don't quite get this bit - for FFT to work 
+    freq = 1.00  # 3. / (2*np.pi)
+    period = 100  # total time range
+    nT = np.floor(period*freq)  # number of time points to evaluate
+    t_num = int(nT)  # to work with rest of the code
 
-    f_range = om_range / (np.pi * 2)
+    dt = 1/freq  # time step is determined by frequency
+    t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
+
+    f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
+    om_range = f_range * (2*np.pi)
+    # all above taken from rand_wave_sim.py
+
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
     eta = np.empty(t_num)
