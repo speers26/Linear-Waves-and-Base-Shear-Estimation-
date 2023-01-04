@@ -91,6 +91,29 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     return eta
 
 
+def alt_solve_dispersion(omega: float, d: float):
+    """uses method of (Guo, 2002) to solve dispersion relation for k
+
+    Args:
+        omega (float): angular frequency [s^-1]
+        d (float): water depth [m]
+
+    Returns:
+        k (float): wave number [m^-1]
+    """
+
+    g = 9.81
+    beta = 2.4901
+
+    x = d * omega / np.sqrt(g * d)
+
+    y = x**2 * (1 - np.exp(-x**beta))**(-1/beta)
+
+    k = y / d
+
+    return k
+
+
 if __name__ == "__main__":
 
     # we will propagate a random wave and its kinematics at a fixed point x=0
