@@ -16,9 +16,11 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
         spctrl_dens (np.ndarray): spectrum corresponding to om_range
 
     Returns:
-        eta (float):
-        u_x (float):
-        u_z (float):
+        eta (float): surface level [m]
+        u_x (float): horizontal velocity [ms^-1]
+        u_z (float): vertical velocity [ms^-1]
+        du_x (float): horizontal acceleration [ms^-2]
+        du_z (float) vertical acceleration [ms^-2]
     """
 
     np.random.seed(1234)
@@ -52,6 +54,17 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
         u_x = u_z = du_x = du_z = 0
 
     return eta, u_x, u_z, du_x, du_z
+
+
+def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray, spctrl_dens: np.ndarray):
+    """generates random wave surface and kinematics using FFT
+
+    Args:
+        z_range (np.ndarray): _description_
+        d (np.ndarray): _description_
+        om_range (np.ndarray): _description_
+        spctrl_dens (np.ndarray): _description_
+    """
 
 
 if __name__ == "__main__":
