@@ -5,7 +5,7 @@ import airy as arwave  # for morison eq function
 import rand_wave_sim as rwave  # for JONSWAP
 import rand_wave_spatial_sim as rws  # for dispersion relation
 
-
+# below function isn't used - just to test fft version is working right
 def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spctrl_dens: np.ndarray):
     """returns pointwave surface level eta and kinematics for x=0
 
@@ -84,9 +84,9 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
     i = complex(0, 1)
-    g = A + B * i
+    g1 = A + B * i
 
-    eta = np.real(fftshift(fft(g)))
+    eta = np.real(fftshift(fft(g1)))
 
     k = np.empty(f_num)
 
@@ -96,6 +96,8 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
 
     u_x = np.empty((f_num, len(z_range)))
     du_x = np.empty((f_num, len(z_range)))
+    u_z = np.empty((f_num, len(z_range)))
+    du_z = np.empty((f_num, len(z_range)))
 
     for i_z, z in enumerate(z_range):
 
@@ -106,11 +108,15 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
 
         g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
         g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
         u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
         du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
+        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
+        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
 
-    return eta, u_x, du_x
+    return eta, u_x, u_z, du_x, du_z
 
 
 def alt_solve_dispersion(omega: float, d: float):
@@ -146,6 +152,7 @@ if __name__ == "__main__":
 
     z_num = 150
     z_range = np.linspace(-depth, 50, z_num)
+    dz = z_range[1] - z_range[0]
 
     # don't quite get this bit - for FFT to work
     freq = 1.00  # 3. / (2*np.pi)
@@ -162,79 +169,19 @@ if __name__ == "__main__":
 
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
-    # eta = np.empty(t_num)
-    # u_x = np.empty((t_num, z_num))
-    # u_z = np.empty((t_num, z_num))
-    # du_x = np.empty((t_num, z_num))
-    # du_z = np.empty((t_num, z_num))
-    # F = np.empty((t_num, z_num))
+    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
 
-    # for i_t, t in enumerate(t_range):
-    #     for i_z, z in enumerate(z_range):
-    #         eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
-    #         F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
-
-    # print(np.std(eta)*4)
-
-    # dz = z_range[1] - z_range[0]
-    # base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
-
-    eta_fft, u_x_fft, du_x_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
+    F = np.empty((t_num, z_num))
+    for i_t, t in enumerate(t_range):
+        for i_z, z in enumerate(z_range):
+            F[i_t, i_z] = arwave.morison_load(u_x_fft[i_t, i_z], du_x_fft[i_t, i_z])
+    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
-    # plt.figure()
-    # plt.subplot(2, 2, 1)
-    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
-    # plt.plot(t_range, eta, '-k')
-    # plt.xlabel('time')
-    # plt.ylabel('depth')
-    # plt.title('u')
-    # plt.colorbar()
-
-    # plt.subplot(2, 2, 2)
-    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
-    # plt.plot(t_range, eta, '-k')
-    # plt.xlabel('time')
-    # plt.ylabel('depth')
-    # plt.title('v')
-    # plt.colorbar()
-
-    # plt.subplot(2, 2, 3)
-    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x.flatten())
-    # plt.plot(t_range, eta, '-k')
-    # plt.xlabel('time')
-    # plt.ylabel('depth')
-    # plt.title('du')
-    # plt.colorbar()
-
-    # plt.subplot(2, 2, 4)
-    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z.flatten())
-    # plt.plot(t_range, eta, '-k')
-    # plt.xlabel('time')
-    # plt.ylabel('depth')
-    # plt.title('dv')
-    # plt.colorbar()
-
-    # plt.figure()
-    # plt.plot(t_grid, base_shear)
-    # plt.ylabel('Force [MN]')
-    # plt.xlabel('Time')
-
-    # plt.figure()
-    # plt.subplot(2, 1, 1)
-    # plt.plot(t_range, eta_fft[0], '-r')
-    # plt.ylabel('depth')
-    # plt.xlabel('time')
-
-    # plt.subplot(2, 1, 2)
-    # plt.plot(t_range, eta, '-b')
-    # plt.ylabel('depth')
-    # plt.xlabel('time')
-
     plt.figure()
 
-    plt.subplot(2, 1, 1)
+    plt.subplot(2, 2, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x_fft.flatten())
     plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
@@ -242,12 +189,33 @@ if __name__ == "__main__":
     plt.title('u')
     plt.colorbar()
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 2, 2)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z_fft.flatten())
+    plt.plot(t_range, eta_fft[0], '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('v')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x_fft.flatten())
     plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('du')
     plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z_fft.flatten())
+    plt.plot(t_range, eta_fft[0], '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('dv')
+    plt.colorbar()
+
+    plt.figure()
+    plt.plot(t_grid, base_shear)
+    plt.ylabel('Force [MN]')
+    plt.xlabel('Time')
 
     plt.show()
