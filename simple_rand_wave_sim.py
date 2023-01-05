@@ -86,9 +86,29 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     i = complex(0, 1)
     g = A + B * i
 
-    eta = np.real(fftshift(fft(g, f_num)))
+    eta = np.real(fftshift(fft(g)))
 
-    return eta
+    k = np.empty(f_num)
+
+    for i_f, f in enumerate(f_range):
+        omega = 2 * np.pi * f
+        k[i_f] = rws.solve_dispersion(omega, d, 75)
+
+    u_x = np.empty((f_num, len(z_range)))
+
+    for i_z, z in enumerate(z_range):
+
+        z_init = z
+        # kinematic stretching
+        if z > 0:
+            z = 0
+
+        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+        g3 = (B-A*i)
+
+        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
+
+    return eta, u_x
 
 
 def alt_solve_dispersion(omega: float, d: float):
@@ -140,74 +160,82 @@ if __name__ == "__main__":
 
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
-    eta = np.empty(t_num)
-    u_x = np.empty((t_num, z_num))
-    u_z = np.empty((t_num, z_num))
-    du_x = np.empty((t_num, z_num))
-    du_z = np.empty((t_num, z_num))
-    F = np.empty((t_num, z_num))
+    # eta = np.empty(t_num)
+    # u_x = np.empty((t_num, z_num))
+    # u_z = np.empty((t_num, z_num))
+    # du_x = np.empty((t_num, z_num))
+    # du_z = np.empty((t_num, z_num))
+    # F = np.empty((t_num, z_num))
 
-    for i_t, t in enumerate(t_range):
-        for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
-            F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+    # for i_t, t in enumerate(t_range):
+    #     for i_z, z in enumerate(z_range):
+    #         eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+    #         F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
 
-    print(np.std(eta)*4)
+    # print(np.std(eta)*4)
 
-    dz = z_range[1] - z_range[0]
-    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
+    # dz = z_range[1] - z_range[0]
+    # base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
-    eta_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
+    eta_fft, u_x_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
+    # plt.figure()
+    # plt.subplot(2, 2, 1)
+    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    # plt.plot(t_range, eta, '-k')
+    # plt.xlabel('time')
+    # plt.ylabel('depth')
+    # plt.title('u')
+    # plt.colorbar()
+
+    # plt.subplot(2, 2, 2)
+    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
+    # plt.plot(t_range, eta, '-k')
+    # plt.xlabel('time')
+    # plt.ylabel('depth')
+    # plt.title('v')
+    # plt.colorbar()
+
+    # plt.subplot(2, 2, 3)
+    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x.flatten())
+    # plt.plot(t_range, eta, '-k')
+    # plt.xlabel('time')
+    # plt.ylabel('depth')
+    # plt.title('du')
+    # plt.colorbar()
+
+    # plt.subplot(2, 2, 4)
+    # plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z.flatten())
+    # plt.plot(t_range, eta, '-k')
+    # plt.xlabel('time')
+    # plt.ylabel('depth')
+    # plt.title('dv')
+    # plt.colorbar()
+
+    # plt.figure()
+    # plt.plot(t_grid, base_shear)
+    # plt.ylabel('Force [MN]')
+    # plt.xlabel('Time')
+
+    # plt.figure()
+    # plt.subplot(2, 1, 1)
+    # plt.plot(t_range, eta_fft[0], '-r')
+    # plt.ylabel('depth')
+    # plt.xlabel('time')
+
+    # plt.subplot(2, 1, 2)
+    # plt.plot(t_range, eta, '-b')
+    # plt.ylabel('depth')
+    # plt.xlabel('time')
+
     plt.figure()
-    plt.subplot(2, 2, 1)
-    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
-    plt.plot(t_range, eta, '-k')
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x_fft.flatten())
+    plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('u')
     plt.colorbar()
-
-    plt.subplot(2, 2, 2)
-    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
-    plt.plot(t_range, eta, '-k')
-    plt.xlabel('time')
-    plt.ylabel('depth')
-    plt.title('v')
-    plt.colorbar()
-
-    plt.subplot(2, 2, 3)
-    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x.flatten())
-    plt.plot(t_range, eta, '-k')
-    plt.xlabel('time')
-    plt.ylabel('depth')
-    plt.title('du')
-    plt.colorbar()
-
-    plt.subplot(2, 2, 4)
-    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z.flatten())
-    plt.plot(t_range, eta, '-k')
-    plt.xlabel('time')
-    plt.ylabel('depth')
-    plt.title('dv')
-    plt.colorbar()
-
-    plt.figure()
-    plt.plot(t_grid, base_shear)
-    plt.ylabel('Force [MN]')
-    plt.xlabel('Time')
-
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(t_range, eta_fft[0], '-r')
-    plt.ylabel('depth')
-    plt.xlabel('time')
-
-    plt.subplot(2, 1, 2)
-    plt.plot(t_range, eta, '-b')
-    plt.ylabel('depth')
-    plt.xlabel('time')
 
     plt.show()
