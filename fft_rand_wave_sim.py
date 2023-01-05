@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fft import fft, fftshift
 import airy as arwave  # for morison eq function
-import rand_wave_sim as rwave  # for JONSWAP
+import old_rand_wave_sim as rwave  # for JONSWAP
 import rand_wave_spatial_sim as rws  # for dispersion relation
+
 
 # below function isn't used - just to test fft version is working right
 def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spctrl_dens: np.ndarray):
