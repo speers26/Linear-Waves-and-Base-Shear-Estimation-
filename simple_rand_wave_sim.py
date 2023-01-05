@@ -95,6 +95,7 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
         k[i_f] = rws.solve_dispersion(omega, d, 75)
 
     u_x = np.empty((f_num, len(z_range)))
+    du_x = np.empty((f_num, len(z_range)))
 
     for i_z, z in enumerate(z_range):
 
@@ -104,11 +105,12 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
             z = 0
 
         g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-        g3 = (B-A*i)
+        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
 
         u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
+        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
 
-    return eta, u_x
+    return eta, u_x, du_x
 
 
 def alt_solve_dispersion(omega: float, d: float):
@@ -177,7 +179,7 @@ if __name__ == "__main__":
     # dz = z_range[1] - z_range[0]
     # base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
-    eta_fft, u_x_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
+    eta_fft, u_x_fft, du_x_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
@@ -231,11 +233,21 @@ if __name__ == "__main__":
     # plt.xlabel('time')
 
     plt.figure()
+
+    plt.subplot(2, 1, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x_fft.flatten())
     plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('u')
+    plt.colorbar()
+
+    plt.subplot(2, 1, 2)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x_fft.flatten())
+    plt.plot(t_range, eta_fft[0], '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('du')
     plt.colorbar()
 
     plt.show()
