@@ -36,7 +36,6 @@ def ptws_cond_rand_wave_sim(t: float, a: float, om_range: np.ndarray, spctrl_den
     return eta
 
 
-
 if __name__ == "__main__":
 
     hs = 35.
