@@ -100,22 +100,23 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     u_z = np.empty((f_num, len(z_range)))
     du_z = np.empty((f_num, len(z_range)))
 
-    for i_z, z in enumerate(z_range):
+    z_num = len(z_range)
+    z_ind = np.linspace(0, z_num-1, z_num)
+    wheeler_z_range = np.linspace(-d, 0, z_num)
 
-        z_init = z
-        # kinematic stretching
-        if z > 0:
-            z = 0
+    for (i_z, z, w_z) in zip(z_ind, z_range, wheeler_z_range):
 
-        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
-        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+        i_z = int(i_z)
 
-        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
-        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
-        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
-        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
+        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(w_z + d))) / (np.sinh(k*d))
+        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(w_z+d))) / (np.sinh(k*d))
+        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
+        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
+
+        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z < eta)
+        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z < eta)
+        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z < eta)
+        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z < eta)
 
     return eta, u_x, u_z, du_x, du_z
 
