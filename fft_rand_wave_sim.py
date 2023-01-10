@@ -37,8 +37,8 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
 
     z_init = z
     if z > 0:  # kinematic stretching
-        z = 0
-        # z = (d * (d + z) / (d + eta)) - d   # for Wheeler stretching
+        # z = 0
+        z = d * (d + z) / (d + eta) - d   # for Wheeler stretching
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
@@ -62,10 +62,10 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     """generates random wave surface and kinematics using FFT
 
     Args:
-        z_range (np.ndarray): _description_
-        d (np.ndarray): _description_
-        om_range (np.ndarray): _description_
-        spctrl_dens (np.ndarray): _description_
+        z_range (np.ndarray): range of depths [m]
+        d (float): water depth
+        om_range (np.ndarray): range of angular velocities [s^-1]
+        spctrl_dens (np.ndarray): spectrum corresponding to om_range
 
     Returns:
         eta (np.ndarray): wave surface height [m]
@@ -107,6 +107,10 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     for (i_z, z, w_z) in zip(z_ind, z_range, wheeler_z_range):
 
         i_z = int(i_z)
+
+        w_z = z
+        if z > 0:
+            w_z = 0
 
         g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(w_z + d))) / (np.sinh(k*d))
         g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(w_z+d))) / (np.sinh(k*d))
@@ -210,6 +214,62 @@ if __name__ == "__main__":
     plt.subplot(2, 2, 4)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z_fft.flatten())
     plt.plot(t_range, eta_fft[0], '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('dv')
+    plt.colorbar()
+
+    plt.figure()
+    plt.plot(t_grid, base_shear)
+    plt.ylabel('Force [MN]')
+    plt.xlabel('Time')
+
+    plt.show()
+
+    # run below to show wheeler stretching for non-fft
+
+    eta = np.empty(t_num)
+    u_x = np.empty((t_num, z_num))
+    u_z = np.empty((t_num, z_num))
+    du_x = np.empty((t_num, z_num))
+    du_z = np.empty((t_num, z_num))
+    F = np.empty((t_num, z_num))
+
+    for i_t, t in enumerate(t_range):
+        for i_z, z in enumerate(z_range):
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+            F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+
+    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
+
+    plt.figure()
+    plt.subplot(2, 2, 1)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('u')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('v')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x.flatten())
+    plt.plot(t_range, eta, '-k')
+    plt.xlabel('time')
+    plt.ylabel('depth')
+    plt.title('du')
+    plt.colorbar()
+
+    plt.subplot(2, 2, 4)
+    plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z.flatten())
+    plt.plot(t_range, eta, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('dv')
