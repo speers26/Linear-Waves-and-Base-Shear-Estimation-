@@ -18,6 +18,8 @@ def ptws_cond_rand_wave_sim(t: float, a: float, om_range: np.ndarray, spctrl_den
 
     np.random.seed(1234)
 
+    m = 0
+
     f_num = len(om_range)
     df = (om_range[1] - om_range[0]) / (2*np.pi)
 
@@ -25,24 +27,28 @@ def ptws_cond_rand_wave_sim(t: float, a: float, om_range: np.ndarray, spctrl_den
     B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
     c = df * spctrl_dens
-    d = df * spctrl_dens * om_range**2
+    d = df * spctrl_dens * om_range
 
-    Q = 1/c * (a - np.sum(A))
-    R = 1/d * (0 - np.sum(om_range * A))
+    e = c * np.cos(om_range*t)
+    f = d * np.sin(om_range*t)
 
-    eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t) + Q * c * np.cos(om_range*t)
-                 + R * d * np.sin(om_range*t))
+    Q = (a - np.sum(A))/np.sum(c)
+    R = (m - np.sum(om_range * A))/np.sum(d*om_range)
 
-    return eta
+    eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
+    eta_cond = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t) + Q * e + R * f)
+
+    return eta, eta_cond
 
 
 if __name__ == "__main__":
 
-    hs = 35.
-    tp = 20.
+    hs = 5.
+    tp = 5.
+    a = 5
 
     t_num = 200
-    t_range = np.linspace(-50, 50, t_num)
+    t_range = np.linspace(-25, 25, t_num)
 
     om_num = 50
     om_range = np.linspace(start=1e-1, stop=3, num=om_num)
@@ -51,10 +57,12 @@ if __name__ == "__main__":
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
     eta = np.empty(t_num)
+    eta_cond = np.empty(t_num)
 
     for i_t, t in enumerate(t_range):
-        eta[i_t] = ptws_cond_rand_wave_sim(t=t, a=50, om_range=om_range, spctrl_dens=jnswp_dens)
+        eta[i_t], eta_cond[i_t] = ptws_cond_rand_wave_sim(t=t, a=a, om_range=om_range, spctrl_dens=jnswp_dens)
 
     plt.figure()
     plt.plot(t_range, eta, '-k')
+    plt.plot(t_range, eta_cond, '--r')
     plt.show()

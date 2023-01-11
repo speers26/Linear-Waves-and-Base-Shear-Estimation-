@@ -36,9 +36,7 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
 
     z_init = z
-    if z > 0:  # kinematic stretching
-        # z = 0
-        z = d * (d + z) / (d + eta) - d   # for Wheeler stretching
+    z = d * (d + z) / (d + eta) - d   # for Wheeler stretching
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
@@ -108,19 +106,15 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
 
         i_z = int(i_z)
 
-        w_z = z
-        if z > 0:
-            w_z = 0
-
         g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(w_z + d))) / (np.sinh(k*d))
         g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(w_z+d))) / (np.sinh(k*d))
         g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
         g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
 
-        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z < eta)
-        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z < eta)
-        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z < eta)
-        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z < eta)
+        u_x[:, i_z] = np.real(fftshift(fft(g2)))  # * (z < eta)
+        du_x[:, i_z] = np.real(fftshift(fft(g3)))  # * (z < eta)
+        u_z[:, i_z] = np.real(fftshift(fft(g4)))  # * (z < eta)
+        du_z[:, i_z] = np.real(fftshift(fft(g5)))  # * (z < eta)
 
     return eta, u_x, u_z, du_x, du_z
 
@@ -185,6 +179,10 @@ if __name__ == "__main__":
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
+    # wheeler stretching (don't think this works)
+    for i_t, t in enumerate(t_range):
+        z_grid[i_t, :] = np.linspace(-depth, eta_fft[0][i_t], z_num)
+
     plt.figure()
 
     plt.subplot(2, 2, 1)
@@ -242,9 +240,12 @@ if __name__ == "__main__":
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
+    z_grid, t_grid = np.meshgrid(z_range, t_range)
+
     plt.figure()
     plt.subplot(2, 2, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x.flatten())
+    plt.ylim([-depth, 50])
     plt.plot(t_range, eta, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
