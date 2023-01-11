@@ -45,10 +45,10 @@ if __name__ == "__main__":
 
     hs = 5.
     tp = 5.
-    a = 5
+    a = 5.
 
     t_num = 200
-    t_range = np.linspace(-25, 25, t_num)
+    t_range = np.linspace(-50, 50, t_num)
 
     om_num = 50
     om_range = np.linspace(start=1e-1, stop=3, num=om_num)

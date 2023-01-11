@@ -98,23 +98,21 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     u_z = np.empty((f_num, len(z_range)))
     du_z = np.empty((f_num, len(z_range)))
 
-    z_num = len(z_range)
-    z_ind = np.linspace(0, z_num-1, z_num)
-    wheeler_z_range = np.linspace(-d, 0, z_num)
+    for i_z, z in enumerate(z_range):
 
-    for (i_z, z, w_z) in zip(z_ind, z_range, wheeler_z_range):
+        z_init = z
+        if z > -3:
+            z = -3
 
-        i_z = int(i_z)
+        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(w_z + d))) / (np.sinh(k*d))
-        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(w_z+d))) / (np.sinh(k*d))
-        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
-        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(w_z+d))) / (np.sinh(k*d))
-
-        u_x[:, i_z] = np.real(fftshift(fft(g2)))  # * (z < eta)
-        du_x[:, i_z] = np.real(fftshift(fft(g3)))  # * (z < eta)
-        u_z[:, i_z] = np.real(fftshift(fft(g4)))  # * (z < eta)
-        du_z[:, i_z] = np.real(fftshift(fft(g5)))  # * (z < eta)
+        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
+        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
+        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
+        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
 
     return eta, u_x, u_z, du_x, du_z
 
@@ -179,10 +177,6 @@ if __name__ == "__main__":
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
-    # wheeler stretching (don't think this works)
-    for i_t, t in enumerate(t_range):
-        z_grid[i_t, :] = np.linspace(-depth, eta_fft[0][i_t], z_num)
-
     plt.figure()
 
     plt.subplot(2, 2, 1)
@@ -239,8 +233,6 @@ if __name__ == "__main__":
             F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
-
-    z_grid, t_grid = np.meshgrid(z_range, t_range)
 
     plt.figure()
     plt.subplot(2, 2, 1)
