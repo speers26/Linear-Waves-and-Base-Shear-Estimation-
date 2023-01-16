@@ -19,7 +19,7 @@ def ptws_cond_rand_wave_sim(t: float, z: float, depth: float, a: float, om_range
     Returns:
         eta (float): sea level [m]
     """
-    #  this is essential the same as the pointwise non fft code in fft_rand_wave_sim.py - should really merge these
+    #  this is essentially the same as the pointwise non fft code in fft_rand_wave_sim.py - should really merge these
     np.random.seed(1234)
 
     m = 0
@@ -27,8 +27,8 @@ def ptws_cond_rand_wave_sim(t: float, z: float, depth: float, a: float, om_range
     f_num = len(om_range)
     df = (om_range[1] - om_range[0]) / (2*np.pi)
 
-    A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df) 
-    B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df) 
+    A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
+    B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
     c = df * spctrl_dens
     d = df * spctrl_dens * om_range

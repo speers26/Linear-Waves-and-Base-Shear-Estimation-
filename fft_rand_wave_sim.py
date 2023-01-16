@@ -7,15 +7,17 @@ import rand_wave_spatial_sim as rws  # for dispersion relation
 
 
 # below function isn't used - just to test fft version is working right
-def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spctrl_dens: np.ndarray):
+def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
     """returns pointwave surface level eta and kinematics for x=0
 
     Args:
         t (float): time [s]
         z (float): height in water [m]
         d (float): water depth [m]
+        a (float): wave height at t=0 [m]
         om_range (np.ndarray): range of contributing angular frequencies [s^-1]
         spctrl_dens (np.ndarray): spectrum corresponding to om_range
+        cond (bool): True if we want a conditional wave simulation
 
     Returns:
         eta (float): surface level [m]
@@ -33,7 +35,21 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
     B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
+    if cond:
+        m = 0
+
+        c = df * spctrl_dens
+        d = df * spctrl_dens * om_range
+
+        Q = (a - np.sum(A))/np.sum(c)
+        R = (m - np.sum(om_range * A))/np.sum(d*om_range)
+
+        A = A + Q * c
+        B = B + R * d
+
     eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
+
+    d = depth
 
     z_init = z
     z = d * (d + z) / (d + eta) - d   # for Wheeler stretching
@@ -56,14 +72,16 @@ def ptws_random_wave_sim(t: float, z: float, d: float, om_range: np.ndarray, spc
     return eta, u_x, u_z, du_x, du_z
 
 
-def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray, spctrl_dens: np.ndarray):
+def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
     """generates random wave surface and kinematics using FFT
 
     Args:
         z_range (np.ndarray): range of depths [m]
         d (float): water depth
+        a (float): wave height at t=0 [m]
         om_range (np.ndarray): range of angular velocities [s^-1]
         spctrl_dens (np.ndarray): spectrum corresponding to om_range
+        cond (bool): True if we want a conditional wave simulation
 
     Returns:
         eta (np.ndarray): wave surface height [m]
@@ -82,12 +100,26 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, om_range: np.ndarray
     A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
     B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
+    if cond:
+        m = 0
+
+        c = df * spctrl_dens
+        d = df * spctrl_dens * om_range
+
+        Q = (a - np.sum(A))/np.sum(c)
+        R = (m - np.sum(om_range * A))/np.sum(d*om_range)
+
+        A = A + Q * c
+        B = B + R * d
+
     i = complex(0, 1)
     g1 = A + B * i
 
     eta = np.real(fftshift(fft(g1)))
 
     k = np.empty(f_num)
+
+    d = depth
 
     for i_f, f in enumerate(f_range):
         omega = 2 * np.pi * f
@@ -144,9 +176,11 @@ if __name__ == "__main__":
 
     # we will propagate a random wave and its kinematics at a fixed point x=0
 
-    depth = 100.
-    hs = 35.
-    tp = 20.
+    hs = 10.
+    tp = 12.
+    a = 20.
+    depth = 100
+    cond = True
 
     z_num = 150
     z_range = np.linspace(-depth, 50, z_num)
@@ -167,7 +201,7 @@ if __name__ == "__main__":
 
     jnswp_dens = rwave.djonswap(f_range, hs, tp)
 
-    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = fft_random_wave_sim(z_range, depth, om_range, jnswp_dens)
+    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
@@ -229,7 +263,7 @@ if __name__ == "__main__":
 
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, d=depth, om_range=om_range, spctrl_dens=jnswp_dens)
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
             F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
@@ -272,5 +306,9 @@ if __name__ == "__main__":
     plt.plot(t_grid, base_shear)
     plt.ylabel('Force [MN]')
     plt.xlabel('Time')
+
+    plt.figure()
+    plt.plot(t_grid, eta, '-k')
+    plt.plot(t_grid, eta_fft[0], '--r')
 
     plt.show()
