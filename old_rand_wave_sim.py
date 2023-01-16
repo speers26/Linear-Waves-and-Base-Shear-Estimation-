@@ -23,7 +23,7 @@ def djonswap(f, hs, tp):
     df = f[1] - f[0]
 
     # example constants from https://wikiwaves.org/Ocean-Wave_Spectra
-    gamma = 3.3
+    gamma = 2
     sigma_a = 0.07
     sigma_b = 0.09
 
