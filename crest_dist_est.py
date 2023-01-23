@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import fft_rand_wave_sim as rwave  # for random wave sim
-import rand_wave_spatial_sim as rws  # for dispersion relation
-
 
 def djonswap(f, hs, tp):
 
@@ -53,18 +51,70 @@ def rayleigh_cdf(eta: np.ndarray, hs: float):
 
     return p
 
+def rayleigh_pdf(eta: np.ndarray, hs:float):
+    """_summary_
+
+    Args:
+        eta (np.ndarray): _description_
+        hs (float): _description_
+    """
+
+    d = -np.exp(-8 * eta**2 / hs**2) * -8 * 2 * eta / hs**2
+
+    return d
+
 
 if __name__ == "__main__":
 
     hs = 10
     tp = 12
-
+    depth = 100
     cond = False
+    a = 0
 
+    z_num = 150
+    z_range = np.linspace(-depth, 50, z_num)
+    dz = z_range[1] - z_range[0]
+
+    num_sea_states = 100
+    sea_state_hours = 1
+
+    # don't quite get this bit - for FFT to work
+    freq = 1.00  # 3. / (2*np.pi)
+    period = 60**2 * sea_state_hours  # total time range
+    nT = np.floor(period*freq)  # number of time points to evaluate
+    t_num = int(nT)  # to work with rest of the code
+
+    dt = 1/freq  # time step is determined by frequency
+    t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
+
+    f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
+    om_range = f_range * (2*np.pi)
+
+    # plotting crest cdf
     CoH = np.linspace(1e-3, 1.5)
-
     crest_cdf = rayleigh_cdf(CoH * hs, hs)
 
     plt.figure()
     plt.plot(CoH, crest_cdf)
+
+    jnswp_dens = djonswap(f_range, hs, tp)
+
+    np.random.seed(1234)
+    max_crests = np.ndarray(num_sea_states)
+    for i in range(num_sea_states):
+        eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = rwave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+        max_crests[i] = np.max(eta_fft[0])
+        print(i)
+
+    np.savetxt('max_crests.txt', max_crests, delimiter=',')
+
+    # plotting crest pdf
+    crest_pdf = rayleigh_pdf(CoH * hs, hs)
+
+    norm_max_crests = max_crests/np.sum(max_crests)
+
+    plt.hist(norm_max_crests)
+    plt.plot(CoH*hs, crest_pdf)
+
     plt.show()
