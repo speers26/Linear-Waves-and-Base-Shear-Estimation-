@@ -76,8 +76,8 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 100
-    sea_state_hours = 1
+    num_sea_states = 1000
+    sea_state_hours = 3
 
     # don't quite get this bit - for FFT to work
     freq = 1.00  # 3. / (2*np.pi)
