@@ -268,6 +268,7 @@ if __name__ == "__main__":
         for i_z, z in enumerate(z_range):
             eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
             F[i_t, i_z] = arwave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+    # F = xr.DataArray(F, dims=["t", "z"])
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
