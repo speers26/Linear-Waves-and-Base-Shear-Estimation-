@@ -56,7 +56,7 @@ def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: n
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
-        k[i_om] = rws.solve_dispersion(omega=om, h=d, upp=75)
+        k[i_om] = solve_dispersion(omega=om, h=d, upp=75)
         # k[i_om] = alt_solve_dispersion(omega=om, d=d)
 
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
