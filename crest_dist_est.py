@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import fft_rand_wave_sim as rwave  # for random wave sim
+import rand_wave_sim as rwave  # for random wave sim
 
 def djonswap(f, hs, tp):
 
