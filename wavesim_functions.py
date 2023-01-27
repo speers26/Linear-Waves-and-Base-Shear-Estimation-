@@ -178,7 +178,7 @@ def alt_solve_dispersion(omega: float, d: float):
 def djonswap(f: np.ndarray, hs: float, tp: float):
 
     """
-    returns JONSWAP density for given frequency
+    returns JONSWAP density for given frequency range
 
     Args:
         f (np.ndarray): frequency [s^-1]
@@ -283,16 +283,16 @@ def solve_dispersion(omega: float, h: float, upp: float):
     return k
 
 
-def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
+def morison_load(u:np.ndarray, du: np.ndarray, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
     """compute unit Morison load for a vertical cylinder
 
     Args:
         u (np.ndarray): horizontal velocity [m/s]
         du (np.ndarray): horizontal acceleration [m/s^2]
-        diameter (float, optional): _description_. Defaults to 1.0. [m]
-        rho (float, optional): _description_. Defaults to 1024.0. [kg/m^3]
-        c_m (float, optional): _description_. Defaults to 1.0. [unitless]
-        c_d (float, optional): _description_. Defaults to 1.0. [unitless]
+        diameter (float, optional): diameter of cylinder. Defaults to 1.0. [m]
+        rho (float, optional): water density. Defaults to 1024.0. [kg/m^3]
+        c_m (float, optional): a coefficient. Defaults to 1.0. [unitless]
+        c_d (float, optional): a coefficient. Defaults to 1.0. [unitless]
 
     Returns:
         np.ndarray: horizontal unit morrison load [N/m]
@@ -429,3 +429,34 @@ def alt_djonswap(omega: float, alpha: float, om_p: float, gamma: float, r: float
     dens = alpha * omega ** -r * np.exp(-r / 4 * (np.abs(omega) / om_p) ** -4) * gamma ** delta
 
     return dens
+
+
+# for crest distributions
+
+def rayleigh_cdf(eta: np.ndarray, hs: float):
+    """returns the rayleigh cdf
+
+    Args:
+        eta (np.ndarray): crest heights
+        hs (float): sig wave height
+
+    Returns:
+        p (np.ndarray): rayleigh probability
+    """
+
+    p = 1 - np.exp(-8 * eta**2 / hs**2)
+
+    return p
+
+
+def rayleigh_pdf(eta: np.ndarray, hs: float):
+    """_summary_
+
+    Args:
+        eta (np.ndarray): _description_
+        hs (float): _description_
+    """
+
+    d = -np.exp(-8 * eta**2 / hs**2) * -8 * 2 * eta / hs**2
+
+    return d
