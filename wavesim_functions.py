@@ -93,7 +93,7 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: 
     """
 
     water_depth = d
-    # np.random.seed(1234)
+    np.random.seed(1234)
 
     f_range = om_range / (2*np.pi)
     f_num = len(f_range)

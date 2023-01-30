@@ -1,70 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import rand_wave_sim as rwave  # for random wave sim
-
-def djonswap(f, hs, tp):
-
-    """
-    returns JONSWAP density for given frequency
-
-    Args:
-        f (np.ndarray): frequency [s^-1]
-        hs (np.ndarray): significant wave height [m]
-        tp (np.ndarray): significant wave period [s]
-
-    Returns:
-        dens (np.ndarray): JONSWAP density for given frequencies []
-    """
-    g = 9.81
-    fp = 1. / tp
-    df = f[1] - f[0]
-
-    # example constants from https://wikiwaves.org/Ocean-Wave_Spectra
-    gamma = 2  # 3.3
-    sigma_a = 0.07
-    sigma_b = 0.09
-
-    sigma = (f < fp) * sigma_a + (f >= fp) * sigma_b
-
-    gamma_coeff = gamma ** np.exp(-0.5 * (((f / fp - 1)/sigma) ** 2))
-    dens = g ** 2 * (2 * np.pi) ** -4 * f ** -5 * np.exp(-1.25 * (tp*f) ** -4) * gamma_coeff
-
-    area = sum(dens*df)
-
-    dens *= hs ** 2 / (16 * area)
-
-    return dens
-
-
-def rayleigh_cdf(eta: np.ndarray, hs: float):
-    """returns the rayleigh cdf
-
-    Args:
-        eta (np.ndarray): crest heights
-        hs (float): sig wave height
-
-    Returns:
-        p (np.ndarray): rayleigh probability
-    """
-
-    p = 1 - np.exp(-8 * eta**2 / hs**2)
-
-    return p
-
-def rayleigh_pdf(eta: np.ndarray, hs:float):
-    """_summary_
-
-    Args:
-        eta (np.ndarray): _description_
-        hs (float): _description_
-    """
-
-    d = -np.exp(-8 * eta**2 / hs**2) * -8 * 2 * eta / hs**2
-
-    return d
+import wavesim_functions as wave
 
 
 if __name__ == "__main__":
+
+    np.random.seed(1234)
 
     hs = 10
     tp = 12
@@ -76,12 +17,12 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 1000
-    sea_state_hours = 3
+    num_sea_states = 2000
+    sea_state_hours = 1
+    period = 60**2 * sea_state_hours  # total time range in seconds
+    waves_per_state = 60**2/tp
 
-    # don't quite get this bit - for FFT to work
-    freq = 1.00  # 3. / (2*np.pi)
-    period = 60**2 * sea_state_hours  # total time range
+    freq = 1.00  # number of sample points per second
     nT = np.floor(period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
 
@@ -91,30 +32,28 @@ if __name__ == "__main__":
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
     om_range = f_range * (2*np.pi)
 
-    # plotting crest cdf
+    # get crest cdf
     CoH = np.linspace(1e-3, 1.5)
-    crest_cdf = rayleigh_cdf(CoH * hs, hs)
+    crest_cdf = wave.rayleigh_cdf(CoH * hs, hs)
+
+    # get jonswap densities
+    jnswp_dens = wave.djonswap(f_range, hs, tp)
+
+    # max_crests = np.ndarray(num_sea_states)
+    # for i in range(num_sea_states):
+    #     eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = rwave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+    #     max_crests[i] = np.max(eta_fft[0])
+    #     print(i)
+    # np.savetxt('max_crests.txt', max_crests, delimiter=',')
+
+    max_crests = np.loadtxt('max_crests.txt')
+    emp = np.ndarray(len(CoH))
+    for i_c, c in enumerate(CoH):
+        emp[i_c] = sum(c*hs > max_crests)/num_sea_states
+
+    true = crest_cdf**waves_per_state
 
     plt.figure()
-    plt.plot(CoH, crest_cdf)
-
-    jnswp_dens = djonswap(f_range, hs, tp)
-
-    np.random.seed(1234)
-    max_crests = np.ndarray(num_sea_states)
-    for i in range(num_sea_states):
-        eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = rwave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
-        max_crests[i] = np.max(eta_fft[0])
-        print(i)
-
-    np.savetxt('max_crests.txt', max_crests, delimiter=',')
-
-    # plotting crest pdf
-    crest_pdf = rayleigh_pdf(CoH * hs, hs)
-
-    norm_max_crests = max_crests/np.sum(max_crests)
-
-    plt.hist(norm_max_crests)
-    plt.plot(CoH*hs, crest_pdf)
-
+    plt.plot(CoH, true, '-k')
+    plt.plot(CoH, emp, '--r')
     plt.show()
