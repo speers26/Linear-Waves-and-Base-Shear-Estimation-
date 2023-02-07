@@ -27,7 +27,7 @@ def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: n
         du_z (float) vertical acceleration [ms^-2]
     """
 
-    np.random.seed(1234)
+    # np.random.seed(1234)
 
     f_num = len(om_range)
     df = (om_range[1] - om_range[0]) / (2*np.pi)
@@ -56,8 +56,8 @@ def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: n
 
     k = np.empty(f_num)
     for i_om, om in enumerate(om_range):
-        k[i_om] = solve_dispersion(omega=om, h=d, upp=75)
-        # k[i_om] = alt_solve_dispersion(omega=om, d=d)
+        # k[i_om] = solve_dispersion(omega=om, h=d, upp=75)
+        k[i_om] = alt_solve_dispersion(omega=om, d=d)
 
     u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
     u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
@@ -93,7 +93,7 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: 
     """
 
     water_depth = d
-    np.random.seed(1234)
+    #np.random.seed(1234)
 
     f_range = om_range / (2*np.pi)
     f_num = len(f_range)

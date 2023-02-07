@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.fft import fft, fftshift
 import wavesim_functions as wave
 
 if __name__ == "__main__":
 
     # we will propagate a random wave and its kinematics at a fixed point x=0
 
+    # set sea state and conditioned peak here
     hs = 10.
     tp = 12.
     a = 20.
@@ -17,7 +17,6 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    # don't quite get this bit - for FFT to work
     freq = 1.00  # 3. / (2*np.pi)
     period = 100  # total time range
     nT = np.floor(period*freq)  # number of time points to evaluate
@@ -33,6 +32,8 @@ if __name__ == "__main__":
     jnswp_dens = wave.djonswap(f_range, hs, tp)
 
     eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+    np.savetxt('ux_fft', u_x_fft) 
+    u_x_fft = np.loadtxt('ux_fft', usecols=range(z_num))
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
