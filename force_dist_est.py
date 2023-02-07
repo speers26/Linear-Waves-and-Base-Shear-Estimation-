@@ -8,7 +8,7 @@ if __name__ == "__main__":
     np.random.seed(1234)
     write = True
 
-    hs = 25
+    hs = 30
     tp = 12
     depth = 100
     cond = False
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 500
+    num_sea_states = 2000
     sea_state_hours = 1
     period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_state = 60**2/tp
