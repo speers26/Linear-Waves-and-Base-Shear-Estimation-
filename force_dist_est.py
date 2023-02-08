@@ -9,7 +9,7 @@ if __name__ == "__main__":
     write = False
     write_con = False
 
-    hs = 30
+    hs = 25
     tp = 12
     depth = 100
     cond = False
@@ -176,6 +176,6 @@ if __name__ == "__main__":
     plt.scatter(max_ind, max_forces, c=colors)
     plt.subplot(2, 1, 2)
 
-    plt.plot(s_max_forces_0, is_1, '-b')
-    plt.plot(s_max_forces_0, long_emp, '-r')
+    plt.plot(s_max_forces_0, np.log10(1-is_1), '-b')
+    plt.plot(s_max_forces_0, np.log10(1-long_emp), '-r')
     plt.show()
