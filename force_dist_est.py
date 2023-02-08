@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(1)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     hs = 30
     tp = 12
@@ -108,8 +108,12 @@ if __name__ == "__main__":
     waves_per_state = 60*2/tp
     sims_per_state = sea_state_hours * 60 / 2
 
+    c = CoH * hs
     f_0 = wave.rayleigh_pdf(CoH*hs, hs)
-    fog = f_0 / g
+    # f_prime = np.exp(16/hs**2 - (16*c/hs**2)**2)
+    # f = waves_per_state * f_0**(waves_per_state-1) * f_prime
+    # fog = f / g
+    fog = f_0/g
 
     freq = 1.00  # number of sample points per second
     nT = np.floor(period*freq)  # number of time points to evaluate
