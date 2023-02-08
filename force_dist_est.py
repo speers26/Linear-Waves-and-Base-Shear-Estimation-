@@ -91,5 +91,3 @@ if __name__ == "__main__":
     plt.plot(np.sort(max_forces), np.linspace(0, 1, len(max_forces), endpoint=False), '-k')
 
     plt.show()
-
-
