@@ -43,8 +43,8 @@ if __name__ == "__main__":
 
     if write:
 
-        eta = np.empty(t_num)
-        u_x = np.empty((t_num, z_num))
+        eta = np.empty(int(t_num*num_sea_states))
+        u_x = np.empty((int(t_num*num_sea_states), z_num))
         u_z = np.empty((t_num, z_num))
         du_x = np.empty((t_num, z_num))
         du_z = np.empty((t_num, z_num))
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
         for i in range(num_sea_states):
             print(i)
-            eta, u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i*t_num:(i+1)*t_num, :], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     # eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = wave.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
@@ -60,6 +60,7 @@ if __name__ == "__main__":
 
         base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
         np.savetxt('load.txt', base_shear, delimiter=' ')
+        np.savetxt('eta.txt', eta, delimeter=' ')
 
     else:
 
