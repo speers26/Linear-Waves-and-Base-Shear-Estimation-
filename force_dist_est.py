@@ -5,7 +5,7 @@ import wavesim_functions as wave
 
 if __name__ == "__main__":
 
-    np.random.seed(1234)
+    np.random.seed(12345)
     write = True
     write_con = True
 
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     dz = z_range[1] - z_range[0]
 
     num_sea_states = 2000
-    sea_state_hours = 1
+    sea_state_hours = 2
     period = 60**2 * sea_state_hours  # total time range in seconds
-    waves_per_state = 60**2/tp
+    waves_per_state = period/tp
 
     freq = 1.00  # number of sample points per second
     nT = np.floor(period*freq)  # number of time points to evaluate
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
         for i in range(num_sea_states):
             print(i)
-            eta[i*t_num:(i+1)*t_num, :], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i*t_num:(i+1)*t_num], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     # eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = wave.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
@@ -60,10 +60,11 @@ if __name__ == "__main__":
 
         base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
         np.savetxt('load.txt', base_shear, delimiter=' ')
-        np.savetxt('eta.txt', eta, delimeter=' ')
+        np.savetxt('eta.txt', eta, delimiter=' ')
 
     else:
 
+        eta = np.loadtxt('eta.txt')
         base_shear = np.loadtxt('load.txt')
 
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
@@ -94,7 +95,36 @@ if __name__ == "__main__":
         long_emp[i_f] = sum(max_forces < f)/num_sea_states
 
     plt.plot(s_max_forces_0, long_emp, '-k')
-    plt.show()
+    #plt.show()
+
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(new_t_range, eta, '-k')
+    plt.ylabel('Crest Height [m]')
+    plt.xlabel('Time')
+
+    max_crests = np.empty(num_sea_states)
+
+    for i_s in range(num_sea_states):
+        slice = eta[i_s*t_num:t_num*(i_s+1)]
+        max_crests[i_s] = max(slice)
+        slice_ind = np.where(slice == max(slice))[0]
+        max_ind[i_s] = int(i_s*t_num + slice_ind)
+
+    plt.scatter(max_ind, max_crests, c=colors)
+    plt.subplot(2, 1, 2)
+
+    long_crest_emp = np.empty(num_sea_states)
+    s_max_crests_0 = np.sort(max_crests)
+    for i_c, c in enumerate(s_max_crests_0):
+        long_crest_emp[i_c] = sum(max_crests < c)/num_sea_states
+
+    plt.plot(s_max_crests_0, long_crest_emp, '-k')
+
+    true_crest_dist = wave.rayleigh_cdf(s_max_crests_0, hs)**waves_per_state
+    plt.plot(s_max_crests_0, true_crest_dist, '--g')
+
+    #plt.show()
 
     # now do for conditional sim / IS method
     cond = True
@@ -109,8 +139,9 @@ if __name__ == "__main__":
     CoH = np.random.uniform(low=CoHmin, high=CoHmax, size=CoHnum)
     g = 1/(CoHmax-CoHmin)
 
-    period = 60*2  # will simulate sea states of 2 minutes
-    waves_per_state = 60*2/tp
+    sea_state_minutes = 2  # will simulate sea states of 2 minutes
+    period = 60*sea_state_minutes  
+    waves_per_state = period/tp
     sims_per_state = sea_state_hours * 60 / 2
 
     c = CoH * hs
@@ -134,7 +165,7 @@ if __name__ == "__main__":
 
     if write_con:
 
-        eta = np.empty(t_num)
+        eta = np.empty(int(t_num*num_sea_states))
         u_x = np.empty((t_num, z_num))
         u_z = np.empty((t_num, z_num))
         du_x = np.empty((t_num, z_num))
@@ -144,7 +175,7 @@ if __name__ == "__main__":
         for i in range(num_sea_states):
             print(i)
             a = CoH[i]
-            eta, u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i*t_num:(i+1)*t_num], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     # eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = wave.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
@@ -152,10 +183,12 @@ if __name__ == "__main__":
 
         base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
         np.savetxt('load_con.txt', base_shear, delimiter=' ')
+        np.savetxt('eta_con.txt', eta, delimiter=' ')
 
     else:
 
         base_shear = np.loadtxt('load_con.txt')
+        eta = np.loadtxt('eta_con.txt')
 
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
 
@@ -183,4 +216,37 @@ if __name__ == "__main__":
 
     plt.plot(s_max_forces, np.log10(1-is_1), '-b')
     plt.plot(s_max_forces_0, np.log10(1-long_emp), '-r')
+    #plt.show()
+
+    plt.figure()
+    plt.subplot(2, 1, 1)
+    plt.plot(new_t_range, eta, '-k')
+    plt.ylabel('Crest Height [m]')
+    plt.xlabel('Time')
+  
+    max_crests = np.empty(num_sea_states)
+
+    for i_s in range(num_sea_states):
+        slice = eta[i_s*t_num:t_num*(i_s+1)]
+        max_crests[i_s] = max(slice)
+        slice_ind = np.where(slice == max(slice))[0]
+        max_ind[i_s] = int(i_s*t_num + slice_ind)
+
+    plt.scatter(max_ind, max_crests, c=colors)
+    plt.subplot(2, 1, 2)
+
+    is_crest_dist = np.empty(num_sea_states)
+    s_max_crests = np.sort(max_crests)
+    for i_c, c in enumerate(s_max_crests):
+        is_crest_dist[i_c] = sum((max_crests < c)*(fog))/sum(fog)
+
+    is_crest_dist_1 = is_crest_dist**sims_per_state
+
+    plt.plot(s_max_crests_0, np.log10(1-long_crest_emp), '-r')
+
+    #true_crest_dist = wave.rayleigh_cdf(s_max_crests, hs)
+    plt.plot(s_max_crests_0, np.log10(1-true_crest_dist), '--g')
+
+    plt.plot(s_max_crests, np.log10(1-is_crest_dist_1), '-b')
+
     plt.show()
