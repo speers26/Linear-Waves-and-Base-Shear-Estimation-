@@ -5,9 +5,9 @@ import wavesim_functions as wave
 
 if __name__ == "__main__":
 
-    np.random.seed(1)
-    write = False
-    write_con = False
+    np.random.seed(1234)
+    write = True
+    write_con = True
 
     hs = 25
     tp = 12
@@ -90,13 +90,17 @@ if __name__ == "__main__":
     long_emp = np.empty(num_sea_states)
     s_max_forces_0 = np.sort(max_forces)
     for i_f, f in enumerate(s_max_forces_0):
-        long_emp[i_f] = sum(max_forces < f )/num_sea_states
+        long_emp[i_f] = sum(max_forces < f)/num_sea_states
 
     plt.plot(s_max_forces_0, long_emp, '-k')
     plt.show()
 
     # now do for conditional sim / IS method
     cond = True
+    # num_sea_states = 10000
+    # max_forces = np.empty(num_sea_states)
+    # max_ind = np.empty(num_sea_states)
+    # colors = np.tile('#FF0000', num_sea_states)
 
     CoHmin = 0
     CoHmax = 2
@@ -168,7 +172,7 @@ if __name__ == "__main__":
 
     s_max_forces = np.sort(max_forces)
     is_0 = np.empty(len(s_max_forces))
-    for i_f, f in enumerate(s_max_forces_0):
+    for i_f, f in enumerate(s_max_forces):
         is_0[i_f] = sum((max_forces < f)*(fog))/sum(fog)
 
     is_1 = is_0**sims_per_state
@@ -176,6 +180,6 @@ if __name__ == "__main__":
     plt.scatter(max_ind, max_forces, c=colors)
     plt.subplot(2, 1, 2)
 
-    plt.plot(s_max_forces_0, np.log10(1-is_1), '-b')
+    plt.plot(s_max_forces, np.log10(1-is_1), '-b')
     plt.plot(s_max_forces_0, np.log10(1-long_emp), '-r')
     plt.show()
