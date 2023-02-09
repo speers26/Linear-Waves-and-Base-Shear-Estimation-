@@ -45,7 +45,6 @@ if __name__ == "__main__":
 
     # if we want new wave data
     if write:
-
         # set up arrays (don't actually need to do this for all)
         eta = np.empty(int(t_num*num_sea_states))
         u_x = np.empty((int(t_num*num_sea_states), z_num))
@@ -69,7 +68,6 @@ if __name__ == "__main__":
 
     # if we want to use the old wave data
     else:
-
         # read data from the text files
         eta = np.loadtxt('eta.txt')
         base_shear = np.loadtxt('load.txt')
@@ -144,7 +142,7 @@ if __name__ == "__main__":
     g = 1/(CoHmax-CoHmin)
 
     # will simulate sea states of 2 minutes
-    sea_state_minutes = 2  
+    sea_state_minutes = 2
     period = 60*sea_state_minutes
     waves_per_state = period/tp
     sims_per_state = sea_state_hours * 60 / 2
@@ -174,7 +172,7 @@ if __name__ == "__main__":
     jnswp_dens = wave.djonswap(f_range, hs, tp)
 
     if write_con:
-
+        # generate wave data and write to text files
         eta = np.empty(int(t_num*num_sea_states))
         u_x = np.empty((t_num, z_num))
         u_z = np.empty((t_num, z_num))
@@ -195,7 +193,7 @@ if __name__ == "__main__":
         np.savetxt('eta_con.txt', eta, delimiter=' ')
 
     else:
-
+        # read wave date from txt files
         base_shear = np.loadtxt('load_con.txt')
         eta = np.loadtxt('eta_con.txt')
 
@@ -225,7 +223,7 @@ if __name__ == "__main__":
     plt.subplot(2, 1, 2)
     plt.plot(s_max_forces, np.log10(1-is_1), '-b')
     plt.plot(s_max_forces_0, np.log10(1-long_emp), '-r')
-  
+
     # get max crests
     max_crests = np.empty(num_sea_states)
     for i_s in range(num_sea_states):
