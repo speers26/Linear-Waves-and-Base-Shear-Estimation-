@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     dz = z_range[1] - z_range[0]
 
     num_sea_states = 2000
-    sea_state_hours = 2
+    sea_state_hours = 1
     period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_state = period/tp
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         # populate arrays
         for i in range(num_sea_states):
             print(i)
-            eta[i*t_num:(i+1)*t_num], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i*t_num:(i+1)*t_num], u_x[i*t_num:(i+1)*t_num, :], u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     F[i_t + i * t_num, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
@@ -65,12 +65,14 @@ if __name__ == "__main__":
         # write data to text files
         np.savetxt('load.txt', base_shear, delimiter=' ')
         np.savetxt('eta.txt', eta, delimiter=' ')
+        np.savetxt('h_velocity.txt', u_x, delimiter=' ')
 
     # if we want to use the old wave data
     else:
         # read data from the text files
         eta = np.loadtxt('eta.txt')
         base_shear = np.loadtxt('load.txt')
+        u_x = np.loadtxt('h_velocity.txt')
 
     # extend the time range to include all sea states
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
@@ -183,7 +185,7 @@ if __name__ == "__main__":
         for i in range(num_sea_states):
             print(i)
             a = CoH[i]
-            eta[i*t_num:(i+1)*t_num], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i*t_num:(i+1)*t_num], u_x[i*t_num:(i+1)*t_num, :], u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     F[i_t + i * t_num, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
@@ -191,11 +193,13 @@ if __name__ == "__main__":
         base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
         np.savetxt('load_con.txt', base_shear, delimiter=' ')
         np.savetxt('eta_con.txt', eta, delimiter=' ')
+        np.savetxt('h_v_con.txt', delimiter=' ')
 
     else:
         # read wave date from txt files
         base_shear = np.loadtxt('load_con.txt')
         eta = np.loadtxt('eta_con.txt')
+        u_x = np.loadtxt('h_v_con.txt')
 
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
 
