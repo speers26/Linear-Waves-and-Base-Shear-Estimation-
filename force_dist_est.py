@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     np.random.seed(12345)
     write = False
-    write_con = False
+    write_con = True
 
     # set up wave conditions
     hs = 25
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 2000
+    num_sea_states = 1000
     sea_state_hours = 1
     period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_state = period/tp
@@ -193,7 +193,7 @@ if __name__ == "__main__":
         base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
         np.savetxt('load_con.txt', base_shear, delimiter=' ')
         np.savetxt('eta_con.txt', eta, delimiter=' ')
-        np.savetxt('h_v_con.txt', delimiter=' ')
+        np.savetxt('h_v_con.txt', u_x, delimiter=' ')
 
     else:
         # read wave date from txt files
