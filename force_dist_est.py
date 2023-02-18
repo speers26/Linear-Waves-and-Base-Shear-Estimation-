@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -119,19 +119,16 @@ if __name__ == "__main__":
     for i_c, c in enumerate(s_max_crests_0):
         long_crest_emp[i_c] = sum(max_crests < c)/num_sea_states
 
-    # get true crest height distribution (rayleigh)
-    true_crest_dist = wave.rayleigh_cdf(s_max_crests_0, hs)**waves_per_state
-
-    # plot crest height ts and emp distribution with rayleigh
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(new_t_range, eta, '-k')
-    plt.ylabel('Crest Height [m]')
-    plt.xlabel('Time')
-    plt.scatter(max_ind, max_crests, c=colors)
-    plt.subplot(2, 1, 2)
-    plt.plot(s_max_crests_0, long_crest_emp, '-k')
-    plt.plot(s_max_crests_0, true_crest_dist, '--g')
+    # # plot crest height ts and emp distribution with rayleigh
+    # plt.figure()
+    # plt.subplot(2, 1, 1)
+    # plt.plot(new_t_range, eta, '-k')
+    # plt.ylabel('Crest Height [m]')
+    # plt.xlabel('Time')
+    # plt.scatter(max_ind, max_crests, c=colors)
+    # plt.subplot(2, 1, 2)
+    # plt.plot(s_max_crests_0, long_crest_emp, '-k')
+    # plt.plot(s_max_crests_0, true_crest_dist, '--g')
 
     # now do for conditional sim / IS method
     cond = True
@@ -143,6 +140,9 @@ if __name__ == "__main__":
     CoH = np.random.uniform(low=CoHmin, high=CoHmax, size=CoHnum)
     g = 1/(CoHmax-CoHmin)
 
+    # get true crest height distribution (rayleigh)
+    true_crest_dist = wave.rayleigh_cdf(np.sort(CoH * hs), hs)**waves_per_state
+
     # will simulate sea states of 2 minutes
     sea_state_minutes = 2
     period = 60*sea_state_minutes
@@ -150,9 +150,13 @@ if __name__ == "__main__":
     sims_per_state = sea_state_hours * 60 / 2
 
     # get true density and weights
-    c = CoH * hs
-    f_0 = wave.rayleigh_pdf(CoH*hs, hs)
+    r_crests = CoH * hs
+    f_0 = wave.rayleigh_pdf(np.sort(r_crests), hs) *hs
     fog = f_0/g
+
+    plt.figure()
+    plt.plot(np.sort(CoH), f_0)
+    plt.show()
 
     # ----- do this if true density needs changing from regular rayleigh (not sure if it does or not) ----- #
     # f_prime = np.exp(16/hs**2 - (16*c/hs**2)**2)
@@ -239,8 +243,9 @@ if __name__ == "__main__":
     # get IS crest distribution
     is_crest_dist = np.empty(num_sea_states)
     s_max_crests = np.sort(max_crests)
-    for i_c, c in enumerate(s_max_crests):
-        is_crest_dist[i_c] = sum((max_crests < c)*(fog))/sum(fog)
+    for i_c, c in enumerate(np.sort(r_crests)):
+        print(i_c)
+        is_crest_dist[i_c] = sum((max_crests < c) * fog)/sum(fog)
     is_crest_dist_1 = is_crest_dist**sims_per_state
 
     # plot max crests and emp crest, true crest and IS crest distributions
@@ -251,7 +256,8 @@ if __name__ == "__main__":
     plt.xlabel('Time')
     plt.scatter(max_ind, max_crests, c=colors)
     plt.subplot(2, 1, 2)
-    plt.plot(s_max_crests_0, np.log10(1-long_crest_emp), '-r')
-    plt.plot(s_max_crests_0, np.log10(1-true_crest_dist), '--g')
-    plt.plot(s_max_crests, np.log10(1-is_crest_dist_1), '-b')
+    plt.plot(np.sort(CoH), np.log10(1-true_crest_dist), '--g')
+    plt.plot(s_max_crests_0/hs, np.log10(1-long_crest_emp), '-r')
+    plt.plot(np.sort(CoH), np.log10(1-is_crest_dist_1), '-b')
     plt.show()
+    
