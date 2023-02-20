@@ -36,10 +36,6 @@ if __name__ == "__main__":
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
     om_range = f_range * (2*np.pi)
 
-    # get crest cdf
-    CoH = np.linspace(1e-3, 1.5)
-    crest_cdf = wave.rayleigh_cdf(CoH * hs, hs)
-
     # get jonswap density
     jnswp_dens = wave.djonswap(f_range, hs, tp)
 
@@ -77,60 +73,16 @@ if __name__ == "__main__":
     # extend the time range to include all sea states
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
 
-    # get maximum force in each sea state
-    max_forces = np.empty(num_sea_states)
+    # get max crest from each sea state
+    max_crests_0 = np.empty(num_sea_states)
     max_ind = np.empty(num_sea_states)
     for i_s in range(num_sea_states):
-        slice = base_shear[i_s*t_num:t_num*(i_s+1)]
-        max_forces[i_s] = max(slice)
-        slice_ind = np.where(slice == max(slice))[0]
-        max_ind[i_s] = int(i_s*t_num + slice_ind)
-
-    # get empirical distribution of max forces
-    long_emp = np.empty(num_sea_states)
-    s_max_forces_0 = np.sort(max_forces)
-    for i_f, f in enumerate(s_max_forces_0):
-        long_emp[i_f] = sum(max_forces < f)/num_sea_states
-
-    # set colors for scatter plots
-    colors = np.tile('#FF0000', num_sea_states)
-
-    # plot max forces ts and emp distribution
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(new_t_range, base_shear, '-k')
-    plt.ylabel('Force [MN]')
-    plt.xlabel('Time')
-    plt.scatter(max_ind, max_forces, c=colors)
-    plt.subplot(2, 1, 2)
-    plt.plot(s_max_forces_0, long_emp, '-k')
-
-    # get max crest from each sea state
-    max_crests = np.empty(num_sea_states)
-    for i_s in range(num_sea_states):
         slice = eta[i_s*t_num:t_num*(i_s+1)]
-        max_crests[i_s] = max(slice)
+        max_crests_0[i_s] = max(slice)
         slice_ind = np.where(slice == max(slice))[0]
         max_ind[i_s] = int(i_s*t_num + slice_ind)
 
-    # get max crest height empirical distribution
-    long_crest_emp = np.empty(num_sea_states)
-    s_max_crests_0 = np.sort(max_crests)
-    for i_c, c in enumerate(s_max_crests_0):
-        long_crest_emp[i_c] = sum(max_crests < c)/num_sea_states
-
-    # # plot crest height ts and emp distribution with rayleigh
-    # plt.figure()
-    # plt.subplot(2, 1, 1)
-    # plt.plot(new_t_range, eta, '-k')
-    # plt.ylabel('Crest Height [m]')
-    # plt.xlabel('Time')
-    # plt.scatter(max_ind, max_crests, c=colors)
-    # plt.subplot(2, 1, 2)
-    # plt.plot(s_max_crests_0, long_crest_emp, '-k')
-    # plt.plot(s_max_crests_0, true_crest_dist, '--g')
-
-    # now do for conditional sim / IS method
+    # now do for conditional sim
     cond = True
 
     # get proposal sample and density of crest
@@ -138,10 +90,11 @@ if __name__ == "__main__":
     CoHmax = 2
     CoHnum = num_sea_states
     CoH = np.random.uniform(low=CoHmin, high=CoHmax, size=CoHnum)
-    g = 1/((CoHmax-CoHmin)*hs)
+    g = 1/((CoHmax-CoHmin)*hs)  # density for crest heights not CoH
+    r_crests = np.sort(CoH * hs)
 
     # get true crest height distribution (rayleigh)
-    true_crest_dist = wave.rayleigh_cdf(np.sort(CoH * hs), hs)**waves_per_state
+    true_crest_dist = wave.rayleigh_cdf(r_crests, hs)**waves_per_state  # density for crest heights no CoH
 
     # will simulate sea states of 2 minutes
     sea_state_minutes = 2
@@ -149,19 +102,12 @@ if __name__ == "__main__":
     waves_per_state = period/tp
     sims_per_state = sea_state_hours * 60 / sea_state_minutes
 
-    # get true density and weights
-    r_crests = CoH * hs
-    f_0 = wave.rayleigh_pdf(np.sort(r_crests), hs)
-    fog = f_0/g
+    # get weights
+    f = wave.rayleigh_pdf(r_crests, hs)
+    fog = f/g
 
     plt.figure()
-    plt.plot(np.sort(r_crests), f_0)
-    #plt.show()
-
-    # ----- do this if true density needs changing from regular rayleigh (not sure if it does or not) ----- #
-    # f_prime = np.exp(16/hs**2 - (16*c/hs**2)**2)
-    # f = waves_per_state * f_0**(waves_per_state-1) * f_prime
-    # fog = f / g
+    plt.plot(r_crests, f)
 
     # redo arrays
     freq = 1.00  # number of sample points per second
@@ -207,32 +153,12 @@ if __name__ == "__main__":
 
     new_t_range = np.linspace(0, period * num_sea_states, int(nT*num_sea_states))
 
-    # get max forces
-    for i_s in range(num_sea_states):
-        slice = base_shear[i_s*t_num:t_num*(i_s+1)]
-        max_forces[i_s] = max(slice)
-        slice_ind = np.where(slice == max(slice))[0]
-        max_ind[i_s] = int(i_s*t_num + slice_ind)
+    # get emp crest dist
+    emp_crest = np.empty(num_sea_states)
+    for i_c, c in enumerate(r_crests):
+        emp_crest[i_c] = sum(max_crests_0 < c)/num_sea_states
 
-    # get IS max force distribution
-    s_max_forces = np.sort(max_forces)
-    is_0 = np.empty(len(s_max_forces))
-    for i_f, f in enumerate(s_max_forces):
-        is_0[i_f] = sum((max_forces < f)*(fog))/sum(fog)
-    is_1 = is_0**sims_per_state
-
-    # plot max forces and comparison of empirical and IS force dists
-    plt.figure()
-    plt.subplot(2, 1, 1)
-    plt.plot(new_t_range, base_shear, '-k')
-    plt.ylabel('Force [MN]')
-    plt.xlabel('Time')
-    plt.scatter(max_ind, max_forces, c=colors)
-    plt.subplot(2, 1, 2)
-    plt.plot(s_max_forces, np.log10(1-is_1), '-b')
-    plt.plot(s_max_forces_0, np.log10(1-long_emp), '-r')
-
-    # get max crests
+    # get cond max crests
     max_crests = np.empty(num_sea_states)
     for i_s in range(num_sea_states):
         slice = eta[i_s*t_num:t_num*(i_s+1)]
@@ -242,10 +168,11 @@ if __name__ == "__main__":
 
     # get IS crest distribution
     is_crest_dist = np.empty(num_sea_states)
-    s_max_crests = np.sort(max_crests)
-    for i_c, c in enumerate(np.sort(r_crests)):
-        is_crest_dist[i_c] = sum((max_crests < c) * fog)/sum(fog)
+    for i_c, c in enumerate(r_crests):
+        is_crest_dist[i_c] = np.sum((max_crests < c) * fog)/np.sum(fog)
     is_crest_dist_1 = is_crest_dist**sims_per_state
+
+    colors = np.tile('#FF0000', num_sea_states)
 
     # plot max crests and emp crest, true crest and IS crest distributions
     plt.figure()
@@ -255,8 +182,8 @@ if __name__ == "__main__":
     plt.xlabel('Time')
     plt.scatter(max_ind, max_crests, c=colors)
     plt.subplot(2, 1, 2)
-    plt.plot(np.sort(CoH), np.log10(1-true_crest_dist), '--g')
-    plt.plot(s_max_crests_0/hs, np.log10(1-long_crest_emp), '-r')
-    plt.plot(np.sort(CoH), np.log10(1-is_crest_dist_1), '-b')
+    plt.plot(r_crests/hs, np.log10(1-true_crest_dist), '--g')
+    plt.plot(r_crests/hs, np.log10(1-emp_crest), '-r')
+    plt.plot(r_crests/hs, np.log10(1-is_crest_dist_1), '-b')
     plt.show()
-    
+
