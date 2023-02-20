@@ -186,4 +186,3 @@ if __name__ == "__main__":
     plt.plot(r_crests/hs, np.log10(1-emp_crest), '-r')
     plt.plot(r_crests/hs, np.log10(1-is_crest_dist_1), '-b')
     plt.show()
-
