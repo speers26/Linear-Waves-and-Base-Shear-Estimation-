@@ -138,7 +138,7 @@ if __name__ == "__main__":
     CoHmax = 2
     CoHnum = num_sea_states
     CoH = np.random.uniform(low=CoHmin, high=CoHmax, size=CoHnum)
-    g = 1/(CoHmax-CoHmin)
+    g = 1/((CoHmax-CoHmin)*hs)
 
     # get true crest height distribution (rayleigh)
     true_crest_dist = wave.rayleigh_cdf(np.sort(CoH * hs), hs)**waves_per_state
@@ -147,16 +147,16 @@ if __name__ == "__main__":
     sea_state_minutes = 2
     period = 60*sea_state_minutes
     waves_per_state = period/tp
-    sims_per_state = sea_state_hours * 60 / 2
+    sims_per_state = sea_state_hours * 60 / sea_state_minutes
 
     # get true density and weights
     r_crests = CoH * hs
-    f_0 = wave.rayleigh_pdf(np.sort(r_crests), hs) *hs
+    f_0 = wave.rayleigh_pdf(np.sort(r_crests), hs)
     fog = f_0/g
 
     plt.figure()
-    plt.plot(np.sort(CoH), f_0)
-    plt.show()
+    plt.plot(np.sort(r_crests), f_0)
+    #plt.show()
 
     # ----- do this if true density needs changing from regular rayleigh (not sure if it does or not) ----- #
     # f_prime = np.exp(16/hs**2 - (16*c/hs**2)**2)
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
         for i in range(num_sea_states):
             print(i)
-            a = CoH[i]
+            a = CoH[i] * hs
             eta[i*t_num:(i+1)*t_num], u_x, u_z, du_x, du_z = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
@@ -244,7 +244,6 @@ if __name__ == "__main__":
     is_crest_dist = np.empty(num_sea_states)
     s_max_crests = np.sort(max_crests)
     for i_c, c in enumerate(np.sort(r_crests)):
-        print(i_c)
         is_crest_dist[i_c] = sum((max_crests < c) * fog)/sum(fog)
     is_crest_dist_1 = is_crest_dist**sims_per_state
 
