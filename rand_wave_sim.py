@@ -9,7 +9,7 @@ if __name__ == "__main__":
     # set sea state and conditioned peak here
     hs = 10.
     tp = 12.
-    a = 20.
+    a = 25.
     depth = 100
     cond = True
 
