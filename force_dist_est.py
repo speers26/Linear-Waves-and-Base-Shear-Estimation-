@@ -21,12 +21,12 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 10
+    num_sea_states = 2000
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
 
-    freq = 8.00  # number of sample points per second
+    freq = 1.00  # number of sample points per second
     nT = np.floor(full_period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
 
@@ -47,14 +47,22 @@ if __name__ == "__main__":
         # populate arrays
         for i in range(num_sea_states):
             print(i)
-            eta[i, :], _, _, _, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            base_shear = np.empty([num_sea_states, t_num])
+            F = np.empty((t_num, z_num))
+            for i_t, t in enumerate(t_range):
+                for i_z, z in enumerate(z_range):
+                    F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+            base_shear[i, :] = np.sum(F, axis=1) * dz / 1e6 
 
         np.savetxt('eta.txt', eta, delimiter=' ')
+        np.savetxt('base_shear.txt', base_shear, delimiter=' ')
 
     # if we want to use the old wave data
     else:
         # read data from the text files
         eta = np.loadtxt('eta.txt')
+        base_shear = np.loadtxt('base_shear.txt')
 
     # get max crest from each sea state
     two_hour_max_crests = np.empty(num_sea_states)
@@ -80,7 +88,7 @@ if __name__ == "__main__":
     cond_per_full_state = sea_state_hours * 60 / cond_state_min
 
     # redo arrays
-    freq = 8.00  # number of sample points per second
+    freq = 1.00  # number of sample points per second
     nT = np.floor(cond_period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
 
@@ -96,17 +104,25 @@ if __name__ == "__main__":
     if write_con:
         # generate wave data and write to text files
         eta = np.empty([num_sea_states, t_num])
+        base_shear_con = np.empty([num_sea_states, t_num])
         for i in range(num_sea_states):
             print(i)
             a = r_crests[i]
-            eta[i, :], _, _, _, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+           
+            F = np.empty((t_num, z_num))
+            for i_t, t in enumerate(t_range):
+                for i_z, z in enumerate(z_range):
+                    F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+            base_shear_con[i, :] = np.sum(F, axis=1) * dz / 1e6 
 
         np.savetxt('eta_con.txt', eta, delimiter=' ')
-        # np.savetxt('h_v_con.txt', u_x, delimiter=' ')
+        np.savetxt('base_shear_con.txt', base_shear_con, delimiter=' ')
 
     else:
         # read wave date from txt files
         eta = np.loadtxt('eta_con.txt')
+        base_shear_con = np.loadtxt('base_shear_con.txt')
 
     # get cond max crests
     cond_max_crests = np.empty(num_sea_states)
@@ -168,3 +184,5 @@ if __name__ == "__main__":
     plt.plot(x/hs, np.log10(1-rayleigh_cdf_sea_st_max), '-r')
     plt.plot(x/hs, np.log10(1-crest_cdf_is_sea_st_max), '--g')
     plt.show()
+
+    # get max forces
