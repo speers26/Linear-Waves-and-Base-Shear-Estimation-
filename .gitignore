@@ -162,5 +162,5 @@ cython_debug/
 # data files
 eta_con.txt
 eta.txt
-load_con.txt
-load.txt
+base_shear_con.txt
+base_shear.txt
