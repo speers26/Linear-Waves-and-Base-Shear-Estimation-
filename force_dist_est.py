@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     np.random.seed(12345)
     write = False
-    write_con = False
+    write_con = True
 
     # set up wave conditions
     hs = 25
@@ -21,12 +21,12 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 2000
+    num_sea_states = 10
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
 
-    freq = 4.00  # number of sample points per second
+    freq = 8.00  # number of sample points per second
     nT = np.floor(full_period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     cond_per_full_state = sea_state_hours * 60 / cond_state_min
 
     # redo arrays
-    freq = 4.00  # number of sample points per second
+    freq = 8.00  # number of sample points per second
     nT = np.floor(cond_period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         eta = np.empty([num_sea_states, t_num])
         for i in range(num_sea_states):
             print(i)
-            a = CoH[i] * hs
+            a = r_crests[i]
             eta[i, :], _, _, _, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
         np.savetxt('eta_con.txt', eta, delimiter=' ')
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     rayleigh_cdf_sea_st_max = rayleigh_cdf**waves_per_sea_state
 
     plt.figure()
-    plt.plot(r_crests, np.sort(cond_max_crests), '.')
+    plt.plot(r_crests, cond_max_crests, '.')
     plt.plot([0, 50], [0, 50], 'k')
     plt.show()
 
