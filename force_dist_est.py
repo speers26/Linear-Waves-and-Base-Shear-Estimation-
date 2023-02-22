@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 2000
+    num_sea_states = 200
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
