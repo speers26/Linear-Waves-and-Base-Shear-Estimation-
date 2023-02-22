@@ -6,7 +6,7 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = False
+    write = True
     write_con = True
 
     # set up wave conditions
@@ -69,6 +69,12 @@ if __name__ == "__main__":
     for i_s in range(num_sea_states):
         slice = eta[i_s, :]
         two_hour_max_crests[i_s] = max(slice)
+
+    # get max forces from each sea state
+    two_hour_max_forces = np.empty(num_sea_states)
+    for i_s in range(num_sea_states):
+        slice = base_shear[i_s, :]
+        two_hour_max_forces[i_s] = max(slice)
 
     # now do for conditional sim
     cond = True
@@ -183,6 +189,27 @@ if __name__ == "__main__":
     plt.plot(x/hs, np.log10(1-crest_cdf_sea_st_max), '-k')
     plt.plot(x/hs, np.log10(1-rayleigh_cdf_sea_st_max), '-r')
     plt.plot(x/hs, np.log10(1-crest_cdf_is_sea_st_max), '--g')
-    plt.show()
 
-    # get max forces
+    # get cond max forces
+    cond_max_forces = np.empty(num_sea_states)
+    for i_s in range(num_sea_states):
+        slice = base_shear_con[i_s, :]
+        cond_max_forces[i_s] = max(slice)
+
+    # evaluate the force distributions at these points
+    x_f = np.linspace(0, max(two_hour_max_forces), num=100)
+
+    # get emp force distribution 
+    force_cdf_emp = np.empty(x.shape)
+    for i_f, f in enumerate(x_f):
+        force_cdf_emp[i_f] = np.sum(two_hour_max_forces < f)/num_sea_states
+
+    # get IS force distribution
+    force_cdf_IS = np.empty(x.shape)
+    for i_f, f in enumerate(x_f):
+        force_cdf_IS[i_f] = np.sum((cond_max_forces < f) * fog)/np.sum(fog)
+
+    plt.figure()
+    plt.plot(x_f, np.log10(1-force_cdf_emp), '-r')
+    plt.plot(x_f, np.log10(1-force_cdf_IS), '-b')
+    plt.show()
