@@ -21,7 +21,7 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 200
+    num_sea_states = 2000
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
@@ -43,12 +43,11 @@ if __name__ == "__main__":
     if write:
         # set up arrays (don't actually need to do this for all)
         eta = np.empty([num_sea_states, t_num])
-
+        base_shear = np.empty([num_sea_states, t_num])
         # populate arrays
         for i in range(num_sea_states):
             print(i)
             eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
-            base_shear = np.empty([num_sea_states, t_num])
             F = np.empty((t_num, z_num))
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
@@ -197,7 +196,7 @@ if __name__ == "__main__":
         cond_max_forces[i_s] = max(slice)
 
     # evaluate the force distributions at these points
-    x_f = np.linspace(0, max(two_hour_max_forces), num=100)
+    x_f = np.linspace(min(cond_max_forces), max(cond_max_forces), num=100)
 
     # get emp force distribution 
     force_cdf_emp = np.empty(x.shape)
