@@ -32,8 +32,6 @@ if __name__ == "__main__":
     jnswp_dens = wave.djonswap(f_range, hs, tp)
 
     eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
-    np.savetxt('ux_fft', u_x_fft) 
-    u_x_fft = np.loadtxt('ux_fft', usecols=range(z_num))
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):

@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = False
-    write_con = False
+    write = True
+    write_con = True
 
     # set up wave conditions
     hs = 25
