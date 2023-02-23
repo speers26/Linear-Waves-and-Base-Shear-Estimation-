@@ -109,7 +109,7 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: 
         d = df * spctrl_dens * om_range
 
         Q = (a - np.sum(A))/np.sum(c)
-        R = (m - np.sum(om_range * A))/np.sum(d*om_range)
+        R = (m - np.sum(om_range * B))/np.sum(d*om_range)
 
         A = A + Q * c
         B = B + R * d
