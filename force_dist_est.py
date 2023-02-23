@@ -6,8 +6,8 @@ import wavesim_functions as wave
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -207,6 +207,7 @@ if __name__ == "__main__":
     force_cdf_IS = np.empty(x.shape)
     for i_f, f in enumerate(x_f):
         force_cdf_IS[i_f] = np.sum((cond_max_forces < f) * fog)/np.sum(fog)
+    force_cdf_IS = force_cdf_IS**cond_per_full_state
 
     plt.figure()
     plt.plot(x_f, np.log10(1-force_cdf_emp), '-r')
