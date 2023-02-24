@@ -7,7 +7,7 @@ if __name__ == "__main__":
 
     np.random.seed(12345)
     write = False
-    write_con = False
+    write_con = True
 
     # set up wave conditions
     hs = 25
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     r_crests = np.sort(CoH * hs)
 
     # will simulate sea states of 2 minutes
-    cond_state_min = 2
+    cond_state_min = tp/60
     cond_period = 60*cond_state_min
     waves_per_cond_state = cond_period/tp
     cond_per_full_state = sea_state_hours * 60 / cond_state_min
@@ -180,8 +180,8 @@ if __name__ == "__main__":
     plt.plot(x/hs, np.log10(1-rayleigh_cdf), '-r')
 
     plt.subplot(1, 3, 2)
-    plt.plot(x/hs, np.log10(1-crest_cdf_sea_st_max), '-k')
-    plt.plot(x/hs, np.log10(1-rayleigh_cdf_sea_st_max), '-r')
+    plt.plot(x/hs, np.log10(1-crest_cdf_two_min_max), '-k')
+    plt.plot(x/hs, np.log10(1-rayleigh_cdf_two_min_max), '-r')
     plt.plot(x/hs, np.log10(1-crest_cdf_is_two_min_max), '--g')
 
     plt.subplot(1, 3, 3)
