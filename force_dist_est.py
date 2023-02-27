@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import wavesim_functions as wave
-
+from scipy.signal import argrelextrema
 
 if __name__ == "__main__":
 
     np.random.seed(12345)
     write = False
-    write_con = True
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     r_crests = np.sort(CoH * hs)
 
     # will simulate sea states of 2 minutes
-    cond_state_min = tp/60
+    cond_state_min = 2
     cond_period = 60*cond_state_min
     waves_per_cond_state = cond_period/tp
     cond_per_full_state = sea_state_hours * 60 / cond_state_min
@@ -129,11 +129,18 @@ if __name__ == "__main__":
         eta = np.loadtxt('eta_con.txt')
         base_shear_con = np.loadtxt('base_shear_con.txt')
 
-    # get cond max crests
+    # get cond max crests and max forces
     cond_max_crests = np.empty(num_sea_states)
+    cond_max_forces = np.empty(num_sea_states)
     for i_s in range(num_sea_states):
-        slice = eta[i_s, :]
+        mins = argrelextrema(eta[i_s,:], np.less)[0]
+        lower_min = np.max(mins[mins<t_num/2])
+        upper_min = np.min(mins[mins>t_num/2])
+        slice = eta[i_s, lower_min:upper_min]
         cond_max_crests[i_s] = max(slice)
+        # do forces here for a single wave
+        slice = base_shear_con[i_s, lower_min:upper_min]
+        cond_max_forces[i_s] = max(slice)
 
     # evaluated the 3 distributions at these points
     x = np.linspace(0, 2*hs, num=100)
@@ -145,7 +152,7 @@ if __name__ == "__main__":
     # get simple IS dist
     sim_is_crest_cdf = np.empty(x.shape)
     for i_x, c in enumerate(x):
-        sim_is_crest_cdf[i_x] = np.sum((r_crests<c) * fog)/np.sum(fog)
+        sim_is_crest_cdf[i_x] = np.sum((r_crests < c) * fog)/np.sum(fog)
 
     # get true dist
     rayleigh_cdf = wave.rayleigh_cdf(x, hs)
@@ -155,7 +162,7 @@ if __name__ == "__main__":
     for i_c, c in enumerate(x):
         crest_cdf_is_two_min_max[i_c] = np.sum((cond_max_crests < c) * fog)/np.sum(fog)
 
-    crest_cdf_is_sea_st_max = crest_cdf_is_two_min_max**cond_per_full_state
+    crest_cdf_is_sea_st_max = crest_cdf_is_two_min_max**(cond_per_full_state*waves_per_cond_state)
 
     crest_cdf_two_min_max = sim_is_crest_cdf**waves_per_cond_state
     rayleigh_cdf_two_min_max = rayleigh_cdf**waves_per_cond_state
@@ -168,8 +175,12 @@ if __name__ == "__main__":
     plt.plot([0, 50], [0, 50], 'k')
     plt.show()
 
+    mins = argrelextrema(eta[np.argmin(cond_max_crests), :], np.less)[0]
+    lower_min = np.max(mins[mins < t_num/2])
+    upper_min = np.min(mins[mins > t_num/2])
+
     plt.figure()
-    plt.plot(t_range, eta[np.argmax(cond_max_crests), :])
+    plt.plot(t_range[lower_min:upper_min], eta[np.argmin(cond_max_crests), lower_min:upper_min])
     plt.show()
 
     print(CoH[np.argmax(cond_max_crests)] * hs)
@@ -189,12 +200,6 @@ if __name__ == "__main__":
     plt.plot(x/hs, np.log10(1-rayleigh_cdf_sea_st_max), '-r')
     plt.plot(x/hs, np.log10(1-crest_cdf_is_sea_st_max), '--g')
 
-    # get cond max forces
-    cond_max_forces = np.empty(num_sea_states)
-    for i_s in range(num_sea_states):
-        slice = base_shear_con[i_s, :]
-        cond_max_forces[i_s] = max(slice)
-
     # evaluate the force distributions at these points
     x_f = np.linspace(min(cond_max_forces), max(cond_max_forces), num=100)
 
@@ -207,7 +212,7 @@ if __name__ == "__main__":
     force_cdf_IS = np.empty(x.shape)
     for i_f, f in enumerate(x_f):
         force_cdf_IS[i_f] = np.sum((cond_max_forces < f) * fog)/np.sum(fog)
-    force_cdf_IS = force_cdf_IS**cond_per_full_state
+    force_cdf_IS = force_cdf_IS**(cond_per_full_state*waves_per_cond_state)
 
     plt.figure()
     plt.plot(x_f, np.log10(1-force_cdf_emp), '-r')
