@@ -52,7 +52,7 @@ if __name__ == "__main__":
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
-            base_shear[i, :] = np.sum(F, axis=1) * dz / 1e6 
+            base_shear[i, :] = np.sum(F, axis=1) * dz / 1e6
 
         np.savetxt('eta.txt', eta, delimiter=' ')
         np.savetxt('base_shear.txt', base_shear, delimiter=' ')
@@ -114,12 +114,12 @@ if __name__ == "__main__":
             print(i)
             a = r_crests[i]
             eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
-           
+
             F = np.empty((t_num, z_num))
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
                     F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
-            base_shear_con[i, :] = np.sum(F, axis=1) * dz / 1e6 
+            base_shear_con[i, :] = np.sum(F, axis=1) * dz / 1e6
 
         np.savetxt('eta_con.txt', eta, delimiter=' ')
         np.savetxt('base_shear_con.txt', base_shear_con, delimiter=' ')
@@ -133,9 +133,9 @@ if __name__ == "__main__":
     cond_max_crests = np.empty(num_sea_states)
     cond_max_forces = np.empty(num_sea_states)
     for i_s in range(num_sea_states):
-        mins = argrelextrema(eta[i_s,:], np.less)[0]
-        lower_min = np.max(mins[mins<t_num/2])
-        upper_min = np.min(mins[mins>t_num/2])
+        mins = argrelextrema(eta[i_s, :], np.less)[0]
+        lower_min = np.max(mins[mins < t_num/2])
+        upper_min = np.min(mins[mins > t_num/2])
         slice = eta[i_s, lower_min:upper_min]
         cond_max_crests[i_s] = max(slice)
         # do forces here for a single wave
