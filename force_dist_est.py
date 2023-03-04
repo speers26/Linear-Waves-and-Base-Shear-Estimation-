@@ -6,7 +6,7 @@ from scipy.signal import argrelextrema
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = False
+    write = True
     write_con = True
 
     # set up wave conditions
