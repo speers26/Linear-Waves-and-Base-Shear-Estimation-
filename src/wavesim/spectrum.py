@@ -2,7 +2,89 @@
 Code for generating Wave Spectra and associated functionality
 
 '''
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import numpy as np
+
+
+@dataclass
+class Spectrum(ABC):
+    """ Wave spectrum class
+    """
+    frequency: np.array
+    g = 9.81
+    density = np.ndarray = None
+
+    @abstractmethod
+    def compute_density(self):
+        """returns density for given frequency range
+        """
+
+    @property
+    def df(self):
+        return self.frequency[1] - self.frequency[0]
+
+    def kth_moment(self, k: int):
+        """function to return the kth moment of the given spectrum evaulated at given frequencies
+
+        Args:
+            k (int): moment
+
+        Returns:
+            k_integral (_type_): integral equal to the kth moment
+        """
+
+        k_integral = np.sum(self.density * (self.frequency ** k) * self.df)
+
+        return k_integral
+
+    def random_waves_acf(self, tau: np.ndarray):
+        """find acf function of the gaussian random wave surface with given spectrum
+
+        Args:
+            tau (np.ndarray): lags []
+
+        Returns:
+            acf (np.ndarray): auto correlation
+        """
+
+        spctrl_area = self.kth_moment(0)
+
+        outer_ft = np.outer(self.frequency, tau)    # (n_freq x tau_length)
+
+        acf_mat = np.cos(2 * np.pi * outer_ft) * self.density[:, np.newaxis] * self.df / spctrl_area    # (n_freq x tau_length)
+        acf_vec = np.sum(acf_mat, axis=0)   # sum over columns to give (1 x tau_length)
+
+        return acf_vec
+
+
+@dataclass
+class Jonswap(Spectrum):
+    """ JONSWAP specific functions
+    """
+    hs: np.array
+    tp: np.array
+    gamma: np.array = 2
+    sigma_a: np.array = 0.07
+    sigma_b: np.array = 0.09
+
+    def density(self):
+
+        fp = 1. / self.tp
+
+        df = self.frequency[1] - self.frequency[0]
+
+        sigma = (self.frequency < fp) * self.sigma_a + (self.frequency >= fp) * self.sigma_b
+
+        gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / fp - 1)/sigma) ** 2))
+        dens = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
+            * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
+
+        area = sum(dens*df)
+
+        dens *= self.hs ** 2 / (16 * area)
+
+        return dens
 
 
 def djonswap(f: np.ndarray, hs: float, tp: float):
