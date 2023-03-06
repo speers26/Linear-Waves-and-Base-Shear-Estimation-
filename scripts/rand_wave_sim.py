@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from wavesim import wavesim_functions as wave
+from wavesim import kinematics as kin
+from wavesim import loading as load
+from wavesim import spectrum as spctr
 
 if __name__ == "__main__":
 
@@ -29,14 +31,14 @@ if __name__ == "__main__":
     om_range = f_range * (2*np.pi)
     # all above taken from rand_wave_sim.py
 
-    jnswp_dens = wave.djonswap(f_range, hs, tp)
+    jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
-    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            F[i_t, i_z] = wave.morison_load(u_x_fft[i_t, i_z], du_x_fft[i_t, i_z])
+            F[i_t, i_z] = load.morison_load(u_x_fft[i_t, i_z], du_x_fft[i_t, i_z])
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
@@ -93,8 +95,8 @@ if __name__ == "__main__":
 
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = wave.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
-            F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = kin.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
+            F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
     # F = xr.DataArray(F, dims=["t", "z"])
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N

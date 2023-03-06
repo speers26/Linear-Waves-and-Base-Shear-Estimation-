@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import wavesim_functions as wave
 from scipy.signal import argrelextrema
+from wavesim import kinematics as kin
+from wavesim import loading as load
+from wavesim import spectrum as spctr
 
 if __name__ == "__main__":
 
@@ -37,7 +39,7 @@ if __name__ == "__main__":
     om_range = f_range * (2*np.pi)
 
     # get jonswap density
-    jnswp_dens = wave.djonswap(f_range, hs, tp)
+    jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
     # if we want new wave data
     if write:
@@ -47,11 +49,11 @@ if __name__ == "__main__":
         # populate arrays
         for i in range(num_sea_states):
             print(i)
-            eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i, :], u_x, _, du_x, _ = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
             F = np.empty((t_num, z_num))
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
-                    F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+                    F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
             base_shear[i, :] = np.sum(F, axis=1) * dz / 1e6
 
         np.savetxt('eta.txt', eta, delimiter=' ')
@@ -104,7 +106,7 @@ if __name__ == "__main__":
     om_range = f_range * (2*np.pi)
 
     # redo jonswap density
-    jnswp_dens = wave.djonswap(f_range, hs, tp)
+    jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
     if write_con:
         # generate wave data and write to text files
@@ -113,12 +115,12 @@ if __name__ == "__main__":
         for i in range(num_sea_states):
             print(i)
             a = r_crests[i]
-            eta[i, :], u_x, _, du_x, _ = wave.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+            eta[i, :], u_x, _, du_x, _ = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
             F = np.empty((t_num, z_num))
             for i_t, t in enumerate(t_range):
                 for i_z, z in enumerate(z_range):
-                    F[i_t, i_z] = wave.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+                    F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
             base_shear_con[i, :] = np.sum(F, axis=1) * dz / 1e6
 
         np.savetxt('eta_con.txt', eta, delimiter=' ')
@@ -146,7 +148,7 @@ if __name__ == "__main__":
     x = np.linspace(0, 2*hs, num=100)
 
     # get weights
-    f = wave.rayleigh_pdf(r_crests, hs)
+    f = spctr.rayleigh_pdf(r_crests, hs)
     fog = f/g
 
     # get simple IS dist
@@ -155,7 +157,7 @@ if __name__ == "__main__":
         sim_is_crest_cdf[i_x] = np.sum((r_crests < c) * fog)/np.sum(fog)
 
     # get true dist
-    rayleigh_cdf = wave.rayleigh_cdf(x, hs)
+    rayleigh_cdf = spctr.rayleigh_cdf(x, hs)
 
     # get IS crest distribution
     crest_cdf_is_two_min_max = np.empty(x.shape)
