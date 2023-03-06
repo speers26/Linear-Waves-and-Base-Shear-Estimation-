@@ -18,7 +18,14 @@ class Spectrum(ABC):
     @abstractmethod
     def compute_density(self):
         """returns density for given frequency range
+
+        output sotre in density
         """
+
+    @property
+    def omega(self):
+        """ Get angular frequecy"""
+        return self.frequency * 2 * np.pi  # TODO CHECK THIS
 
     @property
     def df(self):
@@ -68,7 +75,7 @@ class Jonswap(Spectrum):
     sigma_a: np.array = 0.07
     sigma_b: np.array = 0.09
 
-    def density(self):
+    def compute_density(self):
 
         fp = 1. / self.tp
 
@@ -77,12 +84,47 @@ class Jonswap(Spectrum):
         sigma = (self.frequency < fp) * self.sigma_a + (self.frequency >= fp) * self.sigma_b
 
         gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / fp - 1)/sigma) ** 2))
-        dens = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
+        self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
             * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
 
-        area = sum(dens*df)
+        area = sum(self.density *df)
 
-        dens *= self.hs ** 2 / (16 * area)
+        self.density *= self.hs ** 2 / (16 * area)
+
+        return self
+
+
+@dataclass
+class AltJonswap(Jonswap):
+    """ JONSWAP specific functions using formulation used in Jake's paper
+
+    TODO: maybe create unscaled_density and then commmon density
+    """
+    r
+
+    @property
+    def omega_p(self):
+        """ Get angular frequecy"""
+        return self.tp * 2 * np.pi  # TODO CHECK THIS
+
+
+    def density(alpha: float, gamma: float, r: float):
+        """jonswap density using formulation used in Jake's paper
+
+        Args:
+            omega (float): angular frequency
+            alpha (float): scaling parameter TODO: maybe create unscaled_density and then commmon density
+            om_p (float): peak ang freq
+            gamma (float): peak enhancement factor
+            r (float): spectral tail decay index
+
+        Returns:
+            dens (float): JONSWAP density for given omega
+        """
+
+        delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)))) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
+
+        dens = alpha * self.omega ** -r * np.exp(-r / 4 * (np.abs(omega) / self.omega_p) ** -4) * gamma ** delta
 
         return dens
 
