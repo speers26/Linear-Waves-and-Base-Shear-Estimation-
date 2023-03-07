@@ -27,7 +27,7 @@ def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: n
         du_z (float) vertical acceleration [ms^-2]
     """
 
-    # np.random.seed(1234)
+    np.random.seed(1234)
 
     f_num = len(om_range)
     df = (om_range[1] - om_range[0]) / (2*np.pi)
@@ -117,7 +117,7 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: 
     i = complex(0, 1)
     g1 = A + B * i
 
-    eta = np.real(fftshift(fft(g1)))
+    eta = np.real(np.fft.fftshift(np.fft.fft(g1)))
 
     k = np.empty(f_num)
 
@@ -144,10 +144,10 @@ def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: 
         g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
         g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
-        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
-        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
-        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
+        u_x[:, i_z] = np.real(np.fft.fftshift(np.fft.fft(g2))) * (z_init < eta)
+        du_x[:, i_z] = np.real(np.fft.fftshift(np.fft.fft(g3))) * (z_init < eta)
+        u_z[:, i_z] = np.real(np.fft.fftshift(np.fft.fft(g4))) * (z_init < eta)
+        du_z[:, i_z] = np.real(np.fft.fftshift(np.fft.fft(g5))) * (z_init < eta)
 
     return eta, u_x, u_z, du_x, du_z
 
