@@ -251,6 +251,7 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
 
 #         d = water_depth
 
+<<<<<<< HEAD
 # @dataclass
 # class Kinematics:
 #     """
@@ -457,6 +458,34 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
 #             u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
 #             du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
 
+=======
+#         for i_f, f in enumerate(f_range):
+#             omega = 2 * np.pi * f
+#             # k[i_f] = rws.solve_dispersion(omega, d, 95)
+#             k[i_f] = alt_solve_dispersion(omega, d)
+
+#         u_x = np.empty((f_num, len(z_range)))
+#         du_x = np.empty((f_num, len(z_range)))
+#         u_z = np.empty((f_num, len(z_range)))
+#         du_z = np.empty((f_num, len(z_range)))
+
+#         for i_z, z in enumerate(z_range):
+
+#             z_init = z
+#             if z > -3:
+#                 z = -3
+
+#             g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+#             g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+#             g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+#             g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+
+#             u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
+#             du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
+#             u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
+#             du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
+
+>>>>>>> fded595eaa8f501f1217ad2c394f4f5b49a1d792
 #         return eta, u_x, u_z, du_x, du_z
 
 
