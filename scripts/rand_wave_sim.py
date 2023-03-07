@@ -35,7 +35,7 @@ if __name__ == "__main__":
     jnswp.compute_density()  # need to run this to store density
     jnswp.compute_omega_density()  # get omegas and corresponding density
 
-    jnswp_dens = spctr.djonswap(f_range, hs, tp)
+    #jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
     eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, jnswp.omega, jnswp.omega_density, cond)
 
