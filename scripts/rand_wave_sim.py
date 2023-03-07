@@ -28,13 +28,9 @@ if __name__ == "__main__":
     t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
 
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
-    om_range = f_range * (2*np.pi)
-    # all above taken from rand_wave_sim.py
 
     jswp = spctr.Jonswap(f_range, hs, tp)
     jswp.compute_density()
-
-    jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
     eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, jswp.omega, jswp.density, cond)
 
