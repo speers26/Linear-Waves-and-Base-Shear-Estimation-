@@ -4,7 +4,6 @@ Code for generating kinematics, wave velocity, wave accelerations
 '''
 
 import numpy as np
-from scipy.fft import fft, fftshift
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion
 
 
