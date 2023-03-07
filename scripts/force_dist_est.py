@@ -205,7 +205,7 @@ if __name__ == "__main__":
     # evaluate the force distributions at these points
     x_f = np.linspace(min(cond_max_forces), max(cond_max_forces), num=100)
 
-    # get emp force distribution 
+    # get emp force distribution
     force_cdf_emp = np.empty(x.shape)
     for i_f, f in enumerate(x_f):
         force_cdf_emp[i_f] = np.sum(two_hour_max_forces < f)/num_sea_states
