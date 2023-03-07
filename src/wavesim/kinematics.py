@@ -188,96 +188,96 @@ def stokes_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray
 
     return eta, u, w, dudt, dwdt
 
-@dataclass
-class Kinematics:
-    """
-    Returns:
-        _type_: _description_
-    """
-    u
-    du
+# @dataclass
+# class Kinematics:
+#     """
+#     Returns:
+#         _type_: _description_
+#     """
+#     u
+#     du
 
-@dataclass
-class Linear(Kinematics):
-    spectrum: Spectrum
+# @dataclass
+# class Linear(Kinematics):
+#     spectrum: Spectrum
 
-    def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, cond: bool):
-        """generates random wave surface and kinematics using FFT
+#     def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, cond: bool):
+#         """generates random wave surface and kinematics using FFT
 
-        Args:
-            z_range (np.ndarray): range of depths [m]
-            d (float): water depth
-            a (float): wave height at t=0 [m]
-            om_range (np.ndarray): range of angular velocities [s^-1]
-            spctrl_dens (np.ndarray): spectrum corresponding to om_range
-            cond (bool): True if we want a conditional wave simulation
+#         Args:
+#             z_range (np.ndarray): range of depths [m]
+#             d (float): water depth
+#             a (float): wave height at t=0 [m]
+#             om_range (np.ndarray): range of angular velocities [s^-1]
+#             spctrl_dens (np.ndarray): spectrum corresponding to om_range
+#             cond (bool): True if we want a conditional wave simulation
 
-        Returns:
-            eta (np.ndarray): wave surface height [m]
-            u_x (np.ndarray): horizontal velociy at given z [ms^-1]
-            u_v (np.ndarray): vertical velocity at given z [ms^-1]
-            du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
-            du_v (np.ndarray): vertical acceleration at given z [ms^-2]
-        """
+#         Returns:
+#             eta (np.ndarray): wave surface height [m]
+#             u_x (np.ndarray): horizontal velociy at given z [ms^-1]
+#             u_v (np.ndarray): vertical velocity at given z [ms^-1]
+#             du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
+#             du_v (np.ndarray): vertical acceleration at given z [ms^-2]
+#         """
 
-        water_depth = d
-        # np.random.seed(1234)
+#         water_depth = d
+#         # np.random.seed(1234)
 
-        f_range = om_range / (2*np.pi)
-        f_num = len(f_range)
-        df = f_range[1] - f_range[0]
+#         f_range = om_range / (2*np.pi)
+#         f_num = len(f_range)
+#         df = f_range[1] - f_range[0]
 
-        A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
-        B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
+#         A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
+#         B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
 
-        if cond:
-            m = 0
+#         if cond:
+#             m = 0
 
-            c = df * spctrl_dens
-            d = df * spctrl_dens * om_range
+#             c = df * spctrl_dens
+#             d = df * spctrl_dens * om_range
 
-            Q = (a - np.sum(A))/np.sum(c)
-            R = (m - np.sum(om_range * B))/np.sum(d*om_range)
+#             Q = (a - np.sum(A))/np.sum(c)
+#             R = (m - np.sum(om_range * B))/np.sum(d*om_range)
 
-            A = A + Q * c
-            B = B + R * d
+#             A = A + Q * c
+#             B = B + R * d
 
-        i = complex(0, 1)
-        g1 = A + B * i
+#         i = complex(0, 1)
+#         g1 = A + B * i
 
-        eta = np.real(fftshift(fft(g1)))
+#         eta = np.real(fftshift(fft(g1)))
 
-        k = np.empty(f_num)
+#         k = np.empty(f_num)
 
-        d = water_depth
+#         d = water_depth
 
-        for i_f, f in enumerate(f_range):
-            omega = 2 * np.pi * f
-            # k[i_f] = rws.solve_dispersion(omega, d, 95)
-            k[i_f] = alt_solve_dispersion(omega, d)
+#         for i_f, f in enumerate(f_range):
+#             omega = 2 * np.pi * f
+#             # k[i_f] = rws.solve_dispersion(omega, d, 95)
+#             k[i_f] = alt_solve_dispersion(omega, d)
 
-        u_x = np.empty((f_num, len(z_range)))
-        du_x = np.empty((f_num, len(z_range)))
-        u_z = np.empty((f_num, len(z_range)))
-        du_z = np.empty((f_num, len(z_range)))
+#         u_x = np.empty((f_num, len(z_range)))
+#         du_x = np.empty((f_num, len(z_range)))
+#         u_z = np.empty((f_num, len(z_range)))
+#         du_z = np.empty((f_num, len(z_range)))
 
-        for i_z, z in enumerate(z_range):
+#         for i_z, z in enumerate(z_range):
 
-            z_init = z
-            if z > -3:
-                z = -3
+#             z_init = z
+#             if z > -3:
+#                 z = -3
 
-            g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-            g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
-            g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-            g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+#             g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+#             g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+#             g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+#             g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
-            du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
-            u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
-            du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
+#             u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
+#             du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
+#             u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
+#             du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
 
-        return eta, u_x, u_z, du_x, du_z
+#         return eta, u_x, u_z, du_x, du_z
 
 
 
