@@ -11,7 +11,7 @@ import numpy as np
 class Spectrum(ABC):
     """ Wave spectrum class
     """
-    frequency: np.array
+    frequency: np.ndarray
     g = 9.81
     density = np.ndarray = None
 
@@ -19,12 +19,12 @@ class Spectrum(ABC):
     def compute_density(self):
         """returns density for given frequency range
 
-        output sotre in density
+        output store in density
         """
 
     @property
     def omega(self):
-        """ Get angular frequecy"""
+        """ Get angular frequency"""
         return self.frequency * 2 * np.pi  # TODO CHECK THIS
 
     @property
@@ -69,17 +69,17 @@ class Spectrum(ABC):
 class Jonswap(Spectrum):
     """ JONSWAP specific functions
     """
-    hs: np.array
-    tp: np.array
-    gamma: np.array = 2
-    sigma_a: np.array = 0.07
-    sigma_b: np.array = 0.09
+    hs: np.ndarray 
+    tp: np.ndarray
+    fp: np.ndarray = 1/tp
+    gamma: np.ndarray = 2
+    sigma_a: np.ndarray = 0.07 
+    sigma_b: np.ndarray = 0.09
 
     def compute_density(self):
 
-        fp = 1. / self.tp
-
-        df = self.frequency[1] - self.frequency[0]
+        df = self.df
+        fp = self.fp
 
         sigma = (self.frequency < fp) * self.sigma_a + (self.frequency >= fp) * self.sigma_b
 
@@ -87,7 +87,7 @@ class Jonswap(Spectrum):
         self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
             * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
 
-        area = sum(self.density *df)
+        area = sum(self.density*df)
 
         self.density *= self.hs ** 2 / (16 * area)
 
@@ -100,15 +100,13 @@ class AltJonswap(Jonswap):
 
     TODO: maybe create unscaled_density and then commmon density
     """
-    r
 
     @property
     def omega_p(self):
-        """ Get angular frequecy"""
-        return self.tp * 2 * np.pi  # TODO CHECK THIS
+        """ Get peak angular frequecy"""
+        return 2 * np.pi / self.tp  # TODO CHECK THIS
 
-
-    def density(alpha: float, gamma: float, r: float):
+    def compute_density(self, alpha: float, gamma: float, r: float):
         """jonswap density using formulation used in Jake's paper
 
         Args:
@@ -122,9 +120,10 @@ class AltJonswap(Jonswap):
             dens (float): JONSWAP density for given omega
         """
 
-        delta = np.exp(-(2 * (0.07 + 0.02 * (om_p > np.abs(omega)))) ** -2 * (np.abs(omega) / om_p - 1) ** 2)
+        delta = np.exp(-(2 * (0.07 + 0.02 * (self.omega_p > np.abs(self.omega)))) ** -2
+                       * (np.abs(self.omega) / self.omega_p - 1) ** 2)
 
-        dens = alpha * self.omega ** -r * np.exp(-r / 4 * (np.abs(omega) / self.omega_p) ** -4) * gamma ** delta
+        dens = alpha * self.omega ** -r * np.exp(-r / 4 * (np.abs(self.omega) / self.omega_p) ** -4) * gamma ** delta
 
         return dens
 
@@ -209,7 +208,7 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float,
     """returns frequency direction spectrum for a single angular frequency and direction.
 
     Args:
-        omega (np.ndarray): angular frequency
+        omega (np.ndarray): angular frequencynp.arraynp.array
         phi (np.ndarray): direction (from)
         alpha (float): scaling parameter
         om_p (float): peak ang freq

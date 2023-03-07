@@ -40,7 +40,7 @@ def rayleigh_pdf(eta: np.ndarray, hs: float):
 class CrestDistribution(ABC):
     """ Super class over crest distributions
     """
-    hs: np.array
+    hs: np.ndarray
 
     @abstractmethod
     def cdf(self, X) -> np.ndarray:
@@ -84,7 +84,7 @@ class Rayleigh(CrestDistribution):
 class Foristall(CrestDistribution):
     """ Class for the Foristall distribution
     """
-    t1: np.array
+    t1: np.ndarray
 
     def cdf(self, X):
 
