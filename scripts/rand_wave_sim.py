@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from wavesim import kinematics as kinematics
 from wavesim import spectrum as spctr
-from wavesim import loading as load
+from wavesim import loading as loading
 
 if __name__ == "__main__":
 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            F[i_t, i_z] = load.morison_load(u_x_fft[i_t, i_z], du_x_fft[i_t, i_z])
+            F[i_t, i_z] = loading.morison_load(u_x_fft[i_t, i_z], du_x_fft[i_t, i_z])
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x_fft.flatten())
-    plt.plot(t_range, eta_fft[0], '-k')
+    plt.plot(t_range, eta_fft, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('u')
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 2)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z_fft.flatten())
-    plt.plot(t_range, eta_fft[0], '-k')
+    plt.plot(t_range, eta_fft, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('v')
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 3)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x_fft.flatten())
-    plt.plot(t_range, eta_fft[0], '-k')
+    plt.plot(t_range, eta_fft, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('du')
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 4)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z_fft.flatten())
-    plt.plot(t_range, eta_fft[0], '-k')
+    plt.plot(t_range, eta_fft, '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('dv')
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
             eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = kinematics.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
-            F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
+            F[i_t, i_z] = loading.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
     # F = xr.DataArray(F, dims=["t", "z"])
 
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
