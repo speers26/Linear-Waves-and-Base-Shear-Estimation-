@@ -31,9 +31,12 @@ if __name__ == "__main__":
     om_range = f_range * (2*np.pi)
     # all above taken from rand_wave_sim.py
 
+    jswp = spctr.Jonswap(f_range, hs, tp)
+    jswp.compute_density()
+
     jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
-    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
+    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, jswp.omega, jswp.density, cond)
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
