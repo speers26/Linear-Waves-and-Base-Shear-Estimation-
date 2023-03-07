@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from wavesim import kinematics as kin
-from wavesim import loading as load
+from wavesim import kinematics as kinematics
 from wavesim import spectrum as spctr
+from wavesim import loading as load
 
 if __name__ == "__main__":
 
@@ -28,11 +28,12 @@ if __name__ == "__main__":
     t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
 
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
+    om_range = f_range * (2*np.pi)
+    # all above taken from rand_wave_sim.py
 
-    jswp = spctr.Jonswap(f_range, hs, tp)
-    jswp.compute_density()
+    jnswp_dens = spctr.djonswap(f_range, hs, tp)
 
-    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kin.fft_random_wave_sim(z_range, depth, a, jswp.omega, jswp.density, cond)
+    eta_fft, u_x_fft, u_z_fft, du_x_fft, du_z_fft = kinematics.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
     F = np.empty((t_num, z_num))
     for i_t, t in enumerate(t_range):
@@ -94,7 +95,7 @@ if __name__ == "__main__":
 
     for i_t, t in enumerate(t_range):
         for i_z, z in enumerate(z_range):
-            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = kin.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
+            eta[i_t], u_x[i_t, i_z], u_z[i_t, i_z], du_x[i_t, i_z], du_z[i_t, i_z] = kinematics.ptws_random_wave_sim(t=t, z=z, depth=depth, a=a, om_range=om_range, spctrl_dens=jnswp_dens, cond=cond)
             F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
     # F = xr.DataArray(F, dims=["t", "z"])
 
