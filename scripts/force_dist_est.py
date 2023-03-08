@@ -4,12 +4,13 @@ from scipy.signal import argrelextrema
 from wavesim import kinematics as kin
 from wavesim import loading as load
 from wavesim import spectrum as spctr
+from wavesim import crestdistributions as crestd
 
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = True
-    write_con = True
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 2000
+    num_sea_states = 20
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     x = np.linspace(0, 2*hs, num=100)
 
     # get weights
-    f = spctr.rayleigh_pdf(r_crests, hs)
+    f = crestd.rayleigh_pdf(r_crests, hs)
     fog = f/g
 
     # get simple IS dist
@@ -157,7 +158,7 @@ if __name__ == "__main__":
         sim_is_crest_cdf[i_x] = np.sum((r_crests < c) * fog)/np.sum(fog)
 
     # get true dist
-    rayleigh_cdf = spctr.rayleigh_cdf(x, hs)
+    rayleigh_cdf = crestd.rayleigh_cdf(x, hs)
 
     # get IS crest distribution
     crest_cdf_is_two_min_max = np.empty(x.shape)
