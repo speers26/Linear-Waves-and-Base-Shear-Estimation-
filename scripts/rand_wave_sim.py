@@ -43,11 +43,9 @@ if __name__ == "__main__":
 
     z_grid, t_grid = np.meshgrid(z_range, t_range)
 
-    plt.figure()
-
     plt.subplot(2, 2, 1)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_x_fft.flatten())
-    plt.plot(t_range, eta_fft, '-k')
+    plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('u')
@@ -55,7 +53,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 2)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=u_z_fft.flatten())
-    plt.plot(t_range, eta_fft, '-k')
+    plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('v')
@@ -63,7 +61,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 3)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_x_fft.flatten())
-    plt.plot(t_range, eta_fft, '-k')
+    plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('du')
@@ -71,7 +69,7 @@ if __name__ == "__main__":
 
     plt.subplot(2, 2, 4)
     plt.scatter(t_grid.flatten(), z_grid.flatten(), s=1, c=du_z_fft.flatten())
-    plt.plot(t_range, eta_fft, '-k')
+    plt.plot(t_range, eta_fft[0], '-k')
     plt.xlabel('time')
     plt.ylabel('depth')
     plt.title('dv')
