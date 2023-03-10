@@ -7,140 +7,140 @@ from dataclasses import dataclass
 import numpy as np
 
 
-# @dataclass
-# class Spectrum(ABC):
-#     """ Wave spectrum class
-#     """
-#     frequency: np.ndarray
-#     g = 9.81
-#     density = np.ndarray = None
-#     omega_density = np.ndarray = None
+@dataclass
+class Spectrum(ABC):
+    """ Wave spectrum class
+    """
+    frequency: np.ndarray
+    g = 9.81
+    density = np.ndarray = None
+    omega_density = np.ndarray = None
 
-#     @property
-#     def omega(self):
-#         """returns omegas for given fs
-#         """
-#         return self.frequency * 2 * np.pi
+    @property
+    def omega(self):
+        """returns omegas for given fs
+        """
+        return self.frequency * 2 * np.pi
 
-#     @property
-#     def df(self):
-#         return self.frequency[1] - self.frequency[0]
+    @property
+    def df(self):
+        return self.frequency[1] - self.frequency[0]
 
-#     @property
-#     def dom(self):
-#         return self.omega[1] - self.omega[0]
+    @property
+    def dom(self):
+        return self.omega[1] - self.omega[0]
 
-#     @abstractmethod
-#     def compute_density(self):
-#         """returns density for given frequency range
+    @abstractmethod
+    def compute_density(self):
+        """returns density for given frequency range
 
-#         output stored in density
-#         """
+        output stored in density
+        """
 
-#     def compute_omega_density(self):
-#         """ returns the density scaled for omega on the x axis
+    def compute_omega_density(self):
+        """ returns the density scaled for omega on the x axis
 
-#         output stored in omega_density
-#         """
-#         self.omega_density = self.density / (2*np.pi)
-#         return self
+        output stored in omega_density
+        """
+        self.omega_density = self.density / (2*np.pi)
+        return self
 
-#     def compute_kth_moment(self, k: int):
-#         """function to return the kth moment of the given spectrum evaulated at given frequencies
+    def compute_kth_moment(self, k: int):
+        """function to return the kth moment of the given spectrum evaulated at given frequencies
 
-#         Args:
-#             k (int): moment
+        Args:
+            k (int): moment
 
-#         Returns:
-#             k_integral (_type_): integral equal to the kth moment
-#         """
+        Returns:
+            k_integral (_type_): integral equal to the kth moment
+        """
 
-#         k_integral = np.sum(self.density * (self.frequency ** k) * self.df)
+        k_integral = np.sum(self.density * (self.frequency ** k) * self.df)
 
-#         return k_integral
+        return k_integral
 
-#     def compute_random_waves_acf(self, tau: np.ndarray):
-#         """find acf function of the gaussian random wave surface with given spectrum
+    def compute_random_waves_acf(self, tau: np.ndarray):
+        """find acf function of the gaussian random wave surface with given spectrum
 
-#         Args:
-#             tau (np.ndarray): lags []
+        Args:
+            tau (np.ndarray): lags []
 
-#         Returns:
-#             acf (np.ndarray): auto correlation
-#         """
+        Returns:
+            acf (np.ndarray): auto correlation
+        """
 
-#         spctrl_area = self.kth_moment(0)
+        spctrl_area = self.kth_moment(0)
 
-#         outer_ft = np.outer(self.frequency, tau)  # (n_freq x tau_length)
+        outer_ft = np.outer(self.frequency, tau)  # (n_freq x tau_length)
 
-#         acf_mat = np.cos(2 * np.pi * outer_ft) * self.density[:, np.newaxis] * self.df / spctrl_area
-#         acf_vec = np.sum(acf_mat, axis=0)   # sum over columns to give (1 x tau_length)
+        acf_mat = np.cos(2 * np.pi * outer_ft) * self.density[:, np.newaxis] * self.df / spctrl_area
+        acf_vec = np.sum(acf_mat, axis=0)   # sum over columns to give (1 x tau_length)
 
-#         return acf_vec
-
-
-# @dataclass
-# class Jonswap(Spectrum):
-#     """ JONSWAP specific functions
-#     """
-#     hs: np.ndarray
-#     tp: np.ndarray
-#     gamma: np.ndarray = 2
-#     sigma_a: np.ndarray = 0.07
-#     sigma_b: np.ndarray = 0.09
-
-#     @property
-#     def fp(self):
-#         """ Get peak frequency """
-#         return 1/self.tp
-
-#     @property
-#     def omega_p(self):
-#         """ Get peak angular frequecy """
-#         return 2 * np.pi / self.tp  # TODO CHECK THIS
-
-#     def compute_density(self):
-
-#         sigma = (self.frequency < self.fp) * self.sigma_a + (self.frequency >= self.fp) * self.sigma_b
-
-#         gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / self.fp - 1)/sigma) ** 2))
-#         self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
-#             * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
-
-#         area = sum(self.density*self.df)
-
-#         self.density *= self.hs ** 2 / (16 * area)
-
-#         return self
+        return acf_vec
 
 
-# @dataclass
-# class AltJonswap(Jonswap):
-#     """ JONSWAP specific functions using formulation used in Jake's paper
+@dataclass
+class Jonswap(Spectrum):
+    """ JONSWAP specific functions
+    """
+    hs: np.ndarray
+    tp: np.ndarray
+    gamma: np.ndarray = 2
+    sigma_a: np.ndarray = 0.07
+    sigma_b: np.ndarray = 0.09
 
-#     TODO: maybe create unscaled_density and then commmon density
-#     """
+    @property
+    def fp(self):
+        """ Get peak frequency """
+        return 1/self.tp
 
-#     def compute_density(self, alpha: float, gamma: float, r: float):
-#         """jonswap density using formulation used in Jake's paper
+    @property
+    def omega_p(self):
+        """ Get peak angular frequecy """
+        return 2 * np.pi / self.tp  # TODO CHECK THIS
 
-#         Args:
-#             omega (float): angular frequency
-#             alpha (float): scaling parameter TODO: maybe create unscaled_density and then commmon density
-#             om_p (float): peak ang freq
-#             gamma (float): peak enhancement factor
-#             r (float): spectral tail decay index
+    def compute_density(self):
 
-#         Returns:
-#             dens (float): JONSWAP density for given omega
-#         """
+        sigma = (self.frequency < self.fp) * self.sigma_a + (self.frequency >= self.fp) * self.sigma_b
 
-#         delta = np.exp(-(2 * (self.sigma_a + (self.sigma_b-self.sigma_a) * (self.omega_p > np.abs(self.omega)))) ** -2
-#                        * (np.abs(self.omega) / self.omega_p - 1) ** 2)
+        gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / self.fp - 1)/sigma) ** 2))
+        self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
+            * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
 
-#         dens = alpha * self.omega ** -r * np.exp(-r / 4 * (np.abs(self.omega) / self.omega_p) ** -4) * gamma ** delta
+        area = sum(self.density*self.df)
 
-#         return dens
+        self.density *= self.hs ** 2 / (16 * area)
+
+        return self
+
+
+@dataclass
+class AltJonswap(Jonswap):
+    """ JONSWAP specific functions using formulation used in Jake's paper
+
+    TODO: maybe create unscaled_density and then commmon density
+    """
+
+    def compute_density(self, alpha: float, gamma: float, r: float):
+        """jonswap density using formulation used in Jake's paper
+
+        Args:
+            omega (float): angular frequency
+            alpha (float): scaling parameter TODO: maybe create unscaled_density and then commmon density
+            om_p (float): peak ang freq
+            gamma (float): peak enhancement factor
+            r (float): spectral tail decay index
+
+        Returns:
+            dens (float): JONSWAP density for given omega
+        """
+
+        delta = np.exp(-(2 * (self.sigma_a + (self.sigma_b-self.sigma_a) * (self.omega_p > np.abs(self.omega)))) ** -2
+                       * (np.abs(self.omega) / self.omega_p - 1) ** 2)
+
+        dens = alpha * self.omega ** -r * np.exp(-r / 4 * (np.abs(self.omega) / self.omega_p) ** -4) * gamma ** delta
+
+        return dens
 
 
 def djonswap(f: np.ndarray, hs: float, tp: float):
