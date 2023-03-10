@@ -12,9 +12,9 @@ class Spectrum(ABC):
     """ Wave spectrum class
     """
     frequency: np.ndarray
-    g = 9.81
-    density = np.ndarray = None
-    omega_density = np.ndarray = None
+    g: float = 9.81
+    density: np.ndarray = None
+    omega_density: np.ndarray = None
 
     @property
     def omega(self):
@@ -69,7 +69,7 @@ class Spectrum(ABC):
             acf (np.ndarray): auto correlation
         """
 
-        spctrl_area = self.kth_moment(0)
+        spctrl_area = self.compute_kth_moment(0)
 
         outer_ft = np.outer(self.frequency, tau)  # (n_freq x tau_length)
 
