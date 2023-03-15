@@ -12,6 +12,8 @@ class Spectrum(ABC):
     """ Wave spectrum class
     """
     frequency: np.ndarray
+    hs: np.ndarray
+    tp: np.ndarray
     g: float = 9.81
     density: np.ndarray = None
     omega_density: np.ndarray = None
@@ -83,8 +85,6 @@ class Spectrum(ABC):
 class Jonswap(Spectrum):
     """ JONSWAP specific functions
     """
-    hs: np.ndarray
-    tp: np.ndarray
     gamma: np.ndarray = 2
     sigma_a: np.ndarray = 0.07
     sigma_b: np.ndarray = 0.09

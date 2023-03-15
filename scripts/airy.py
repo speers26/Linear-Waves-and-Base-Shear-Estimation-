@@ -1,6 +1,6 @@
 import numpy as np
-from scipy import optimize
 import matplotlib.pyplot as plt
+from wavesim import kinematics as kin
 
 if __name__ == '__main__':
 

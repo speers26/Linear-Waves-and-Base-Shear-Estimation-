@@ -2,7 +2,8 @@
 Code for generating kinematics, wave velocity, wave accelerations
 
 '''
-
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion
 from scipy.fft import fft, fftshift
@@ -376,3 +377,75 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
             eta[i_y, i_x] = np.sum(A * np.cos(k_x * x + k_y * y - om_t) + B * np.sin(k_x * x + k_y * y - om_t))
 
     return eta
+
+
+@dataclass
+class WaveKin(ABC):
+    """ Wave kinematics class
+
+        current simulates by propogating through time at a single point x=0
+    """
+    times: np.ndarray
+    z_values: np.ndarray
+    H: np.ndarray  # sig wave height or A/2
+    T: np.ndarray  # (peak) period
+    g: float = 9.81
+
+    @property
+    def depth(self):
+        """ returns water depth as the minimun of z_values
+        """
+        return -np.min(self.z_values)
+
+    @abstractmethod
+    def compute_kinematics(self):
+        """ compute kinematics for given time and z_values """
+
+
+@dataclass
+class AiryKin(WaveKin):
+    """ Airy kinematics class
+    """
+    x: np.ndarray = 0  # always set this to 0 for now to align with other kin methods
+
+    @property
+    def omega(self):
+        """ angular freq
+        """
+        return 2*np.pi/self.T
+
+    @property
+    def k(self):
+        """ returns wave number for kinematics calculation
+        """
+        beta = 2.4901
+
+        x = self.depth * self.omega / np.sqrt(self.g * self.d)
+
+        y = x**2 * (1 - np.exp(-x**beta))**(-1/beta)
+
+        k = y / self.depth
+
+        return k
+
+    def compute_kinematics(self):
+
+        for i_t, t in enumerate(self.times):
+            for i_z, z in enumerate(self.z_values):
+
+                A = self.H/2
+
+                eta = A * np.sin(self.omega * t - self.k * self.x)
+
+                u = self.omega * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+
+                w = self.omega * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+
+                du = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+
+                dw = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+
+                if z > eta:
+                    u = w = du = dw = 0
+
+        return eta, u, w, du, dw
