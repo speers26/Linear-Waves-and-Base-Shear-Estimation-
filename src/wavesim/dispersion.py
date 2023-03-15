@@ -8,6 +8,20 @@ ADD REF HERE
 import numpy as np
 from scipy import optimize
 
+def airy_dispersion(h: np.ndarray, T: np.ndarray):
+    """solves dispersion relation for wave number
+    Args:
+        h (np.ndarray): water depth
+        T (np.ndarray): period [s]
+    """
+
+    omega = 2 * np.pi / T
+
+    f = lambda k: dispersion_diff(k, h, omega)
+
+    k = optimize.bisect(f, 1e-7, 1)
+
+    return k, omega
 
 def fDispersionSTOKES5(h, H1, T):
     """
@@ -71,12 +85,12 @@ def solve_dispersion(omega: float, h: float, upp: float):
         k (float): wave number [m^-1]
     """
 
-    k = optimize.bisect(f=_dispersion_diff, a=1e-7, b=upp, args=(h, omega))
+    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=upp, args=(h, omega))
 
     return k
 
 
-def _dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
+def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
     """function to optimise in airy_dispersion
 
     Args:

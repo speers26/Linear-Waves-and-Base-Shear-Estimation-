@@ -390,6 +390,7 @@ class WaveKin(ABC):
     H: np.ndarray  # sig wave height or A/2
     T: np.ndarray  # (peak) period
     g: float = 9.81
+    x: np.ndarray = 0  # always set this to 0 for now
 
     @property
     def depth(self):
@@ -406,8 +407,6 @@ class WaveKin(ABC):
 class AiryKin(WaveKin):
     """ Airy kinematics class
     """
-    x: np.ndarray = 0  # always set this to 0 for now to align with other kin methods
-
     @property
     def omega(self):
         """ angular freq
@@ -420,7 +419,7 @@ class AiryKin(WaveKin):
         """
         beta = 2.4901
 
-        x = self.depth * self.omega / np.sqrt(self.g * self.d)
+        x = self.depth * self.omega / np.sqrt(self.g * self.depth)
 
         y = x**2 * (1 - np.exp(-x**beta))**(-1/beta)
 
@@ -433,7 +432,7 @@ class AiryKin(WaveKin):
         for i_t, t in enumerate(self.times):
             for i_z, z in enumerate(self.z_values):
 
-                A = self.H/2
+                A = self.H * 2
 
                 eta = A * np.sin(self.omega * t - self.k * self.x)
 
