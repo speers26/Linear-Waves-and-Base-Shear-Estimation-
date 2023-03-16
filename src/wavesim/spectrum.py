@@ -97,7 +97,7 @@ class Jonswap(Spectrum):
     @property
     def omega_p(self):
         """ Get peak angular frequecy """
-        return 2 * np.pi / self.tp  # TODO CHECK THIS
+        return 2 * np.pi / self.tp 
 
     def compute_density(self):
 

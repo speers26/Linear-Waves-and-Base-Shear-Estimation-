@@ -5,6 +5,9 @@ ADD REF HERE
 
 '''
 import numpy as np
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from wavesim.kinematics import WaveKin
 
 
 def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
@@ -47,3 +50,23 @@ def base_shear(u, du, dz):
     base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
 
     return base_shear
+
+@dataclass
+class Load(ABC):
+    """ load and base shear class
+    """
+    kinematics: WaveKin
+
+    @abstractmethod
+    def compute_load(self):
+        """ compute load at individual z points in WaveKin """
+    
+    @abstractmethod
+    def compute_base_shear(self):
+        """ integrate load to get base shear """
+
+
+@dataclass
+class MorisonLoad(Load):
+    """ Morison load class """
+    
