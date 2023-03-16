@@ -200,7 +200,6 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
     return eta
 
 
-
 @dataclass
 class WaveKin(ABC):
     """ General wave kinematics class
@@ -436,10 +435,10 @@ class StokesKin(WaveKin):
                                 + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
                                 + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
                                 + B55 * np.cos(5 * psi)))
-                
+
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
-                
+
                 else:
                     # u calculation
                     self.u[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * (self.k * np.cos(self.theta)) \
@@ -489,8 +488,6 @@ class StokesKin(WaveKin):
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
         return self
-
-
 
 # @dataclass
 # class LinearKin(WaveKin):

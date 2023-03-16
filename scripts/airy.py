@@ -20,5 +20,4 @@ if __name__ == '__main__':
 
     airy_load = load.MorisonLoad(airy_wave)
     airy_load.compute_load()
-    airy_load.retrieve_load()
     airy_load.plot_load()
