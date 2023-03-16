@@ -1,5 +1,6 @@
 import numpy as np
 from wavesim import kinematics as kin
+from wavesim import loading as load
 
 if __name__ == '__main__':
 
@@ -14,9 +15,9 @@ if __name__ == '__main__':
     time = np.linspace(-20, 20, n_time)
 
     stokes_wave = kin.StokesKin(t_values=time, z_values=z_range, H=H, T=T)
-
     stokes_wave.compute_kinematics()
     stokes_wave.plot_kinematics()
 
-    stokes_wave.compute_base_shear()
-    stokes_wave.plot_base_shear()
+    stokes_load = load.MorisonLoad(stokes_wave)
+    stokes_load.compute_load()
+    stokes_load.plot_load()

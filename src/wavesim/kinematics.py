@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersionSTOKES5
-from wavesim.loading import base_shear
 from wavesim.spectrum import Spectrum, Jonswap
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
@@ -201,16 +200,16 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
     return eta
 
 
+
 @dataclass
 class WaveKin(ABC):
-    """ Wave kinematics class
-
-        current simulates by propogating through time at a single point x=0
+    """ General wave kinematics class
     """
+
     t_values: np.ndarray
     z_values: np.ndarray
-    H: np.ndarray = 15  # sig wave height or A/2
-    T: np.ndarray = 10  # (peak) period
+    H: np.ndarray
+    T: np.ndarray
     g: float = 9.81
     x: np.ndarray = 0  # always set this to 0 for now
     theta: np.ndarray = 0  # always set to 0 for now
@@ -219,7 +218,6 @@ class WaveKin(ABC):
     w: np.ndarray = 0
     du: np.ndarray = 0
     dw: np.ndarray = 0
-    base_shear: np.ndarray = 0
 
     @property
     def omega(self):
@@ -299,19 +297,6 @@ class WaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        plt.show()
-
-    def compute_base_shear(self):
-        self.base_shear = base_shear(self.u, self.du, self.dz)
-        return self
-
-    def retreive_base_shear(self):
-        return self.base_shear
-
-    def plot_base_shear(self):
-        """ plot the force stored in base_shear """
-        plt.plot()
-        plt.plot(self.t_values, self.base_shear)
         plt.show()
 
 
@@ -506,19 +491,10 @@ class StokesKin(WaveKin):
         return self
 
 
-@dataclass
-class LinearKin(WaveKin):
-    """ Linear kinematics class
-    """
-    spctr: Spectrum
-    cond: bool = False
 
-    def __post_init__(self):
-        self.H = self.spctr.hs
-        self.T = self.spctr.tp
-        return self
-
-    
-
-
-
+# @dataclass
+# class LinearKin(WaveKin):
+#     """ Linear kinematics class
+#     """
+#     spctr: Spectrum = 0
+#     cond: bool = False

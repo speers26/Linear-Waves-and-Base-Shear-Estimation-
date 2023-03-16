@@ -8,6 +8,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from wavesim.kinematics import WaveKin
+import matplotlib.pyplot as plt
 
 
 def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
@@ -28,7 +29,7 @@ def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
     return rho * c_m * (np.pi / 4) * (diameter ** 2) * du + 0.5 * rho * c_d * diameter * u * np.abs(u)
 
 
-def base_shear(u, du, dz):
+def morison_base_shear(u, du, dz):
     """ compute base shear time series in MN using morison load on a cylinder
 
     Args:
@@ -51,22 +52,36 @@ def base_shear(u, du, dz):
 
     return base_shear
 
+
 @dataclass
 class Load(ABC):
-    """ load and base shear class
+    """ load class
     """
     kinematics: WaveKin
+    load: np.ndarray = 0
 
     @abstractmethod
     def compute_load(self):
-        """ compute load at individual z points in WaveKin """
-    
-    @abstractmethod
-    def compute_base_shear(self):
-        """ integrate load to get base shear """
+        """ compute load at individual z points in WaveKin
+
+        store in load
+        """
+
+    def retrieve_load(self):
+        """ retrieve the forces stores in load"""
+        return self.load
+
+    def plot_load(self):
+        """ plot the force stored in load """
+        plt.plot()
+        plt.plot(self.kinematics.t_values, self.load)
+        plt.show()
 
 
 @dataclass
 class MorisonLoad(Load):
     """ Morison load class """
-    
+
+    def compute_load(self):
+        self.load = morison_base_shear(self.kinematics.u, self.kinematics.du, self.kinematics.dz)
+        return self

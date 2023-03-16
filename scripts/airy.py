@@ -1,5 +1,6 @@
 import numpy as np
 from wavesim import kinematics as kin
+from wavesim import loading as load
 
 if __name__ == '__main__':
 
@@ -17,5 +18,7 @@ if __name__ == '__main__':
     airy_wave.compute_kinematics()
     airy_wave.plot_kinematics()
 
-    airy_wave.compute_base_shear()
-    airy_wave.plot_base_shear()
+    airy_load = load.MorisonLoad(airy_wave)
+    airy_load.compute_load()
+    airy_load.retrieve_load()
+    airy_load.plot_load()
