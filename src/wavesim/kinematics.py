@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion
 from scipy.fft import fft, fftshift
+import matplotlib.pyplot as plt
 
 
 def airy_kinematics(k: np.ndarray, h: np.ndarray, A: np.ndarray, x: np.ndarray,
@@ -385,12 +386,17 @@ class WaveKin(ABC):
 
         current simulates by propogating through time at a single point x=0
     """
-    times: np.ndarray
+    t_values: np.ndarray
     z_values: np.ndarray
     H: np.ndarray  # sig wave height or A/2
     T: np.ndarray  # (peak) period
     g: float = 9.81
     x: np.ndarray = 0  # always set this to 0 for now
+    eta: np.ndarray = 0
+    u: np.ndarray = 0
+    w: np.ndarray = 0
+    du: np.ndarray = 0
+    dw: np.ndarray = 0
 
     @property
     def depth(self):
@@ -398,9 +404,44 @@ class WaveKin(ABC):
         """
         return -np.min(self.z_values)
 
+    @property
+    def nz(self):
+        """ retuns number of z values"""
+        return len(self.z_values)
+
+    @property
+    def nt(self):
+        """ returns number of time points"""
+        return len(self.t_values)
+
+    @property
+    def zt_grid(self):
+        """ returns grid for plotting over"""
+        return np.meshgrid(self.z_values, self.t_values)
+
     @abstractmethod
     def compute_kinematics(self):
-        """ compute kinematics for given time and z_values """
+        """ compute kinematics for given time and z_values 
+
+        output stored in eta, u, w, du, dw
+        """
+
+    @abstractmethod
+    def retrieve_kinematics(self):
+        """get kinematics stored in eta, u, w, du, dw
+        """
+
+    @abstractmethod
+    def plot_kinematics(self):
+        """ plot the kinematics computed in compute_kinematics """
+
+    # @abstractmethod
+    # def compute_base_shear(self):
+    #     """ copmute the base shear using morison load on a stick """
+
+    # @abstractmethod
+    # def plot_base_shear(self):
+    #     """ plot the force calculated using compute_base_shear """
 
 
 @dataclass
@@ -429,22 +470,70 @@ class AiryKin(WaveKin):
 
     def compute_kinematics(self):
 
-        for i_t, t in enumerate(self.times):
+        self.eta = np.empty(self.nt)
+        self.u = np.empty((self.nt, self.nz))
+        self.w = np.empty((self.nt, self.nz))
+        self.du = np.empty((self.nt, self.nz))
+        self.dw = np.empty((self.nt, self.nz))
+
+        for i_t, t in enumerate(self.t_values):
             for i_z, z in enumerate(self.z_values):
 
-                A = self.H * 2
+                A = self.H / 2
 
-                eta = A * np.sin(self.omega * t - self.k * self.x)
+                self.eta[i_t] = A * np.sin(self.omega * t - self.k * self.x)
 
-                u = self.omega * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+                if z > self.eta[i_t]:
+                    self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
 
-                w = self.omega * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+                else:
+                    self.u[i_t, i_z] = self.omega * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
 
-                du = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+                    self.w[i_t, i_z] = self.omega * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
 
-                dw = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+                    self.du[i_t, i_z] = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
 
-                if z > eta:
-                    u = w = du = dw = 0
+                    self.dw[i_t, i_z] = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
 
-        return eta, u, w, du, dw
+        return self
+
+    def retrieve_kinematics(self):
+        return self.eta, self.u, self.w, self.du, self.dw
+
+    def plot_kinematics(self):
+
+        plt.figure()
+        plt.subplot(2, 2, 1)
+
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('u')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
+
+        plt.subplot(2, 2, 2)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('w')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
+
+        plt.subplot(2, 2, 3)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('du')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
+
+        plt.subplot(2, 2, 4)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('dw')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
+
+        plt.show()
