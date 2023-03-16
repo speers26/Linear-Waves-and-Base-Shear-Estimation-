@@ -10,49 +10,6 @@ from dataclasses import dataclass
 from wavesim.kinematics import WaveKin
 import matplotlib.pyplot as plt
 
-
-def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
-    """compute unit Morison load for a vertical cylinder
-
-    Args:
-        u (np.ndarray): horizontal velocity [m/s]
-        du (np.ndarray): horizontal acceleration [m/s^2]
-        diameter (float, optional): _description_. Defaults to 1.0. [m]
-        rho (float, optional): _description_. Defaults to 1024.0. [kg/m^3]
-        c_m (float, optional): _description_. Defaults to 1.0. [unitless]
-        c_d (float, optional): _description_. Defaults to 1.0. [unitless]
-
-    Returns:
-        np.ndarray: horizontal unit morrison load [N/m]
-    """
-
-    return rho * c_m * (np.pi / 4) * (diameter ** 2) * du + 0.5 * rho * c_d * diameter * u * np.abs(u)
-
-
-def morison_base_shear(u, du, dz):
-    """ compute base shear time series in MN using morison load on a cylinder
-
-    Args:
-        t_values (np.ndarray): time values to return series at [s]
-        z_values (np.ndarray): z_values to integrate morison loading over [m]
-        u (np.ndarray): horizontal velocities [ms^-1]
-        du (np.ndarray): horizontal accelerations [ms^-2]
-
-    Returns:
-        base_shear (np.ndarray): time series of base shear forces [MN]
-    """
-
-    F = np.empty(np.shape(u))
-
-    for i_t, t in enumerate(u):
-        for i_z, z in enumerate(t):
-            F[i_t, i_z] = morison_load(u[i_t, i_z], du[i_t, i_z])
-
-    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
-
-    return base_shear
-
-
 @dataclass
 class Load(ABC):
     """ load class
@@ -82,6 +39,23 @@ class Load(ABC):
 class MorisonLoad(Load):
     """ Morison load class """
 
+    diameter: float = 1.0
+    rho: float = 1024.0
+    c_m: float = 1.0
+    c_d: float = 1.0
+
     def compute_load(self):
-        self.load = morison_base_shear(self.kinematics.u, self.kinematics.du, self.kinematics.dz)
+        """ compute base shear time series in MN using morison load on a cylinder
+        """
+
+        F = np.empty(np.shape(self.kinematics.u))
+
+        for i_t, t in enumerate(self.kinematics.u):
+            for i_z, _ in enumerate(t):
+                F[i_t, i_z] = self.rho * self.c_m * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du[i_t, i_z]\
+                      + 0.5 * self.rho * self.c_d * self.diameter * self.kinematics.u[i_t, i_z]\
+                      * np.abs(self.kinematics.u[i_t, i_z])
+
+        self.load = np.sum(F, axis=1) * self.kinematics.dz / 1e6  # 1e6 converts to MN from N
+
         return self
