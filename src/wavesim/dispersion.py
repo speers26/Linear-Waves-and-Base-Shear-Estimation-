@@ -8,47 +8,31 @@ ADD REF HERE
 import numpy as np
 from scipy import optimize
 
-def airy_dispersion(h: np.ndarray, T: np.ndarray):
-    """solves dispersion relation for wave number
-    Args:
-        h (np.ndarray): water depth
-        T (np.ndarray): period [s]
-    """
 
-    omega = 2 * np.pi / T
-
-    f = lambda k: dispersion_diff(k, h, omega)
-
-    k = optimize.bisect(f, 1e-7, 1)
-
-    return k, omega
-
-def fDispersionSTOKES5(h, H1, T):
+def fDispersionSTOKES5(h, H, omega):
     """
     Solves the progressive wave dispersion equation
 
     Args:
         h (np.ndarray): depth [m]
-        H1 (np.ndarray):  wave height [m]
+        H (np.ndarray):  wave height [m]
         T (np.ndarray): wave period
 
     Returns:
         np.array: wave number k [1/m]
     """
+    # TODO: why isnt this using depth
 
-    g = 9.81
-    omega = 2 * np.pi / T
-
-    f = lambda k: _progressive_dispersion(k, H1, omega)
+    f = lambda k: _progressive_dispersion(k, H, omega)
 
     k = optimize.bisect(f, 1e-7, 1)
 
-    return k, omega
+    return k
 
 
-def _progressive_dispersion(k, H1, omega):
+def _progressive_dispersion(k, H, omega):
     g = 9.81
-    return 1 + (H1 ** 2 * k ** 2) / 8+(H1 ** 4 * k ** 4) / 128 - omega / ((g * k) ** 0.5)
+    return 1 + (H ** 2 * k ** 2) / 8+(H ** 4 * k ** 4) / 128 - omega / ((g * k) ** 0.5)
 
 
 def alt_solve_dispersion(omega: float, d: float):
