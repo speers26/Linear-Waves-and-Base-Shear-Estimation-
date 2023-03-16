@@ -23,3 +23,27 @@ def morison_load(u, du, diameter=1.0, rho=1024.0, c_m=1.0, c_d=1.0):
     """
 
     return rho * c_m * (np.pi / 4) * (diameter ** 2) * du + 0.5 * rho * c_d * diameter * u * np.abs(u)
+
+
+def base_shear(u, du, dz):
+    """ compute base shear time series in MN using morison load on a cylinder
+
+    Args:
+        t_values (np.ndarray): time values to return series at [s]
+        z_values (np.ndarray): z_values to integrate morison loading over [m]
+        u (np.ndarray): horizontal velocities [ms^-1]
+        du (np.ndarray): horizontal accelerations [ms^-2]
+
+    Returns:
+        base_shear (np.ndarray): time series of base shear forces [MN]
+    """
+
+    F = np.empty(np.shape(u))
+
+    for i_t, t in enumerate(u):
+        for i_z, z in enumerate(t):
+            F[i_t, i_z] = morison_load(u[i_t, i_z], du[i_t, i_z])
+
+    base_shear = np.sum(F, axis=1) * dz / 1e6  # 1e6 converts to MN from N
+
+    return base_shear

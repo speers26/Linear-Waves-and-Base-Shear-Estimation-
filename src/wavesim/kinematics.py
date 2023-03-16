@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion
+from wavesim.loading import base_shear
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
 
@@ -397,6 +398,7 @@ class WaveKin(ABC):
     w: np.ndarray = 0
     du: np.ndarray = 0
     dw: np.ndarray = 0
+    base_shear: np.ndarray = 0
 
     @property
     def depth(self):
@@ -408,6 +410,11 @@ class WaveKin(ABC):
     def nz(self):
         """ retuns number of z values"""
         return len(self.z_values)
+
+    @property
+    def dz(self):
+        """ returns steps in z-values """
+        return self.z_values[1] - self.z_values[0]
 
     @property
     def nt(self):
@@ -433,15 +440,22 @@ class WaveKin(ABC):
 
     @abstractmethod
     def plot_kinematics(self):
-        """ plot the kinematics computed in compute_kinematics """
+        """ plot the kinematics stored in eta, u, w, du, dw """
 
-    # @abstractmethod
-    # def compute_base_shear(self):
-    #     """ copmute the base shear using morison load on a stick """
+    @abstractmethod
+    def compute_base_shear(self):
+        """ compute the base shear using morison load on a stick
 
-    # @abstractmethod
-    # def plot_base_shear(self):
-    #     """ plot the force calculated using compute_base_shear """
+        output stored in base_shear
+        """
+
+    @abstractmethod
+    def retreive_base_shear(self):
+        """ get forces stored in base_shear"""
+
+    @abstractmethod
+    def plot_base_shear(self):
+        """ plot the force stored in base_shear """
 
 
 @dataclass
@@ -458,15 +472,7 @@ class AiryKin(WaveKin):
     def k(self):
         """ returns wave number for kinematics calculation
         """
-        beta = 2.4901
-
-        x = self.depth * self.omega / np.sqrt(self.g * self.depth)
-
-        y = x**2 * (1 - np.exp(-x**beta))**(-1/beta)
-
-        k = y / self.depth
-
-        return k
+        return alt_solve_dispersion(self.omega, self.depth)
 
     def compute_kinematics(self):
 
@@ -536,4 +542,16 @@ class AiryKin(WaveKin):
         plt.ylabel('depth')
         plt.colorbar()
 
+        plt.show()
+
+    def compute_base_shear(self):
+        self.base_shear = base_shear(self.u, self.du, self.dz)
+        return self
+
+    def retreive_base_shear(self):
+        return self.base_shear
+
+    def plot_base_shear(self):
+        plt.plot()
+        plt.plot(self.t_values, self.base_shear)
         plt.show()
