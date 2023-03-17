@@ -6,11 +6,11 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersionSTOKES5
-from wavesim.spectrum import Spectrum, Jonswap
+from wavesim.spectrum import Spectrum
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
 
-# Linear
+#TODO: create classes for spatial waves
 
 def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
     """returns pointwave surface level eta and kinematics for x=0
@@ -74,85 +74,6 @@ def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: n
 
     if z_init > eta:
         u_x = u_z = du_x = du_z = 0
-
-    return eta, u_x, u_z, du_x, du_z
-
-
-def fft_random_wave_sim(z_range: np.ndarray, d: np.ndarray, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
-    """generates random wave surface and kinematics using FFT
-
-    Args:
-        z_range (np.ndarray): range of depths [m]
-        d (float): water depth
-        a (float): wave height at t=0 [m]
-        om_range (np.ndarray): range of angular velocities [s^-1]
-        spctrl_dens (np.ndarray): spectrum corresponding to om_range
-        cond (bool): True if we want a conditional wave simulation
-
-    Returns:
-        eta (np.ndarray): wave surface height [m]
-        u_x (np.ndarray): horizontal velociy at given z [ms^-1]
-        u_v (np.ndarray): vertical velocity at given z [ms^-1]
-        du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
-        du_v (np.ndarray): vertical acceleration at given z [ms^-2]
-    """
-
-    water_depth = d
-    np.random.seed(1234)
-
-    f_range = om_range / (2*np.pi)
-    f_num = len(f_range)
-    df = f_range[1] - f_range[0]
-
-    A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
-    B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
-
-    if cond:
-        m = 0
-
-        c = df * spctrl_dens
-        d = df * spctrl_dens * om_range
-
-        Q = (a - np.sum(A))/np.sum(c)
-        R = (m - np.sum(om_range * B))/np.sum(d*om_range)
-
-        A = A + Q * c
-        B = B + R * d
-
-    i = complex(0, 1)
-    g1 = A + B * i
-
-    eta = np.real(fftshift(fft(g1)))
-
-    k = np.empty(f_num)
-
-    d = water_depth
-
-    for i_f, f in enumerate(f_range):
-        omega = 2 * np.pi * f
-        # k[i_f] = rws.solve_dispersion(omega, d, 95)
-        k[i_f] = alt_solve_dispersion(omega, d)
-
-    u_x = np.empty((f_num, len(z_range)))
-    du_x = np.empty((f_num, len(z_range)))
-    u_z = np.empty((f_num, len(z_range)))
-    du_z = np.empty((f_num, len(z_range)))
-
-    for i_z, z in enumerate(z_range):
-
-        z_init = z
-        if z > -3:
-            z = -3
-
-        g2 = (A+B*i) * 2*np.pi*f_range * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-        g3 = (B-A*i) * (2*np.pi*f_range)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
-        g4 = (B-A*i) * (2*np.pi*f_range) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-        g5 = (-A-B*i) * (2*np.pi*f_range)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-
-        u_x[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < eta)
-        du_x[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < eta)
-        u_z[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < eta)
-        du_z[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < eta)
 
     return eta, u_x, u_z, du_x, du_z
 
@@ -281,6 +202,86 @@ class WaveKin(ABC):
         plt.colorbar()
 
         plt.show()
+
+
+@dataclass
+class LinearKin(WaveKin):
+    """ Linear Random Wave Kinematics Class """
+
+    spctr: Spectrum
+
+    def compute_kinematics(self, cond: bool, a: float = 0, seed: int = 1):
+        """generates random wave surface and kinematics using FFT
+
+        Args:
+            z_range (np.ndarray): range of depths [m]
+            d (float): water depth
+            a (float): wave height at t=0 [m]
+            om_range (np.ndarray): range of angular velocities [s^-1]
+            spctrl_dens (np.ndarray): spectrum corresponding to om_range
+            cond (bool): True if we want a conditional wave simulation
+
+        Returns:
+            eta (np.ndarray): wave surface height [m]
+            u_x (np.ndarray): horizontal velociy at given z [ms^-1]
+            u_v (np.ndarray): vertical velocity at given z [ms^-1]
+            du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
+            du_v (np.ndarray): vertical acceleration at given z [ms^-2]
+        """
+        # TODO: replace things here with moment functions of spectrum
+
+        np.random.seed(seed)
+
+        A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+        B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+
+        if cond:
+            m = 0
+
+            c = self.spctr.df * self.spctr.density
+            d = self.spctr.df * self.spctr.density * self.spctr.omega
+
+            Q = (a - np.sum(A))/np.sum(c)
+            R = (m - np.sum(self.spctr.omega * B))/np.sum(d*self.spctr.omega)
+
+            A = A + Q * c
+            B = B + R * d
+
+        i = complex(0, 1)
+        g1 = A + B * i
+
+        self.eta = np.real(fftshift(fft(g1)))[0]
+
+        k = np.empty(self.spctr.nf)
+
+        d = self.depth
+
+        for i_f, f in enumerate(self.spctr.frequency):
+            omega = 2 * np.pi * f
+            k[i_f] = alt_solve_dispersion(omega, d)
+
+        self.u = np.empty((self.spctr.nf, len(self.z_values)))
+        self.du = np.empty((self.spctr.nf, len(self.z_values)))
+        self.w = np.empty((self.spctr.nf, len(self.z_values)))
+        self.dw = np.empty((self.spctr.nf, len(self.z_values)))
+
+        for i_z, z in enumerate(self.z_values):
+
+            z_init = z
+            if z > -3:
+                z = -3
+
+            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
+
+        return self
 
 
 @dataclass
@@ -488,67 +489,3 @@ class StokesKin(DetWaveKin):
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
         return self
-
-
-@dataclass
-class LinearKin(WaveKin):
-    """ Linear Random Wave Kinematics Class """
-
-    spctr: Spectrum
-
-    def compute_kinematics(self, cond: bool, a: float = 0, seed: int = 1):
-        # TODO: replace things here with moment functions of spectrum
-
-        np.random.seed(seed)
-
-        A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
-        B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
-
-        if cond:
-            m = 0
-
-            c = self.spctr.df * self.spctr.density
-            d = self.spctr.df * self.spctr.density * self.spctr.omega
-
-            Q = (a - np.sum(A))/np.sum(c)
-            R = (m - np.sum(self.spctr.omega * B))/np.sum(d*self.spctr.omega)
-
-            A = A + Q * c
-            B = B + R * d
-
-        i = complex(0, 1)
-        g1 = A + B * i
-
-        self.eta = np.real(fftshift(fft(g1)))[0]
-
-        k = np.empty(self.spctr.nf)
-
-        d = self.depth
-
-        for i_f, f in enumerate(self.spctr.frequency):
-            omega = 2 * np.pi * f
-            k[i_f] = alt_solve_dispersion(omega, d)
-
-        self.u = np.empty((self.spctr.nf, len(self.z_values)))
-        self.du = np.empty((self.spctr.nf, len(self.z_values)))
-        self.w = np.empty((self.spctr.nf, len(self.z_values)))
-        self.dw = np.empty((self.spctr.nf, len(self.z_values)))
-
-        for i_z, z in enumerate(self.z_values):
-
-            z_init = z
-            if z > -3:
-                z = -3
-
-            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
-            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
-
-        return self
-

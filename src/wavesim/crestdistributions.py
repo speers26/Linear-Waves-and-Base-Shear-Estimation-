@@ -78,20 +78,3 @@ class Rayleigh(CrestDistribution):
         hs_sq = self.hs ** 2
 
         return -np.exp(-8 * X**2 / hs_sq) * -8 * 2 * X / hs_sq
-
-
-@dataclass
-class Foristall(CrestDistribution):
-    """ Class for the Foristall distribution
-    """
-    t1: np.ndarray
-
-    def cdf(self, X):
-
-        return 1 - np.exp(-8 * X ** 2 / (self.hs ** 2))
-
-    def pdf(self, X):
-
-        hs_sq = self.hs ** 2
-
-        return -np.exp(-8 * X**2 / hs_sq) * -8 * 2 * X / hs_sq
