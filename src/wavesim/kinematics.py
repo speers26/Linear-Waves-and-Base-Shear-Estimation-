@@ -210,7 +210,7 @@ class LinearKin(WaveKin):
 
     spctr: Spectrum
 
-    def compute_kinematics(self, cond: bool, a: float = 0, seed: int = 1):
+    def compute_kinematics(self, cond: bool, a: float = 0):
         """generates random wave surface and kinematics using FFT
 
         Args:
@@ -229,8 +229,6 @@ class LinearKin(WaveKin):
             du_v (np.ndarray): vertical acceleration at given z [ms^-2]
         """
         # TODO: replace things here with moment functions of spectrum
-
-        np.random.seed(seed)
 
         A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
         B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
@@ -256,9 +254,8 @@ class LinearKin(WaveKin):
 
         d = self.depth
 
-        for i_f, f in enumerate(self.spctr.frequency):
-            omega = 2 * np.pi * f
-            k[i_f] = alt_solve_dispersion(omega, d)
+        for i_om, om in enumerate(self.spctr.omega):
+            k[i_om] = alt_solve_dispersion(om, d)
 
         self.u = np.empty((self.spctr.nf, len(self.z_values)))
         self.du = np.empty((self.spctr.nf, len(self.z_values)))

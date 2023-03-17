@@ -59,3 +59,8 @@ class MorisonLoad(Load):
         self.load = np.sum(F, axis=1) * self.kinematics.dz / 1e6  # 1e6 converts to MN from N
 
         return self
+
+
+# @dataclass
+# class LoadDistEst(ABC):
+#     kinematics:WaveKin

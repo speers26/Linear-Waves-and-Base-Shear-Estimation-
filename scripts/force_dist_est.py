@@ -8,9 +8,9 @@ from wavesim import crestdistributions as crestd
 
 if __name__ == "__main__":
 
-    np.random.seed(12345)
-    write = True
-    write_con = True
+    np.random.seed(123)
+    write = False
+    write_con = False
 
     # set up wave conditions
     hs = 25
