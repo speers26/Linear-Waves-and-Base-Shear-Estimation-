@@ -9,8 +9,8 @@ from wavesim import crestdistributions as crestd
 if __name__ == "__main__":
 
     np.random.seed(12345)
-    write = False
-    write_con = False
+    write = True
+    write_con = True
 
     # set up wave conditions
     hs = 25
@@ -24,38 +24,38 @@ if __name__ == "__main__":
     z_range = np.linspace(-depth, 50, z_num)
     dz = z_range[1] - z_range[0]
 
-    num_sea_states = 20
+    num_sea_states = 2000
     sea_state_hours = 1
     full_period = 60**2 * sea_state_hours  # total time range in seconds
     waves_per_sea_state = full_period/tp
 
+    # get times and frequencies
     freq = 1.00  # number of sample points per second
     nT = np.floor(full_period*freq)  # number of time points to evaluate
-    t_num = int(nT)  # to work with rest of the code
-
     dt = 1/freq  # time step is determined by frequency
     t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
-
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
-    om_range = f_range * (2*np.pi)
 
     # get jonswap density
-    jnswp_dens = spctr.djonswap(f_range, hs, tp)
+    jnswp1 = spctr.Jonswap(f_range, hs, tp)
+    jnswp1.compute_density()
 
     # if we want new wave data
     if write:
         # set up arrays (don't actually need to do this for all)
-        eta = np.empty([num_sea_states, t_num])
-        base_shear = np.empty([num_sea_states, t_num])
+        eta = np.empty([num_sea_states, len(t_range)])
+        base_shear = np.empty([num_sea_states, len(t_range)])
         # populate arrays
         for i in range(num_sea_states):
             print(i)
-            eta[i, :], u_x, _, du_x, _ = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
-            F = np.empty((t_num, z_num))
-            for i_t, t in enumerate(t_range):
-                for i_z, z in enumerate(z_range):
-                    F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
-            base_shear[i, :] = np.sum(F, axis=1) * dz / 1e6
+
+            lin_kin = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=jnswp1)
+            lin_kin.compute_kinematics(cond=cond, a=a)
+            eta[i, :], u_x, _, du_x, _ = lin_kin.retrieve_kinematics()
+
+            lin_load = load.MorisonLoad(lin_kin)
+            lin_load.compute_load()
+            base_shear[i, :] = lin_load.retrieve_load()
 
         np.savetxt('eta.txt', eta, delimiter=' ')
         np.savetxt('base_shear.txt', base_shear, delimiter=' ')
@@ -95,19 +95,17 @@ if __name__ == "__main__":
     waves_per_cond_state = cond_period/tp
     cond_per_full_state = sea_state_hours * 60 / cond_state_min
 
-    # redo arrays
+    # redo frequencies and times
     freq = 1.00  # number of sample points per second
     nT = np.floor(cond_period*freq)  # number of time points to evaluate
     t_num = int(nT)  # to work with rest of the code
-
     dt = 1/freq  # time step is determined by frequency
     t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
-
     f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
-    om_range = f_range * (2*np.pi)
 
     # redo jonswap density
-    jnswp_dens = spctr.djonswap(f_range, hs, tp)
+    jnswp2 = spctr.Jonswap(f_range, hs, tp)
+    jnswp2.compute_density()
 
     if write_con:
         # generate wave data and write to text files
@@ -116,13 +114,14 @@ if __name__ == "__main__":
         for i in range(num_sea_states):
             print(i)
             a = r_crests[i]
-            eta[i, :], u_x, _, du_x, _ = kin.fft_random_wave_sim(z_range, depth, a, om_range, jnswp_dens, cond)
 
-            F = np.empty((t_num, z_num))
-            for i_t, t in enumerate(t_range):
-                for i_z, z in enumerate(z_range):
-                    F[i_t, i_z] = load.morison_load(u_x[i_t, i_z], du_x[i_t, i_z])
-            base_shear_con[i, :] = np.sum(F, axis=1) * dz / 1e6
+            lin_kin = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=jnswp2)
+            lin_kin.compute_kinematics(cond=cond, a=a)
+            eta[i, :], u_x, _, du_x, _ = lin_kin.retrieve_kinematics()
+
+            lin_load = load.MorisonLoad(lin_kin)
+            lin_load.compute_load()
+            base_shear_con[i, :] = lin_load.retrieve_load()
 
         np.savetxt('eta_con.txt', eta, delimiter=' ')
         np.savetxt('base_shear_con.txt', base_shear_con, delimiter=' ')
