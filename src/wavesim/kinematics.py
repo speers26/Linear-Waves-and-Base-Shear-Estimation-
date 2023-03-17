@@ -207,22 +207,6 @@ class WaveKin(ABC):
 
     t_values: np.ndarray
     z_values: np.ndarray
-    H: np.ndarray
-    T: np.ndarray
-    g: float = 9.81
-    x: np.ndarray = 0  # always set this to 0 for now
-    theta: np.ndarray = 0  # always set to 0 for now
-    eta: np.ndarray = 0
-    u: np.ndarray = 0
-    w: np.ndarray = 0
-    du: np.ndarray = 0
-    dw: np.ndarray = 0
-
-    @property
-    def omega(self):
-        """ (peak) angular freq
-        """
-        return 2*np.pi/self.T
 
     @property
     def depth(self):
@@ -300,7 +284,23 @@ class WaveKin(ABC):
 
 
 @dataclass
-class AiryKin(WaveKin):
+class DetWaveKin(WaveKin):
+    """ deterministic wave sim class """
+    H: np.ndarray
+    T: np.ndarray
+    g: float = 9.81
+    x: np.ndarray = 0  # always set this to 0 for now TODO: implement this for all waves
+    theta: np.ndarray = 0  # always set to 0 for now TODO: implement this for all waves
+
+    @property
+    def omega(self):
+        """ returns the angular freq
+        """
+        return 2*np.pi/self.T
+
+
+@dataclass
+class AiryKin(DetWaveKin):
     """ Airy kinematics class
     """
     @property
@@ -340,7 +340,7 @@ class AiryKin(WaveKin):
 
 
 @dataclass
-class StokesKin(WaveKin):
+class StokesKin(DetWaveKin):
     """ Stokes kinematics class
     """
 
@@ -489,9 +489,66 @@ class StokesKin(WaveKin):
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
         return self
 
-# @dataclass
-# class LinearKin(WaveKin):
-#     """ Linear kinematics class
-#     """
-#     spctr: Spectrum = 0
-#     cond: bool = False
+
+@dataclass
+class LinearKin(WaveKin):
+    """ Linear Random Wave Kinematics Class """
+
+    spctr: Spectrum
+
+    def compute_kinematics(self, cond: bool, a: float = 0, seed: int = 1):
+        # TODO: replace things here with moment functions of spectrum
+
+        np.random.seed(seed)
+
+        A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+        B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+
+        if cond:
+            m = 0
+
+            c = self.spctr.df * self.spctr.density
+            d = self.spctr.df * self.spctr.density * self.spctr.omega
+
+            Q = (a - np.sum(A))/np.sum(c)
+            R = (m - np.sum(self.spctr.omega * B))/np.sum(d*self.spctr.omega)
+
+            A = A + Q * c
+            B = B + R * d
+
+        i = complex(0, 1)
+        g1 = A + B * i
+
+        self.eta = np.real(fftshift(fft(g1)))[0]
+
+        k = np.empty(self.spctr.nf)
+
+        d = self.depth
+
+        for i_f, f in enumerate(self.spctr.frequency):
+            omega = 2 * np.pi * f
+            k[i_f] = alt_solve_dispersion(omega, d)
+
+        self.u = np.empty((self.spctr.nf, len(self.z_values)))
+        self.du = np.empty((self.spctr.nf, len(self.z_values)))
+        self.w = np.empty((self.spctr.nf, len(self.z_values)))
+        self.dw = np.empty((self.spctr.nf, len(self.z_values)))
+
+        for i_z, z in enumerate(self.z_values):
+
+            z_init = z
+            if z > -3:
+                z = -3
+
+            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
+            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
+            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
+
+        return self
+
