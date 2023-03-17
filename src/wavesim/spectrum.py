@@ -32,6 +32,10 @@ class Spectrum(ABC):
     def dom(self):
         return self.omega[1] - self.omega[0]
 
+    @property
+    def nf(self):
+        return len(self.frequency)
+
     @abstractmethod
     def compute_density(self):
         """returns density for given frequency range

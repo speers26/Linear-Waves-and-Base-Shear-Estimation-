@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from wavesim.kinematics import WaveKin
 import matplotlib.pyplot as plt
 
+
 @dataclass
 class Load(ABC):
     """ load class
     """
     kinematics: WaveKin
-    load: np.ndarray = 0
 
     @abstractmethod
     def compute_load(self):
