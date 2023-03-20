@@ -10,7 +10,8 @@ from wavesim.spectrum import Spectrum
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
 
-#TODO: create classes for spatial waves
+# TODO: create classes for spatial waves
+
 
 def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
     """returns pointwave surface level eta and kinematics for x=0

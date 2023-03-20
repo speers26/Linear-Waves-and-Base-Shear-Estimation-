@@ -22,6 +22,7 @@ f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequenc
 
 spectrum1 = spctr.Jonswap(frequency=f_range, hs=hs, tp=tp)
 spectrum1.compute_density()
+spectrum1.plot_density()
 
 lin_wave = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=spectrum1)
 lin_wave.compute_kinematics(cond=cond, a=a)

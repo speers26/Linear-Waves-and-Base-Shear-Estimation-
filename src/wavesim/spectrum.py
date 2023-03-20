@@ -5,6 +5,7 @@ Code for generating Wave Spectra and associated functionality
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 @dataclass
@@ -50,6 +51,16 @@ class Spectrum(ABC):
         """
         self.omega_density = self.density / (2*np.pi)
         return self
+
+    def plot_density(self, ang=False):
+        """plot density stored in density
+        """
+        plt.figure()
+        if ang:
+            plt.plot(self.omega, self.omega_density)
+        else:
+            plt.plot(self.frequency, self.density)
+        plt.show()
 
     def compute_kth_moment(self, k: int):
         """function to return the kth moment of the given spectrum evaulated at given frequencies
