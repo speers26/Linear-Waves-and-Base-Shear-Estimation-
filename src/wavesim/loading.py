@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from wavesim.kinematics import WaveKin, LinearKin
 import matplotlib.pyplot as plt
-from wavesim.kinematics import Spectrum
+from wavesim.spectrum import Jonswap
 
 
 @dataclass
@@ -63,19 +63,20 @@ class MorisonLoad(Load):
 
 
 @dataclass
-class LoadDistEst(ABC):
+class LoadDistEst():
     """
     general estimated load class
     """
     hs: np.ndarray
     tp: np.ndarray
-    spctrType: type
-    loadType: type
     num_sea_states: int
-    sim_min: np.ndarray
     sea_state_hours: np.ndarray
     sim_frequency: np.ndarray
     z_values: np.ndarray
+
+    sim_min: np.ndarray = 2.00
+    spctrType: type = Jonswap
+    loadType: type = MorisonLoad
 
     @property
     def dz(self):
@@ -84,11 +85,11 @@ class LoadDistEst(ABC):
     @property
     def dt(self):
         return 1/self.sim_frequency
-    
+
     @property
     def sim_period(self):
         return 60*self.sim_min
-    
+
     @property
     def sim_per_state(self):
         return self.sea_state_hours * 60 / self.sim_min
@@ -100,7 +101,9 @@ class LoadDistEst(ABC):
         self.f_values = np.linspace(1e-3, nT - 1, int(nT)) / (nT / self.sim_frequency)  # selecting frequency range from 0 to freq
         self.df = self.f_values[1] - self.f_values[0]
         return self
-        
-    def compute_spectrum(self):
+
+    def get_spectrum(self):
         """ get spectrum for given frequencies """
         return self.spctrType(self.f_values, self.hs, self.tp)
+    
+
