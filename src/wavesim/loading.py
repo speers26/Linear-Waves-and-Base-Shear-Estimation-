@@ -7,8 +7,9 @@ ADD REF HERE
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from wavesim.kinematics import WaveKin
+from wavesim.kinematics import WaveKin, LinearKin
 import matplotlib.pyplot as plt
+from wavesim.kinematics import Spectrum
 
 
 @dataclass
@@ -61,6 +62,45 @@ class MorisonLoad(Load):
         return self
 
 
-# @dataclass
-# class LoadDistEst(ABC):
-#     kinematics:WaveKin
+@dataclass
+class LoadDistEst(ABC):
+    """
+    general estimated load class
+    """
+    hs: np.ndarray
+    tp: np.ndarray
+    spctrType: type
+    loadType: type
+    num_sea_states: int
+    sim_min: np.ndarray
+    sea_state_hours: np.ndarray
+    sim_frequency: np.ndarray
+    z_values: np.ndarray
+
+    @property
+    def dz(self):
+        return self.z_values[1] - self.z_values[0]
+
+    @property
+    def dt(self):
+        return 1/self.sim_frequency
+    
+    @property
+    def sim_period(self):
+        return 60*self.sim_min
+    
+    @property
+    def sim_per_state(self):
+        return self.sea_state_hours * 60 / self.sim_min
+
+    def compute_tf_values(self):
+        """ get frequency and times for given simulation frequency and length"""
+        nT = np.floor(self.sim_period*self.sim_frequency)  # number of time points to evaluate
+        self.t_values = np.linspace(-nT/2, nT/2 - 1, int(nT)) * self.dt  # centering time around 0
+        self.f_values = np.linspace(1e-3, nT - 1, int(nT)) / (nT / self.sim_frequency)  # selecting frequency range from 0 to freq
+        self.df = self.f_values[1] - self.f_values[0]
+        return self
+        
+    def compute_spectrum(self):
+        """ get spectrum for given frequencies """
+        return self.spctrType(self.f_values, self.hs, self.tp)
