@@ -3,8 +3,8 @@ import numpy as np
 import cProfile
 
 def estimate_load():
-    hs = 15
-    tp = 12
+    hs = 25
+    tp = 10
     num_sea_states = 2000
     sea_state_hours = 2
     z_values = np.linspace(-100, 50, 50)

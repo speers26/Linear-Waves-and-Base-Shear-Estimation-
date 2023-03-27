@@ -274,10 +274,10 @@ class LinearKin(WaveKin):
             g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
             g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < 0) * (z_init < self.eta)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < 0) * (z_init < self.eta)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < 0) * (z_init < self.eta)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < 0) * (z_init < self.eta)
 
         return self
 
