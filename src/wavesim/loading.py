@@ -204,6 +204,10 @@ class LoadDistEst():
         plt.figure()
         if log:
             plt.plot(self.load_X, np.log10(1-self.load_cdf))
+            plt.xlabel("Load [MN]")
+            plt.ylabel("log10(1-P)")
         else:
             plt.plot(self.load_X, self.load_cdf)
+            plt.xlabel("Load [MN]")
+            plt.ylabel("P")
         plt.show()
