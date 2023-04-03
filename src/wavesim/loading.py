@@ -35,6 +35,8 @@ class Load(ABC):
         """ plot the force stored in load """
         plt.plot()
         plt.plot(self.kinematics.t_values, self.load)
+        plt.ylabel("Force [MN]")
+        plt.xlabel("Time")
         plt.show()
 
 

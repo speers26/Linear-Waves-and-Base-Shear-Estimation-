@@ -169,7 +169,7 @@ class WaveKin(ABC):
     def plot_kinematics(self):
 
         plt.figure()
-        plt.subplot(2, 2, 1)
+        plt.subplot(1, 2, 1)
 
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
         plt.plot(self.t_values, self.eta, '-k')
@@ -178,15 +178,15 @@ class WaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        plt.subplot(2, 2, 2)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
-        plt.title('w')
-        plt.xlabel('time')
-        plt.ylabel('depth')
-        plt.colorbar()
+        # plt.subplot(2, 2, 2)
+        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
+        # plt.plot(self.t_values, self.eta, '-k')
+        # plt.title('w')
+        # plt.xlabel('time')
+        # plt.ylabel('depth')
+        # plt.colorbar()
 
-        plt.subplot(2, 2, 3)
+        plt.subplot(1, 2, 2)
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
         plt.plot(self.t_values, self.eta, '-k')
         plt.title('du')
@@ -194,13 +194,13 @@ class WaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        plt.subplot(2, 2, 4)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
-        plt.title('dw')
-        plt.xlabel('time')
-        plt.ylabel('depth')
-        plt.colorbar()
+        # plt.subplot(2, 2, 4)
+        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
+        # plt.plot(self.t_values, self.eta, '-k')
+        # plt.title('dw')
+        # plt.xlabel('time')
+        # plt.ylabel('depth')
+        # plt.colorbar()
 
         plt.show()
 
@@ -266,18 +266,18 @@ class LinearKin(WaveKin):
         for i_z, z in enumerate(self.z_values):
 
             z_init = z
-            if z > -3:
-                z = -3
+            if z > -1:
+                z = -1
 
             g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
             g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
             g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
             g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < 0) * (z_init < self.eta)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < 0) * (z_init < self.eta)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < 0) * (z_init < self.eta)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < 0) * (z_init < self.eta)
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
 
         return self
 
