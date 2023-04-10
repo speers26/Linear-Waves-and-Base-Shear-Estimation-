@@ -26,4 +26,3 @@ loadEst.compute_load_dist()
 loadEst.plot_crest_dist(log=True)
 loadEst.plot_load_dist(log=False)
 loadEst.plot_load_dist(log=True)
-

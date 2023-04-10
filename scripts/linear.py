@@ -9,6 +9,8 @@ a = 25.
 depth = 100
 cond = True
 
+np.random.seed(1)
+
 z_num = 150
 z_range = np.linspace(-depth, 50, z_num)
 

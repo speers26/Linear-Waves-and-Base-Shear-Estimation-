@@ -53,13 +53,9 @@ class MorisonLoad(Load):
         """ compute base shear time series in MN using morison load on a cylinder
         """
 
-        F = np.empty(np.shape(self.kinematics.u))
-
-        for i_t, t in enumerate(self.kinematics.u):
-            for i_z, _ in enumerate(t):
-                F[i_t, i_z] = self.rho * self.c_m * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du[i_t, i_z]\
-                      + 0.5 * self.rho * self.c_d * self.diameter * self.kinematics.u[i_t, i_z]\
-                      * np.abs(self.kinematics.u[i_t, i_z])
+        F = self.rho * self.c_m * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du\
+            + 0.5 * self.rho * self.c_d * self.diameter * self.kinematics.u\
+            * np.abs(self.kinematics.u)
 
         self.load = np.sum(F, axis=1) * self.kinematics.dz / 1e6  # 1e6 converts to MN from N
 
