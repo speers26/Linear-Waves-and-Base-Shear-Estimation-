@@ -101,7 +101,8 @@ class WaveKin(ABC):
         return self.eta, self.u, self.w, self.du, self.dw
 
     def plot_kinematics(self):
-
+        """plots wave kinematics calculuated in compute_kinematics
+        """
         plt.figure()
         plt.subplot(2, 2, 1)
 
@@ -146,23 +147,7 @@ class LinearKin(WaveKin):
     spctr: Spectrum
 
     def compute_kinematics(self, cond: bool, a: float = 0):
-        """generates random wave surface and kinematics using FFT
 
-        Args:
-            z_range (np.ndarray): range of depths [m]
-            d (float): water depth
-            a (float): wave height at t=0 [m]
-            om_range (np.ndarray): range of angular velocities [s^-1]
-            spctrl_dens (np.ndarray): spectrum corresponding to om_range
-            cond (bool): True if we want a conditional wave simulation
-
-        Returns:
-            eta (np.ndarray): wave surface height [m]
-            u_x (np.ndarray): horizontal velociy at given z [ms^-1]
-            u_v (np.ndarray): vertical velocity at given z [ms^-1]
-            du_x (np.ndarray): horizontal acceleration at given z [ms^-2]
-            du_v (np.ndarray): vertical acceleration at given z [ms^-2]
-        """
         # TODO: replace things here with moment functions of spectrum
 
         A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
