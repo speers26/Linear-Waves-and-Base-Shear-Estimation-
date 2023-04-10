@@ -13,72 +13,6 @@ import matplotlib.pyplot as plt
 # TODO: create classes for spatial waves
 
 
-def ptws_random_wave_sim(t: float, z: float, depth: float, a: float, om_range: np.ndarray, spctrl_dens: np.ndarray, cond: bool):
-    """returns pointwave surface level eta and kinematics for x=0
-
-    Args:
-        t (float): time [s]
-        z (float): height in water [m]
-        d (float): water depth [m]
-        a (float): wave height at t=0 [m]
-        om_range (np.ndarray): range of contributing angular frequencies [s^-1]
-        spctrl_dens (np.ndarray): spectrum corresponding to om_range
-        cond (bool): True if we want a conditional wave simulation
-
-    Returns:
-        eta (float): surface level [m]
-        u_x (float): horizontal velocity [ms^-1]
-        u_z (float): vertical velocity [ms^-1]
-        du_x (float): horizontal acceleration [ms^-2]
-        du_z (float) vertical acceleration [ms^-2]
-    """
-
-    # np.random.seed(1234)
-
-    f_num = len(om_range)
-    df = (om_range[1] - om_range[0]) / (2*np.pi)
-
-    A = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
-    B = np.random.normal(0, 1, size=(1, f_num)) * np.sqrt(spctrl_dens*df)
-
-    if cond:
-        m = 0
-
-        c = df * spctrl_dens
-        d = df * spctrl_dens * om_range
-
-        Q = (a - np.sum(A))/np.sum(c)
-        R = (m - np.sum(om_range * A))/np.sum(d*om_range)
-
-        A = A + Q * c
-        B = B + R * d
-
-    eta = np.sum(A * np.cos(om_range*t) + B * np.sin(om_range*t))
-
-    d = depth
-
-    z_init = z
-    z = d * (d + z) / (d + eta) - d   # for Wheeler stretching
-
-    k = np.empty(f_num)
-    for i_om, om in enumerate(om_range):
-        # k[i_om] = solve_dispersion(omega=om, h=d, upp=75)
-        k[i_om] = alt_solve_dispersion(omega=om, d=d)
-
-    u_x = np.sum((A * np.cos(om_range*t) + B * np.sin(om_range*t)) * om_range * (np.cosh(k*(z+d))) / (np.sinh(k*d)))
-    u_z = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range * (np.sinh(k*(z+d))) / (np.sinh(k*d)))
-
-    du_x = np.sum((-A * np.sin(om_range*t) + B * np.cos(om_range*t)) * om_range**2 * (np.cosh(k*(z+d)))
-                  / (np.sinh(k*d)))
-    du_z = np.sum((-A * np.cos(om_range*t) - B * np.sin(om_range*t)) * om_range**2 * (np.sinh(k*(z+d)))
-                  / (np.sinh(k*d)))
-
-    if z_init > eta:
-        u_x = u_z = du_x = du_z = 0
-
-    return eta, u_x, u_z, du_x, du_z
-
-
 def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: np.ndarray, t: np.ndarray, x_range: np.ndarray,
                                        y_range: np.ndarray, h: float):
     """returns random wave surface with frequency direction spectrum defined below
@@ -169,7 +103,7 @@ class WaveKin(ABC):
     def plot_kinematics(self):
 
         plt.figure()
-        plt.subplot(1, 2, 1)
+        plt.subplot(2, 2, 1)
 
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
         plt.plot(self.t_values, self.eta, '-k')
@@ -178,15 +112,15 @@ class WaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        # plt.subplot(2, 2, 2)
-        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
-        # plt.plot(self.t_values, self.eta, '-k')
-        # plt.title('w')
-        # plt.xlabel('time')
-        # plt.ylabel('depth')
-        # plt.colorbar()
+        plt.subplot(2, 2, 2)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('w')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
 
-        plt.subplot(1, 2, 2)
+        plt.subplot(2, 2, 3)
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
         plt.plot(self.t_values, self.eta, '-k')
         plt.title('du')
@@ -194,13 +128,13 @@ class WaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        # plt.subplot(2, 2, 4)
-        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
-        # plt.plot(self.t_values, self.eta, '-k')
-        # plt.title('dw')
-        # plt.xlabel('time')
-        # plt.ylabel('depth')
-        # plt.colorbar()
+        plt.subplot(2, 2, 4)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('dw')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
 
         plt.show()
 
@@ -251,18 +185,14 @@ class LinearKin(WaveKin):
 
         self.eta = np.real(fftshift(fft(g1)))[0]
 
-        k = np.empty(self.spctr.nf)
-
-        d = self.depth
-
-        for i_om, om in enumerate(self.spctr.omega):
-            k[i_om] = alt_solve_dispersion(om, d)
+        k = alt_solve_dispersion(self.spctr.omega, self.depth)
 
         self.u = np.empty((self.spctr.nf, len(self.z_values)))
         self.du = np.empty((self.spctr.nf, len(self.z_values)))
         self.w = np.empty((self.spctr.nf, len(self.z_values)))
         self.dw = np.empty((self.spctr.nf, len(self.z_values)))
 
+        d = self.depth
         for i_z, z in enumerate(self.z_values):
 
             z_init = z

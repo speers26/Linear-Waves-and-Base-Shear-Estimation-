@@ -35,15 +35,15 @@ def _progressive_dispersion(k, H, omega):
     return 1 + (H ** 2 * k ** 2) / 8+(H ** 4 * k ** 4) / 128 - omega / ((g * k) ** 0.5)
 
 
-def alt_solve_dispersion(omega: float, d: float):
+def alt_solve_dispersion(omega: np.ndarray, d: float):
     """uses method of (Guo, 2002) to solve dispersion relation for k
 
     Args:
-        omega (float): angular frequency [s^-1]
+        omega (np.ndarray): angular frequency [s^-1]
         d (float): water depth [m]
 
     Returns:
-        k (float): wave number [m^-1]
+        k (np.ndarray): wave number [m^-1]
     """
 
     g = 9.81

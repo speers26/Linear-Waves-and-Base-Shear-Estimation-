@@ -125,7 +125,7 @@ class LoadDistEst():
         return self
 
     def simulate_sea_states(self):
-        """ simulate conditioned sea states and store elevation and load 
+        """ simulate conditioned sea states and store elevation and load
         also get and store max elevation and load
         """
         self.crests = np.empty([self.num_sea_states, self.nt])
@@ -184,7 +184,7 @@ class LoadDistEst():
         load_cdf_unnorm = np.empty(self.load_X.shape)
         for i_f, f in enumerate(self.load_X):
             load_cdf_unnorm[i_f] = np.sum((self.max_load < f) * fog)/np.sum(fog)
-        
+
         self.load_cdf = load_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
     def plot_crest_dist(self, log=True):
