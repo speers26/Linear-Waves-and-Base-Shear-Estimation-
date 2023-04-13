@@ -129,7 +129,7 @@ class LoadDistEst():
         self.max_crests = np.empty(self.num_sea_states)
         self.max_load = np.empty(self.num_sea_states)
         for i in range(self.num_sea_states):
-            print(i)
+            # print(i)
             lin_kin = LinearKin(t_values=self.t_values, z_values=self.z_values, spctr=self.spctr)
             lin_kin.compute_kinematics(cond=True, a=self.cond_crests[i])
             self.crests[i, :], _, _, _, _ = lin_kin.retrieve_kinematics()
