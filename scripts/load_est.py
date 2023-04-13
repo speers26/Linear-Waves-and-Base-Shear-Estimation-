@@ -3,8 +3,8 @@ import numpy as np
 import cProfile
 
 
-hs = 15
-tp = 10
+hs = 3
+tp = 5
 num_sea_states = 2000
 sea_state_hours = 3
 z_values = np.linspace(-100, 50, 50)

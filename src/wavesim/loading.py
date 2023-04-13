@@ -172,7 +172,8 @@ class LoadDistEst():
         """compute max load dist by importance sampling
         """
 
-        self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
+        # self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
+        self.load_X = np.linspace(0, 10, num=100)
 
         f = crestd.rayleigh_pdf(self.cond_crests, self.hs)
         fog = f/self.g

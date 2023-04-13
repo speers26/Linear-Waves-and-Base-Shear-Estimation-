@@ -3,15 +3,15 @@ import pandas as pd
 from wavesim.loading import LoadDistEst
 import matplotlib.pyplot as plt
 
-env_probs = pd.read_csv('env_probs.csv')
+env_probs = pd.read_csv('scripts/env_probs.csv')
 
 num_sea_states = 2000
 sea_state_hours = 3
 z_values = np.linspace(-100, 50, 50)
 
-hs_max = np.max(env_probs['hs'])
 x_num = 100
-X = np.linspace(0, 2*hs_max, x_num)
+X = np.linspace(0, 10, num=x_num)
+
 np.random.seed(1)
 
 results = np.empty((env_probs.shape[0], x_num))
@@ -34,8 +34,7 @@ for i_s in range(env_probs.shape[0]):
 
     results[i_s, :] = loadEst.load_cdf
 
-np.savetxt("results.csv", results, delimiter=",")
-
+np.savetxt("scripts/results.csv", results, delimiter=",")
 p_array = np.array(env_probs['p'])
 f_cdf = np.sum(results * p_array[:, np.newaxis], axis=0)
 
