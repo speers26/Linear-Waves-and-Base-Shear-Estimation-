@@ -59,6 +59,10 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
 @dataclass
 class WaveKin(ABC):
     """ General wave kinematics class
+
+    Args:
+        t_values (np.ndarray): values in time at which to calculate kinematics [s]
+        z_values (np.ndarray): depth values to calculate kimematics at [m]
     """
 
     t_values: np.ndarray
@@ -142,7 +146,11 @@ class WaveKin(ABC):
 
 @dataclass
 class LinearKin(WaveKin):
-    """ Linear Random Wave Kinematics Class """
+    """ Linear Random Wave Kinematics Class
+
+    Args:
+        spctr (Spectrum): desired spectral density of the wave surface 
+     """
 
     spctr: Spectrum
 
@@ -199,7 +207,16 @@ class LinearKin(WaveKin):
 
 @dataclass
 class DetWaveKin(WaveKin):
-    """ deterministic wave sim class """
+    """ deterministic wave sim class
+     
+    Args: 
+        H (np.ndarray): wave height [m]
+        T (np.ndarray): wave period [s]
+        g (np.ndarray): acc due to gravity [ms^-2]
+        x (np.ndarray): point in space to evaluate kimematics at [m]
+        theta (np.ndarray): angle of propogation of the wave [radians]
+       
+    """
     H: np.ndarray
     T: np.ndarray
     g: float = 9.81
