@@ -11,6 +11,14 @@ import matplotlib.pyplot as plt
 @dataclass
 class Spectrum(ABC):
     """ Wave spectrum class
+
+    Args:
+        frequency (np.ndarray): frequencies to evaluate spectral densities at [hertz]
+        hs (np.ndarray): significant wave height of wave surface with this spectrum [m]
+        tp (np.ndarray): significant wave period of wave surface with this spectrum [s]
+        g (np.ndarray): acc. due to gravity [ms^-1]
+        density (np.ndarray): spectral density for frequency 
+        omega_density (np.ndarray): spectral density for angular frequency
     """
     frequency: np.ndarray
     hs: np.ndarray
@@ -99,6 +107,11 @@ class Spectrum(ABC):
 @dataclass
 class Jonswap(Spectrum):
     """ JONSWAP specific functions
+
+    Args:
+        gamma (np.ndarray): JONSWAP gamma
+        sigma_a (np.ndarray): JONSWAP sigma for f<f_p
+        sigma_b (np.ndarray): JONSWAP sigma for f>f_p
     """
     gamma: np.ndarray = 2
     sigma_a: np.ndarray = 0.07

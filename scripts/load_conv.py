@@ -4,13 +4,14 @@ from wavesim.loading import LoadDistEst
 import matplotlib.pyplot as plt
 
 env_probs = pd.read_csv('scripts/env_probs.csv')
+env_probs[env_probs.p != 0]
 
 num_sea_states = 2000
 sea_state_hours = 3
 z_values = np.linspace(-100, 50, 50)
 
 x_num = 100
-X = np.linspace(0, 10, num=x_num)
+X = np.linspace(0, 2, num=x_num)
 
 np.random.seed(1)
 

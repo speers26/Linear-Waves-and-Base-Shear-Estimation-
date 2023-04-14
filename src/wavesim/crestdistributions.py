@@ -39,6 +39,9 @@ def rayleigh_pdf(eta: np.ndarray, hs: float):
 @dataclass
 class CrestDistribution(ABC):
     """ Super class over crest distributions
+
+    Args:
+        hs (np.ndarray): significant wave height [m]
     """
     hs: np.ndarray
 

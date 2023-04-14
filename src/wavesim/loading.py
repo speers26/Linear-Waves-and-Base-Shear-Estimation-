@@ -17,6 +17,9 @@ import wavesim.crestdistributions as crestd
 @dataclass
 class Load(ABC):
     """ load class
+
+    Args:
+        kinematics (WaveKin): class of wave kinematics to use when computing load
     """
     kinematics: WaveKin
 
@@ -42,7 +45,14 @@ class Load(ABC):
 
 @dataclass
 class MorisonLoad(Load):
-    """ Morison load class """
+    """ Morison load class
+
+    Args:
+        diameter (float): diameter of cylinder to calculate morison loading on
+        rho (float): density of fluid
+        c_m: float: ??? constant
+        c_d: float ??? constant
+    """
 
     diameter: float = 1.0
     rho: float = 1024.0
@@ -66,6 +76,18 @@ class MorisonLoad(Load):
 class LoadDistEst():
     """
     general estimated load class
+
+    Args:
+        hs (np.ndarray): significant wave height [m]
+        tp (np.ndarray): significant wave period [s]
+        num_sea_states (int): number of sea states to find max force within
+        sea_state_hours (np.ndarray): length of each sea state in hours [hours]
+        z_values (np.ndarray): depths to evaluate wave kinematics at [m]
+
+        sim_frequency (np.ndarray): frequency of simulated wave kinematic observations [hertz]
+        sim_min (np.ndarray): length of time to simulate for each sea state in minutes [min]
+        spctrType (type): class of wave spectrum to use
+        loadType (type): class of loading to use
     """
     hs: np.ndarray
     tp: np.ndarray
@@ -173,12 +195,12 @@ class LoadDistEst():
         """
 
         # self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
-        self.load_X = np.linspace(0, 10, num=100)
+        self.load_X = np.linspace(0, 2, num=100)
 
         f = crestd.rayleigh_pdf(self.cond_crests, self.hs)
         fog = f/self.g
 
-        load_cdf_unnorm = np.empty(self.load_X.shape)
+        load_cdf_unnorm = np.empty(self.load_X.shape)  # TODO: figure out how to do this as a vector
         for i_f, f in enumerate(self.load_X):
             load_cdf_unnorm[i_f] = np.sum((self.max_load < f) * fog)/np.sum(fog)
 
