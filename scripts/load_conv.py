@@ -24,7 +24,8 @@ for i_s in range(env_probs.shape[0]):
     s2 = row['s2']
     tp = np.sqrt((hs*2*np.pi)/(s2*9.81))
 
-    loadEst = LoadDistEst(hs=hs, tp=tp, num_sea_states=num_sea_states, sea_state_hours=sea_state_hours, z_values=z_values)
+    loadEst = LoadDistEst(hs=hs, tp=tp, num_sea_states=num_sea_states, sea_state_hours=sea_state_hours,
+                          z_values=z_values)
 
     loadEst.compute_tf_values()
     loadEst.compute_spectrum()

@@ -208,14 +208,14 @@ class LinearKin(WaveKin):
 @dataclass
 class DetWaveKin(WaveKin):
     """ deterministic wave sim class
-     
-    Args: 
+
+    Args:
         H (np.ndarray): wave height [m]
         T (np.ndarray): wave period [s]
         g (np.ndarray): acc due to gravity [ms^-2]
         x (np.ndarray): point in space to evaluate kimematics at [m]
         theta (np.ndarray): angle of propogation of the wave [radians]
-       
+
     """
     H: np.ndarray
     T: np.ndarray

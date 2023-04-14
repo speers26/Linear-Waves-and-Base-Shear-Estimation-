@@ -124,7 +124,7 @@ class LoadDistEst():
         """ get frequency and times for given simulation frequency and length"""
         nT = np.floor(self.sim_period*self.sim_frequency)  # number of time points to evaluate
         self.t_values = np.linspace(-nT/2, nT/2 - 1, int(nT)) * self.dt  # centering time around 0
-        self.f_values = np.linspace(1e-3, nT - 1, int(nT)) / (nT / self.sim_frequency)  # selecting frequency range from 0 to freq
+        self.f_values = np.linspace(1e-3, nT - 1, int(nT)) / (nT / self.sim_frequency)  # selecting frequency range
         self.df = self.f_values[1] - self.f_values[0]
         self.nt = int(nT)
         return self

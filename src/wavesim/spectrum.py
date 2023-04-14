@@ -17,7 +17,7 @@ class Spectrum(ABC):
         hs (np.ndarray): significant wave height of wave surface with this spectrum [m]
         tp (np.ndarray): significant wave period of wave surface with this spectrum [s]
         g (np.ndarray): acc. due to gravity [ms^-1]
-        density (np.ndarray): spectral density for frequency 
+        density (np.ndarray): spectral density for frequency
         omega_density (np.ndarray): spectral density for angular frequency
     """
     frequency: np.ndarray
