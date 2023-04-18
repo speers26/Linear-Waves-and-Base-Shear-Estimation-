@@ -7,7 +7,7 @@ ADD REF HERE
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from wavesim.kinematics import WaveKin, LinearKin
+from wavesim.kinematics import AbstractWaveKin, LinearKin
 import matplotlib.pyplot as plt
 from wavesim.spectrum import Jonswap
 from scipy.signal import argrelextrema
@@ -15,13 +15,13 @@ import wavesim.crestdistributions as crestd
 
 
 @dataclass
-class Load(ABC):
+class AbstractLoad(ABC):
     """ load class
 
     Args:
         kinematics (WaveKin): class of wave kinematics to use when computing load
     """
-    kinematics: WaveKin
+    kinematics: AbstractWaveKin
 
     @abstractmethod
     def compute_load(self):
@@ -44,7 +44,7 @@ class Load(ABC):
 
 
 @dataclass
-class MorisonLoad(Load):
+class MorisonLoad(AbstractLoad):
     """ Morison load class
 
     Args:
@@ -159,6 +159,7 @@ class LoadDistEst():
             lin_load = MorisonLoad(lin_kin)
             lin_load.compute_load()
             self.load[i, :] = lin_load.retrieve_load()
+
             # get maximums
             mins = argrelextrema(self.crests[i, :], np.less)[0]
             lower_min = np.max(mins[mins < self.nt/2])
@@ -182,9 +183,7 @@ class LoadDistEst():
         f = crestd.rayleigh_pdf(self.cond_crests, self.hs)
         fog = f/self.g
 
-        crest_cdf_unnorm = np.empty(X.shape)
-        for i_c, c in enumerate(X):
-            crest_cdf_unnorm[i_c] = np.sum((self.max_crests < c) * fog)/np.sum(fog)
+        crest_cdf_unnorm = np.sum((X[:, None] > self.max_crests[None, :])*fog, axis=1)/np.sum(fog)
 
         self.crest_cdf = crest_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
@@ -194,15 +193,13 @@ class LoadDistEst():
         """compute max load dist by importance sampling
         """
 
-        # self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
-        self.load_X = np.linspace(0, 2, num=100)
+        self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
+        # self.load_X = np.linspace(0, 2, num=100)
 
         f = crestd.rayleigh_pdf(self.cond_crests, self.hs)
         fog = f/self.g
 
-        load_cdf_unnorm = np.empty(self.load_X.shape)  # TODO: figure out how to do this as a vector
-        for i_f, f in enumerate(self.load_X):
-            load_cdf_unnorm[i_f] = np.sum((self.max_load < f) * fog)/np.sum(fog)
+        load_cdf_unnorm = np.sum((self.load_X[:, None] > self.max_load[None, :])*(fog), axis=1)/np.sum(fog)
 
         self.load_cdf = load_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
