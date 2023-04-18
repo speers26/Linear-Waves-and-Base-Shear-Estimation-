@@ -195,6 +195,8 @@ class LinearKin(AbstractWaveKin):
             if z > -1:
                 z = -1
 
+            # TODO: add overflow error fix by capping cosh and sinh fractions
+
             g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
             g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
             g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))

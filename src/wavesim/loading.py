@@ -73,7 +73,7 @@ class MorisonLoad(AbstractLoad):
 
 
 @dataclass
-class LoadDistEst():
+class LoadDistEst():  # TODO: add option to specify structure height
     """
     general estimated load class
 

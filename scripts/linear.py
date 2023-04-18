@@ -12,6 +12,8 @@ cond = True
 
 np.random.seed(1)
 
+# TODO: put code to select t_values into linear wave class
+
 z_num = 150
 z_range = np.linspace(-depth, 50, z_num)
 
@@ -29,16 +31,6 @@ spectrum1.compute_density()
 lin_wave = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=spectrum1)
 lin_wave.compute_kinematics(cond=cond, a=a)
 lin_wave.plot_kinematics()
-
-_, u, _, _, _ = lin_wave.retrieve_kinematics()
-
-plt.figure()
-plt.plot(u[50,:], lin_wave.z_values)
-plt.show()
-
-plt.figure()
-plt.plot(lin_wave.t_values, lin_wave.eta)
-plt.show()
 
 lin_load = load.MorisonLoad(lin_wave)
 lin_load.compute_load()

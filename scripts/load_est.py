@@ -25,11 +25,3 @@ loadEst.compute_load_dist()
 loadEst.plot_crest_dist(log=True)
 loadEst.plot_load_dist(log=False)
 loadEst.plot_load_dist(log=True)
-
-plt.figure()
-plt.scatter(loadEst.cond_crests, loadEst.max_load)
-plt.xlabel("Crest height")
-plt.ylabel("log10(1-P)")
-plt.title("Force [MN]")
-plt.show()
-
