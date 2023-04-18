@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 @dataclass
-class Spectrum(ABC):
+class AbstractSpectrum(ABC):
     """ Wave spectrum class
 
     Args:
@@ -105,7 +105,7 @@ class Spectrum(ABC):
 
 
 @dataclass
-class Jonswap(Spectrum):
+class Jonswap(AbstractSpectrum):
     """ JONSWAP specific functions
 
     Args:

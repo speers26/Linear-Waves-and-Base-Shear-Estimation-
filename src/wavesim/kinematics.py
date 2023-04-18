@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersionSTOKES5
-from wavesim.spectrum import Spectrum
+from wavesim.spectrum import AbstractSpectrum
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
 
@@ -57,7 +57,7 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
 
 
 @dataclass
-class WaveKin(ABC):
+class AbstractWaveKin(ABC):
     """ General wave kinematics class
 
     Args:
@@ -145,14 +145,14 @@ class WaveKin(ABC):
 
 
 @dataclass
-class LinearKin(WaveKin):
+class LinearKin(AbstractWaveKin):
     """ Linear Random Wave Kinematics Class
 
     Args:
         spctr (Spectrum): desired spectral density of the wave surface 
      """
 
-    spctr: Spectrum
+    spctr: AbstractSpectrum
 
     def compute_kinematics(self, cond: bool, a: float = 0):
 
@@ -206,7 +206,7 @@ class LinearKin(WaveKin):
 
 
 @dataclass
-class DetWaveKin(WaveKin):
+class DetWaveKin(AbstractWaveKin):
     """ deterministic wave sim class
 
     Args:

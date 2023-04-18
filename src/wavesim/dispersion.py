@@ -9,25 +9,25 @@ import numpy as np
 from scipy import optimize
 
 
-# def fDispersionSTOKES5(h, H, omega):
-#     """
-#     Solves the progressive wave dispersion equation
+def fDispersionSTOKES5(h, H, omega):
+    """
+    Solves the progressive wave dispersion equation
 
-#     Args:
-#         h (np.ndarray): depth [m]
-#         H (np.ndarray):  wave height [m]
-#         T (np.ndarray): wave period
+    Args:
+        h (np.ndarray): depth [m]
+        H (np.ndarray):  wave height [m]
+        T (np.ndarray): wave period
 
-#     Returns:
-#         np.array: wave number k [1/m]
-#     """
-#     # TODO: why isnt this using depth
+    Returns:
+        np.array: wave number k [1/m]
+    """
+    # TODO: why isnt this using depth
 
-#     f = lambda k: _progressive_dispersion(k, H, omega)
+    f = lambda k: _progressive_dispersion(k, H, omega)
 
-#     k = optimize.bisect(f, 1e-7, 1)
+    k = optimize.bisect(f, 1e-7, 1)
 
-#     return k
+    return k
 
 
 def _progressive_dispersion(k, H, omega):
