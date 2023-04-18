@@ -108,7 +108,7 @@ class AbstractWaveKin(ABC):
         """plots wave kinematics calculuated in compute_kinematics
         """
         plt.figure()
-        plt.subplot(2, 2, 1)
+        # plt.subplot(2, 2, 1)
 
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
         plt.plot(self.t_values, self.eta, '-k')
@@ -117,29 +117,29 @@ class AbstractWaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        plt.subplot(2, 2, 2)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
-        plt.title('w')
-        plt.xlabel('time')
-        plt.ylabel('depth')
-        plt.colorbar()
+        # plt.subplot(2, 2, 2)
+        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
+        # plt.plot(self.t_values, self.eta, '-k')
+        # plt.title('w')
+        # plt.xlabel('time')
+        # plt.ylabel('depth')
+        # plt.colorbar()
 
-        plt.subplot(2, 2, 3)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
-        plt.title('du')
-        plt.xlabel('time')
-        plt.ylabel('depth')
-        plt.colorbar()
+        # plt.subplot(2, 2, 3)
+        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
+        # plt.plot(self.t_values, self.eta, '-k')
+        # plt.title('du')
+        # plt.xlabel('time')
+        # plt.ylabel('depth')
+        # plt.colorbar()
 
-        plt.subplot(2, 2, 4)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
-        plt.title('dw')
-        plt.xlabel('time')
-        plt.ylabel('depth')
-        plt.colorbar()
+        # plt.subplot(2, 2, 4)
+        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
+        # plt.plot(self.t_values, self.eta, '-k')
+        # plt.title('dw')
+        # plt.xlabel('time')
+        # plt.ylabel('depth')
+        # plt.colorbar()
 
         plt.show()
 
@@ -160,6 +160,9 @@ class LinearKin(AbstractWaveKin):
 
         A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
         B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+
+        # A = np.zeros(shape=(1, self.spctr.nf))
+        # B = np.zeros(shape=(1, self.spctr.nf))
 
         if cond:
             m = 0
@@ -197,10 +200,10 @@ class LinearKin(AbstractWaveKin):
             g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
             g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta) * (z_init < 0)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta) * (z_init < 0)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta) * (z_init < 0)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta) * (z_init < 0)
 
         return self
 

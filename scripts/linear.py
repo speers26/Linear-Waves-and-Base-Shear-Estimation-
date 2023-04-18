@@ -1,11 +1,12 @@
 from wavesim import spectrum as spctr
 from wavesim import kinematics as kin
 from wavesim import loading as load
+import matplotlib.pyplot as plt
 import numpy as np
 
 hs = 15.
-tp = 10.
-a = 25.
+tp = 12.
+a = 20.
 depth = 100
 cond = True
 
@@ -24,12 +25,20 @@ f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequenc
 
 spectrum1 = spctr.Jonswap(frequency=f_range, hs=hs, tp=tp)
 spectrum1.compute_density()
-spectrum1.compute_omega_density()
-spectrum1.plot_density(ang=True)
 
 lin_wave = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=spectrum1)
 lin_wave.compute_kinematics(cond=cond, a=a)
 lin_wave.plot_kinematics()
+
+_, u, _, _, _ = lin_wave.retrieve_kinematics()
+
+plt.figure()
+plt.plot(u[50,:], lin_wave.z_values)
+plt.show()
+
+plt.figure()
+plt.plot(lin_wave.t_values, lin_wave.eta)
+plt.show()
 
 lin_load = load.MorisonLoad(lin_wave)
 lin_load.compute_load()

@@ -1,13 +1,12 @@
 from wavesim.loading import LoadDistEst
+import matplotlib.pyplot as plt
 import numpy as np
-import cProfile
-
 
 hs = 15
 tp = 12
-num_sea_states = 2000
+num_sea_states = 1000
 sea_state_hours = 3
-z_values = np.linspace(-100, 50, 50)
+z_values = np.linspace(-100, 50, 150)
 
 np.random.seed(1)
 
@@ -26,3 +25,11 @@ loadEst.compute_load_dist()
 loadEst.plot_crest_dist(log=True)
 loadEst.plot_load_dist(log=False)
 loadEst.plot_load_dist(log=True)
+
+plt.figure()
+plt.scatter(loadEst.cond_crests, loadEst.max_load)
+plt.xlabel("Crest height")
+plt.ylabel("log10(1-P)")
+plt.title("Force [MN]")
+plt.show()
+
