@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 # TODO: create classes for spatial waves
 
 
-def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: np.ndarray, t: np.ndarray, x_range: np.ndarray,
-                                       y_range: np.ndarray, h: float):
+def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: np.ndarray, t: np.ndarray,
+                        x_range: np.ndarray, y_range: np.ndarray, h: float):
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -101,7 +101,7 @@ class AbstractWaveKin(ABC):
         output stored in eta, u, w, du, dw
         """
 
-    def retrieve_kinematics(self):
+    def retrieve_kinematics(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return self.eta, self.u, self.w, self.du, self.dw
 
     def plot_kinematics(self):
@@ -149,7 +149,7 @@ class LinearKin(AbstractWaveKin):
     """ Linear Random Wave Kinematics Class
 
     Args:
-        spctr (Spectrum): desired spectral density of the wave surface 
+        spctr (Spectrum): desired spectral density of the wave surface
      """
 
     spctr: AbstractSpectrum
@@ -264,13 +264,21 @@ class AiryKin(DetWaveKin):
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
 
                 else:
-                    self.u[i_t, i_z] = self.omega * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+                    self.u[i_t, i_z] = self.omega * A * ((np.cosh(self.k * (self.depth + z))) /
+                                                         (np.sinh(self.k * self.depth))) \
+                                                        * np.sin(self.omega * t - self.k * self.x)
 
-                    self.w[i_t, i_z] = self.omega * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+                    self.w[i_t, i_z] = self.omega * A * ((np.sinh(self.k * (self.depth + z))) /
+                                                         (np.sinh(self.k * self.depth))) \
+                                                      * np.cos(self.omega * t - self.k * self.x)
 
-                    self.du[i_t, i_z] = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.cos(self.omega * t - self.k * self.x)
+                    self.du[i_t, i_z] = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) /
+                                                               (np.sinh(self.k * self.depth))) \
+                                                            * np.cos(self.omega * t - self.k * self.x)
 
-                    self.dw[i_t, i_z] = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) / (np.sinh(self.k * self.depth))) * np.sin(self.omega * t - self.k * self.x)
+                    self.dw[i_t, i_z] = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) /
+                                                                (np.sinh(self.k * self.depth))) \
+                                                             * np.sin(self.omega * t - self.k * self.x)
 
         return self
 
@@ -306,31 +314,35 @@ class StokesKin(DetWaveKin):
                 Aco[2] = (-4 - 20 * S + 10 * (S ** 2) - 13 * (S ** 3)) / (8 * np.sinh(kd) * ((1 - S) ** 3))
                 Aco[3] = (-2 * (S ** 2) + 11 * (S ** 3)) / (8 * np.sinh(kd) * ((1.-S) ** 3))
                 Aco[4] = (12 * S - 14 * (S ** 2) - 264 * (S ** 3) - 45 * (S ** 4) - 13 * (S ** 5)) / (24*((1.-S)**5))
-                Aco[5] = (10 * (S ** 3) - 174 * (S ** 4) + 291 * (S ** 5) + 278 * (S ** 6)) / (48 * (3 + 2 * S) * ((1 - S) ** 5))
-                Aco[6] = (-1184 + 32 * S + 13232 * (S ** 2) + 21712 * (S ** 3) + 20940 * (S ** 4) + 12554 * (S ** 5) - 500 *
-                        (S ** 6) - 3341 * (S ** 7) - 670 * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
+                Aco[5] = (10 * (S ** 3) - 174 * (S ** 4) + 291 * (S ** 5) + 278 * (S ** 6)) / (48 * (3 + 2 * S)
+                                                                                               * ((1 - S) ** 5))
+                Aco[6] = (-1184 + 32 * S + 13232 * (S ** 2) + 21712 * (S ** 3) + 20940 * (S ** 4) + 12554 * (S ** 5)
+                          - 500 * (S ** 6) - 3341 * (S ** 7) - 670 * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S)
+                                                                                  * (4 + S) * ((1 - S) ** 6))
                 Aco[7] = (4 * S + 105 * (S ** 2) + 198 * (S ** 3) - 1376 * (S ** 4) - 1302 * (S ** 5) - 117 * (S ** 6) +
-                        58 * (S ** 7))/(32 * np.sinh(kd) * (3 + 2 * S) * ((1 - S) ** 6))
-                Aco[8] = (-6 * (S ** 3) + 272 * (S ** 4) - 1552 * (S ** 5) + 852 * (S ** 6) + 2029 * (S ** 7) + 430 * (S ** 8)) \
-                    / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
+                          58 * (S ** 7))/(32 * np.sinh(kd) * (3 + 2 * S) * ((1 - S) ** 6))
+                Aco[8] = (-6 * (S ** 3) + 272 * (S ** 4) - 1552 * (S ** 5) + 852 * (S ** 6) + 2029 * (S ** 7) + 430
+                          * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
                 # Calculation of the B coefficients
                 Bco = np.empty(6)
                 Bco[0] = (1 / np.tanh(kd)) * (1 + 2 * S) / (2 * (1 - S))
                 Bco[1] = -3 * (1 + 3 * S + 3 * (S ** 2) + 2 * (S ** 3)) / (8 * ((1 - S) ** 3))
-                Bco[2] = (1 / np.tanh(kd)) * (6 - 26 * S - 182 * (S ** 2) - 204 * (S ** 3) - 25 * (S ** 4) + 26 * (S ** 5)) \
-                    / (6 * (3 + 2 * S) * ((1 - S) ** 4))
-                Bco[3] = (1./np.tanh(kd)) * (24 + 92 * S + 122 * (S ** 2) + 66 * (S ** 3) + 67 * (S ** 4) + 34 * (S ** 5)) \
-                    / (24 * (3 + 2 * S) * ((1 - S) ** 4))
+                Bco[2] = (1 / np.tanh(kd)) * (6 - 26 * S - 182 * (S ** 2) - 204 * (S ** 3) - 25 * (S ** 4) + 26
+                                              * (S ** 5)) / (6 * (3 + 2 * S) * ((1 - S) ** 4))
+                Bco[3] = (1./np.tanh(kd)) * (24 + 92 * S + 122 * (S ** 2) + 66 * (S ** 3) + 67 * (S ** 4) + 34
+                                             * (S ** 5)) / (24 * (3 + 2 * S) * ((1 - S) ** 4))
                 Bco[4] = 9 * (132 + 17 * S - 2216 * (S ** 2) - 5897 * (S ** 3) - 6292 * (S ** 4) - 2687 * (S ** 5)
-                            + 194 * (S ** 6) + 467 * (S ** 7) + 82 * (S ** 8)) / (128 * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
+                              + 194 * (S ** 6) + 467 * (S ** 7) + 82 * (S ** 8)) / (128 * (3 + 2 * S) * (4 + S)
+                                                                                    * ((1 - S) ** 6))
                 Bco[5] = 5 * (300 + 1579 * S + 3176 * (S ** 2) + 2949 * (S ** 3) + 1188 * (S ** 4) + 675 * (S ** 5)
-                            + 1326 * (S ** 6) + 827 * (S ** 7) + 130 * (S ** 8)) / (384 * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
+                              + 1326 * (S ** 6) + 827 * (S ** 7) + 130 * (S ** 8)) / (384 * (3 + 2 * S) * (4 + S)
+                                                                                      * ((1 - S) ** 6))
                 # Calculation of the C coefficients
                 Cco = np.empty(3)
                 Cco[0] = np.sqrt(np.tanh(kd))
                 Cco[1] = (np.sqrt(np.tanh(kd)) * (2 + 7 * S ** 2)) / (4 * (1-S) ** 2)
-                Cco[2] = (np.sqrt(np.tanh(kd)) * (4 + 32 * S - 116 * S ** 2 - 400 * S ** 3 - 71 * S ** 4 + 146 * S ** 5)) \
-                    / (32 * (1 - S) ** 5)
+                Cco[2] = (np.sqrt(np.tanh(kd)) * (4 + 32 * S - 116 * S ** 2 - 400 * S ** 3 - 71 * S ** 4 + 146
+                                                  * S ** 5)) / (32 * (1 - S) ** 5)
                 # Calculation of the D coefficients
                 Dco = np.empty(2)
                 Dco[0] = -0.5 * np.sqrt(1 / np.tanh(kd))
@@ -367,10 +379,10 @@ class StokesKin(DetWaveKin):
                 k_z_plus_h = self.k * (z + self.depth)
                 # z
                 self.eta[i_t] = (1 / self.k) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
-                                + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
-                                + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
-                                + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
-                                + B55 * np.cos(5 * psi)))
+                                                + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
+                                                + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
+                                                + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
+                                                + B55 * np.cos(5 * psi)))
 
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
@@ -379,47 +391,47 @@ class StokesKin(DetWaveKin):
                     # u calculation
                     self.u[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * (self.k * np.cos(self.theta)) \
                         * (A11 * epsilon * np.cosh(k_z_plus_h) * np.cos(psi)
-                        + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
-                        + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * np.cos(psi)
-                        + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
-                        + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
-                        + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * np.cos(4 * psi)
-                        + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * np.cos(psi) \
-                        + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi) \
-                        + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
+                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
+                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * np.cos(psi)
+                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
+                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
+                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * np.cos(4 * psi)
+                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * np.cos(psi)
+                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
+                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
                     # w calculation
                     self.w[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * self.k \
                         * (A11 * epsilon * np.sinh(k_z_plus_h)*np.sin(psi)
-                        + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
-                        + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * np.sin(psi)
-                        + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
-                        + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
-                        + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * np.sin(4 * psi)
-                        + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * np.sin(psi)
-                        + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
-                        + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * np.sin(5 * psi))
+                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
+                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * np.sin(psi)
+                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
+                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
+                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * np.sin(4 * psi)
+                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * np.sin(psi)
+                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
+                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * np.sin(5 * psi))
                     #  dudt horizontal acceleration
                     self.du[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * (self.k * np.cos(self.theta)) \
                         * (A11 * (epsilon) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                        + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
-                        + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                        + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
-                        + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
-                        + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.omega * np.sin(4 * psi)
-                        + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                        + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
-                        + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.omega * np.sin(5 * psi))
+                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
+                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
+                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
+                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
+                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.omega * np.sin(4 * psi)
+                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
+                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
+                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.omega * np.sin(5 * psi))
                     # dwdt vertical acceleration
                     self.dw[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * self.k \
                         * (A11 * epsilon * np.sinh(k_z_plus_h)*self.omega*-np.cos(psi)
-                        + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
-                        + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.omega * -np.cos(psi)
-                        + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
-                        + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
-                        + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.omega * -np.cos(4 * psi)
-                        + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.omega * - np.cos(psi)
-                        + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
-                        + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.omega * -np.cos(5 * psi))
+                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
+                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.omega * -np.cos(psi)
+                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
+                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
+                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.omega * -np.cos(4 * psi)
+                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.omega * - np.cos(psi)
+                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
+                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.omega * -np.cos(5 * psi))
 
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
