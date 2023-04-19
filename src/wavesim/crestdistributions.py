@@ -75,11 +75,27 @@ class CrestDistribution(ABC):
 class Rayleigh(CrestDistribution):
     """ Class for the Rayleigh distribution
     """
-    def cdf(self, X):
+    def cdf(self, X: np.ndarray) -> np.ndarray:
+        """computes the rayleigh cdf
+
+        Args:
+            X (np.ndarray): evaluation points
+
+        Returns:
+            np.ndarray: distribution cdf
+        """
 
         return 1 - np.exp(-8 * X ** 2 / (self.hs ** 2))
 
-    def pdf(self, X):
+    def pdf(self, X: np.ndarray) -> np.ndarray:
+        """computes the rayleigh density
+
+        Args:
+            X (np.ndarray): evaluation points
+
+        Returns:
+            np.ndarray: distribution density
+        """
 
         hs_sq = self.hs ** 2
 

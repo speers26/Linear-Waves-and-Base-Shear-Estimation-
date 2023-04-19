@@ -20,7 +20,7 @@ def fDispersionSTOKES5(h, H, omega) -> float:
         T (np.ndarray): wave period
 
     Returns:
-        np.array: wave number k [1/m]
+        float: wave number k [1/m]
     """
     # TODO: why isnt this using depth
 
@@ -44,7 +44,7 @@ def alt_solve_dispersion(omega: np.ndarray, d: float) -> float:
         d (float): water depth [m]
 
     Returns:
-        k (np.ndarray): wave number [m^-1]
+        k (float): wave number [m^-1]
     """
 
     g = 9.81
@@ -70,18 +70,21 @@ def solve_dispersion(omega: float, h: float, upp: float) -> float:
         k (float): wave number [m^-1]
     """
 
-    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=upp, args=(h, omega))
+    k = optimize.bisect(f=_dispersion_diff, a=1e-7, b=upp, args=(h, omega))
 
     return k
 
 
-def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray) -> float:
+def _dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray) -> float:
     """function to optimise in airy_dispersion
 
     Args:
         k (np.ndarray): wave number
         h (np.ndarray): water depth
         omega (np.ndarray): angular frequency
+
+    Returns:
+        float: dispersion difference
     """
     g = 9.81
     return omega ** 2 - g * k * np.tanh(k * h)
