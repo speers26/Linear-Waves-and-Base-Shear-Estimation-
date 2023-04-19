@@ -1,5 +1,5 @@
 '''
-Dispersion relation stuff
+Code for solving dispersion relation to give wave number
 
 ADD REF HERE
 
