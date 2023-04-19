@@ -51,8 +51,8 @@ class MorisonLoad(AbstractLoad):
     Args:
         diameter (float): diameter of cylinder to calculate morison loading on
         rho (float): density of fluid
-        c_m: float: ??? constant
-        c_d: float ??? constant
+        c_m (float): coefficient of mass
+        c_d (float): coefficient of drag
     """
 
     diameter: float = 1.0
@@ -96,7 +96,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
     sea_state_hours: np.ndarray
     z_values: np.ndarray
 
-    sim_frequency: np.ndarray = 1.00  # TODO: make code work when this is 4.00
+    sim_frequency: np.ndarray = 1.00
     sim_min: np.ndarray = 2.00
     spctrType: type = Jonswap
     loadType: type = MorisonLoad
@@ -147,11 +147,12 @@ class LoadDistEst():  # TODO: add option to specify structure height
         """ simulate conditioned sea states and store elevation and load
         also get and store max elevation and load
         """
+        # TODO: move some of this code into kinematics and load classes
         self.crests = np.empty([self.num_sea_states, self.nt])
         self.load = np.empty([self.num_sea_states, self.nt])
         self.max_crests = np.empty(self.num_sea_states)
         self.max_load = np.empty(self.num_sea_states)
-        for i in range(self.num_sea_states):
+        for i in range(self.num_sea_states):  # TODO: Change to two loops
             # print(i)
             lin_kin = LinearKin(t_values=self.t_values, z_values=self.z_values, spctr=self.spctr)
             lin_kin.compute_kinematics(cond=True, a=self.cond_crests[i])
@@ -161,6 +162,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
             lin_load.compute_load()
             self.load[i, :] = lin_load.retrieve_load()
 
+            # TODO: vectorise this first
             # get maximums
             mins = argrelextrema(self.crests[i, :], np.less)[0]
             lower_min = np.max(mins[mins < self.nt/2])
@@ -194,12 +196,13 @@ class LoadDistEst():  # TODO: add option to specify structure height
         """compute max load dist by importance sampling
         """
 
-        # self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
-        self.load_X = np.linspace(0, 3, num=100)
+        self.load_X = np.linspace(min(self.max_load), max(self.max_load), num=100)
+        # self.load_X = np.linspace(0, 3, num=100)
 
         f = crestd.rayleigh_pdf(self.cond_crests, self.hs)
         fog = f/self.g
 
+        # TODO: maybe right function for below line
         load_cdf_unnorm = np.sum((self.load_X[:, None] > self.max_load[None, :])*(fog), axis=1)/np.sum(fog)
 
         self.load_cdf = load_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
