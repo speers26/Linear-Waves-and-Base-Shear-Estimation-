@@ -73,38 +73,65 @@ class AbstractWaveKin(ABC):
 
     @property
     def depth(self) -> float:
-        """ returns water depth as the minimun of z_values
+        """returns water depth as the minimun of z_values
+
+        Returns:
+            float: depth of sea bed
         """
         return -np.min(self.z_values)
 
     @property
     def nz(self) -> int:
-        """ retuns number of z values"""
+        """retuns number of z values
+
+        Returns:
+            int: number of depth values to evaluate at
+        """
         return len(self.z_values)
 
     @property
     def dz(self) -> float:
-        """ returns steps in z-values """
+        """returns steps in z-values
+
+        Returns:
+            float: depth step size (homogenous)
+        """
         return self.z_values[1] - self.z_values[0]
 
     @property
     def nt(self) -> int:
-        """ returns number of time points"""
+        """returns number of time points
+
+        Returns:
+            int: number of time points to evaluate at
+        """
         return len(self.t_values)
 
     @property
     def zt_grid(self) -> np.ndarray:
-        """ returns grid for plotting over"""
+        """returns grid for plotting over
+
+        Returns:
+            np.ndarray: meshgrid of depth and time values
+        """
         return np.meshgrid(self.z_values, self.t_values)
 
     @abstractmethod
     def compute_kinematics(self) -> AbstractWaveKin:
-        """ compute kinematics for given time and z_values
+        """compute kinematics for given time and z_values
 
         output stored in eta, u, w, du, dw
+
+        Returns:
+            AbstractWaveKin: returns self
         """
 
     def retrieve_kinematics(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """ outputs the kinematics stored in self.kinematics
+
+        Returns:
+            tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]: crest height and kinematics
+        """
         return self.eta, self.u, self.w, self.du, self.dw
 
     def plot_kinematics(self) -> None:
@@ -153,12 +180,21 @@ class LinearKin(AbstractWaveKin):
 
     Args:
         spctr (Spectrum): desired spectral density of the wave surface
-     """
+    """
 
     spctr: AbstractSpectrum
 
     def compute_kinematics(self, cond: bool, a: float = 0, NewWave: bool = False) -> LinearKin:
+        """computes linear wave kinematics
 
+        Args:
+            cond (bool): Set to True to generate a conditioned wave series
+            a (float, optional): Conditioned crest elevation at t=0. Defaults to 0.
+            NewWave (bool, optional): Set to True to generate a NewWave. Defaults to False.
+
+        Returns:
+            LinearKin: returns self
+        """
         if NewWave:
             A = np.zeros(shape=(1, self.spctr.nf))
             B = np.zeros(shape=(1, self.spctr.nf))
@@ -237,7 +273,10 @@ class DetWaveKin(AbstractWaveKin):
 
     @property
     def omega(self) -> float:
-        """ returns the angular freq
+        """returns the angular freq
+
+        Returns:
+            float: peak angular frequency
         """
         return 2*np.pi/self.T
 
@@ -248,12 +287,19 @@ class AiryKin(DetWaveKin):
     """
     @property
     def k(self) -> float:
-        """ returns wave number for kinematics calculation
+        """returns wave number for kinematics calculation
+
+        Returns:
+            float: wave number
         """
         return alt_solve_dispersion(self.omega, self.depth)
 
     def compute_kinematics(self) -> AiryKin:
+        """computes airy wave kinematics and stores them in self
 
+        Returns:
+            AiryKin: returns self
+        """
         self.eta = np.empty(self.nt)
         self.u = np.empty((self.nt, self.nz))
         self.w = np.empty((self.nt, self.nz))
@@ -297,11 +343,19 @@ class StokesKin(DetWaveKin):
 
     @property
     def k(self) -> float:
-        """ return k for stokes wave """
+        """return k for stokes wave
+
+        Returns:
+            float: wave number
+        """
         return fDispersionSTOKES5(self.depth, self.H, self.omega)
 
     def compute_kinematics(self) -> StokesKin:
+        """ computes Stokes wave kinematics and stores them in self
 
+        Returns:
+            StokesKin: returns self
+        """
         self.eta = np.empty(self.nt)
         self.u = np.empty((self.nt, self.nz))
         self.w = np.empty((self.nt, self.nz))

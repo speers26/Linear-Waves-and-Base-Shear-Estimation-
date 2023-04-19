@@ -26,17 +26,26 @@ class AbstractLoad(ABC):
 
     @abstractmethod
     def compute_load(self) -> AbstractLoad:
-        """ compute load at individual z points in WaveKin
+        """compute load at individual z points in WaveKin
 
         store in load
+
+
+        Returns:
+            AbstractLoad: returns self
         """
 
     def retrieve_load(self) -> np.ndarray:
-        """ retrieve the forces stores in load"""
+        """retrieve the forces stores in load
+
+        Returns:
+            np.ndarray: induced load time series
+        """
         return self.load
 
     def plot_load(self) -> None:
-        """ plot the force stored in load """
+        """ plot the force stored in load
+        """
         plt.plot()
         plt.plot(self.kinematics.t_values, self.load)
         plt.ylabel("Force [MN]")
@@ -61,7 +70,10 @@ class MorisonLoad(AbstractLoad):
     c_d: float = 1.0
 
     def compute_load(self) -> MorisonLoad:
-        """ compute base shear time series in MN using morison load on a cylinder
+        """compute base shear time series in MN using morison load on a cylinder
+
+        Returns:
+            MorisonLoad: returns self
         """
 
         F = self.rho * self.c_m * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du\
@@ -103,26 +115,55 @@ class LoadDistEst():  # TODO: add option to specify structure height
 
     @property
     def dz(self) -> float:
+        """returns the step in depth points (homogenous)
+
+        Returns:
+            float: step in depth evaluation points
+        """
         return self.z_values[1] - self.z_values[0]
 
     @property
     def dt(self) -> float:
+        """returns the step in time points (homegenous)
+
+        Returns:
+            float: step in time evaluation points
+        """
         return 1/self.sim_frequency
 
     @property
     def sim_period(self) -> float:
+        """returns to total number of sections per sim
+
+        Returns:
+            float: sim period [s]
+        """
         return 60*self.sim_min
 
     @property
     def sim_per_state(self) -> float:
+        """returns the number of simulations per full length sea state
+
+        Returns:
+            float: simulations per full sea state
+        """
         return self.sea_state_hours * 60 / self.sim_min
 
     @property
     def waves_per_sim(self) -> float:
+        """returns the number of waves per conditioned simulation
+
+        Returns:
+            float: waves per conditioned simulation
+        """
         return self.sim_period / self.tp
 
     def compute_tf_values(self) -> LoadDistEst:
-        """ get frequency and times for given simulation frequency and length"""
+        """get frequency and times for given simulation frequency and length
+
+        Returns:
+            LoadDistEst: returns self
+        """
         nT = np.floor(self.sim_period*self.sim_frequency)  # number of time points to evaluate
         self.t_values = np.linspace(-nT/2, nT/2 - 1, int(nT)) * self.dt  # centering time around 0
         self.f_values = np.linspace(1e-3, nT - 1, int(nT)) / (nT / self.sim_frequency)  # selecting frequency range
@@ -208,7 +249,8 @@ class LoadDistEst():  # TODO: add option to specify structure height
         self.load_cdf = load_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
     def plot_crest_dist(self, log=True) -> None:
-        """ plot the stored crest distribution against theoretical """
+        """ plot the stored crest distribution against theoretical
+        """
         theor_cdf = crestd.rayleigh_cdf(self.crest_X, self.hs)**(self.sim_per_state*self.waves_per_sim)
         plt.figure()
         if log:
@@ -220,7 +262,8 @@ class LoadDistEst():  # TODO: add option to specify structure height
         plt.show()
 
     def plot_load_dist(self, log=True) -> None:
-        """ plot the stored load distribution """
+        """ plot the stored load distribution
+        """
         plt.figure()
         if log:
             plt.plot(self.load_X, np.log10(1-self.load_cdf))
