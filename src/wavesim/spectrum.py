@@ -31,19 +31,37 @@ class AbstractSpectrum(ABC):
     @property
     def omega(self) -> np.ndarray:
         """returns omegas for given fs
+
+        Returns:
+            np.ndarray: angular frequencies
         """
         return self.frequency * 2 * np.pi
 
     @property
     def df(self) -> float:
+        """returns the length of each frequency band (homogenous)
+
+        Returns:
+            float: df
+        """
         return self.frequency[1] - self.frequency[0]
 
     @property
     def dom(self) -> float:
+        """returns the length of each angular frequency band (homogenous)
+
+        Returns:
+            float: dom
+        """
         return self.omega[1] - self.omega[0]
 
     @property
     def nf(self) -> int:
+        """returns the number of contributing discrete frequencies
+
+        Returns:
+            int: nf
+        """
         return len(self.frequency)
 
     @abstractmethod
@@ -51,12 +69,18 @@ class AbstractSpectrum(ABC):
         """returns density for given frequency range
 
         output stored in density
+
+        Returns:
+            AbstractSpectrum: returns self
         """
 
     def compute_omega_density(self) -> AbstractSpectrum:
-        """ returns the density scaled for omega on the x axis
+        """returns the density scaled for omega on the x axis
 
         output stored in omega_density
+
+        Returns:
+            AbstractSpectrum: returns self
         """
         self.omega_density = self.density / (2*np.pi)
         return self
@@ -78,7 +102,7 @@ class AbstractSpectrum(ABC):
             k (int): moment
 
         Returns:
-            k_integral (_type_): integral equal to the kth moment
+            k_integral (float): integral equal to the kth moment
         """
 
         k_integral = np.sum(self.density * (self.frequency ** k) * self.df)
@@ -120,15 +144,28 @@ class Jonswap(AbstractSpectrum):
 
     @property
     def fp(self) -> float:
-        """ Get peak frequency """
+        """get peak frequency
+
+        Returns:
+            float: peak frequency
+        """
         return 1/self.tp
 
     @property
     def omega_p(self) -> float:
-        """ Get peak angular frequecy """
+        """get peak angular frequency
+
+        Returns:
+            float: peak angular frequency
+        """
         return 2 * np.pi / self.tp
 
     def compute_density(self) -> Jonswap:
+        """compute the spectral density for given frequencies
+
+        Returns:
+            Jonswap: spectral density
+        """
 
         sigma = (self.frequency < self.fp) * self.sigma_a + (self.frequency >= self.fp) * self.sigma_b
 
