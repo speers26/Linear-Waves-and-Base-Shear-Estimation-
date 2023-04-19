@@ -10,6 +10,26 @@ import matplotlib.pyplot as plt
 
 
 @dataclass
+class SeaState():
+    """Sea state dataclass, can be multiple sea states
+
+    Args:
+        hs (np.ndarray): significant wave height, [m]
+        tp (np.ndarray): significant wave period [s]
+    """
+    hs: np.ndarray
+    tp: np.ndarray
+
+    @property
+    def num_SS(self) -> int:
+        """get the number of sea states we're considering
+
+        Returns:
+            int: num of sea states
+        """
+
+
+@dataclass
 class AbstractSpectrum(ABC):
     """ Wave spectrum class
 
@@ -21,9 +41,8 @@ class AbstractSpectrum(ABC):
         density (np.ndarray): spectral density for frequency
         omega_density (np.ndarray): spectral density for angular frequency
     """
+    sea_state: SeaState
     frequency: np.ndarray
-    hs: np.ndarray
-    tp: np.ndarray
     g: float = 9.81
     density: np.ndarray = None
     omega_density: np.ndarray = None
@@ -149,7 +168,7 @@ class Jonswap(AbstractSpectrum):
         Returns:
             float: peak frequency
         """
-        return 1/self.tp
+        return 1/self.sea_state.tp
 
     @property
     def omega_p(self) -> float:
@@ -158,7 +177,7 @@ class Jonswap(AbstractSpectrum):
         Returns:
             float: peak angular frequency
         """
-        return 2 * np.pi / self.tp
+        return 2 * np.pi / self.sea_state.tp
 
     def compute_density(self) -> Jonswap:
         """compute the spectral density for given frequencies
@@ -175,7 +194,7 @@ class Jonswap(AbstractSpectrum):
 
         area = sum(self.density*self.df)
 
-        self.density *= self.hs ** 2 / (16 * area)
+        self.density *= self.sea_state.hs ** 2 / (16 * area)
 
         return self
 

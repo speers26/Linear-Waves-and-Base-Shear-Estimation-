@@ -68,8 +68,18 @@ class AbstractWaveKin(ABC):
         z_values (np.ndarray): depth values to calculate kimematics at [m]
     """
 
+    sample_f: float
+    period: float
     t_values: np.ndarray
     z_values: np.ndarray
+
+    @property
+    def t_values(self) -> np.ndarray:
+        """computes time evaluation points from sample_frequency and time period
+
+        Returns:
+            np.ndarray: time evaluation points
+        """
 
     @property
     def depth(self) -> float:
