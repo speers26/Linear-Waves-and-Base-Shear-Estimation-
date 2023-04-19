@@ -156,13 +156,15 @@ class LinearKin(AbstractWaveKin):
 
     spctr: AbstractSpectrum
 
-    def compute_kinematics(self, cond: bool, a: float = 0) -> LinearKin:
+    def compute_kinematics(self, cond: bool, a: float = 0, NewWave: bool = False) -> LinearKin:
 
-        A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
-        B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+        if NewWave:
+            A = np.zeros(shape=(1, self.spctr.nf))
+            B = np.zeros(shape=(1, self.spctr.nf))
 
-        # A = np.zeros(shape=(1, self.spctr.nf))
-        # B = np.zeros(shape=(1, self.spctr.nf))
+        else:
+            A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+            B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
 
         if cond:
             m = 0
