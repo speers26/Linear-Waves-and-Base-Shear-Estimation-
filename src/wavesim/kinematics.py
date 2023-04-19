@@ -7,6 +7,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
+import math
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersionSTOKES5
 from wavesim.spectrum import AbstractSpectrum
 from scipy.fft import fft, fftshift
@@ -197,17 +198,21 @@ class LinearKin(AbstractWaveKin):
             if z > -1:
                 z = -1
 
-            # TODO: add overflow error fix by capping cosh and sinh fractions
+            qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
+            qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * (np.cosh(k*(z + d))) / (np.sinh(k*d))
-            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * (np.cosh(k*(z+d))) / (np.sinh(k*d))
-            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * (np.sinh(k*(z+d))) / (np.sinh(k*d))
-            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * (np.sinh(k*(z+d))) / (np.sinh(k*d))
+            qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
+            qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1
 
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta) * (z_init < 0)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta) * (z_init < 0)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta) * (z_init < 0)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta) * (z_init < 0)
+            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * qf1
+            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * qf1
+            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * qf2
+            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * qf2
+
+            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)  # * (z_init < 0)
+            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)  # * (z_init < 0)
+            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)  # * (z_init < 0)
+            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)  # * (z_init < 0)
 
         return self
 
