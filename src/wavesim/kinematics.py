@@ -166,9 +166,6 @@ class LinearKin(AbstractWaveKin):
             A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
             B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
 
-        # A = np.zeros(shape=(1, self.spctr.nf))
-        # B = np.zeros(shape=(1, self.spctr.nf))
-
         if cond:
             m = 0
 
