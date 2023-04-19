@@ -1,10 +1,3 @@
-# general_mcmc
+# Wave sim and force calculation
 
-PUT STUFF HERE!!
-
-
-To install
-
-pip install .
-or
-pip install -e . for editable mode
+Repository for wavesim and force calculation package. Allows for the simulation of short term wave variability for given sea-state conditions, and the estimation of resulting maximum response force distributions. 
