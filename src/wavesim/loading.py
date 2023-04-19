@@ -4,6 +4,7 @@ Code for generating wave load using Morison Loading
 ADD REF HERE
 
 '''
+from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -24,17 +25,17 @@ class AbstractLoad(ABC):
     kinematics: AbstractWaveKin
 
     @abstractmethod
-    def compute_load(self):
+    def compute_load(self) -> AbstractLoad:
         """ compute load at individual z points in WaveKin
 
         store in load
         """
 
-    def retrieve_load(self):
+    def retrieve_load(self) -> np.ndarray:
         """ retrieve the forces stores in load"""
         return self.load
 
-    def plot_load(self):
+    def plot_load(self) -> None:
         """ plot the force stored in load """
         plt.plot()
         plt.plot(self.kinematics.t_values, self.load)
@@ -59,7 +60,7 @@ class MorisonLoad(AbstractLoad):
     c_m: float = 1.0
     c_d: float = 1.0
 
-    def compute_load(self):
+    def compute_load(self) -> MorisonLoad:
         """ compute base shear time series in MN using morison load on a cylinder
         """
 
@@ -101,26 +102,26 @@ class LoadDistEst():  # TODO: add option to specify structure height
     loadType: type = MorisonLoad
 
     @property
-    def dz(self):
+    def dz(self) -> float:
         return self.z_values[1] - self.z_values[0]
 
     @property
-    def dt(self):
+    def dt(self) -> float:
         return 1/self.sim_frequency
 
     @property
-    def sim_period(self):
+    def sim_period(self) -> float:
         return 60*self.sim_min
 
     @property
-    def sim_per_state(self):
+    def sim_per_state(self) -> float:
         return self.sea_state_hours * 60 / self.sim_min
 
     @property
-    def waves_per_sim(self):
+    def waves_per_sim(self) -> float:
         return self.sim_period / self.tp
 
-    def compute_tf_values(self):
+    def compute_tf_values(self) -> LoadDistEst:
         """ get frequency and times for given simulation frequency and length"""
         nT = np.floor(self.sim_period*self.sim_frequency)  # number of time points to evaluate
         self.t_values = np.linspace(-nT/2, nT/2 - 1, int(nT)) * self.dt  # centering time around 0
@@ -129,20 +130,20 @@ class LoadDistEst():  # TODO: add option to specify structure height
         self.nt = int(nT)
         return self
 
-    def compute_spectrum(self):
+    def compute_spectrum(self) -> LoadDistEst:
         """ get spectrum for given frequencies, store in spctr"""
         self.spctr = self.spctrType(self.f_values, self.hs, self.tp)
         self.spctr.compute_density()
         return self
 
-    def compute_cond_crests(self, up_CoH: np.ndarray = 2):
+    def compute_cond_crests(self, up_CoH: np.ndarray = 2) -> LoadDistEst:
         """ get crests to condition on """
         self.CoH = np.sort(np.random.uniform(low=0, high=up_CoH, size=self.num_sea_states))
         self.cond_crests = self.hs * self.CoH
         self.g = 1/(up_CoH*self.hs)
         return self
 
-    def simulate_sea_states(self):
+    def simulate_sea_states(self) -> LoadDistEst:
         """ simulate conditioned sea states and store elevation and load
         also get and store max elevation and load
         """
@@ -172,7 +173,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
 
         return self
 
-    def compute_crest_dist(self, X: np.ndarray):
+    def compute_crest_dist(self, X: np.ndarray) -> LoadDistEst:
         """compute max crest dist by importance sampling (should be rayleigh)
 
         Args:
@@ -189,7 +190,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
 
         return self
 
-    def compute_load_dist(self):
+    def compute_load_dist(self) -> LoadDistEst:
         """compute max load dist by importance sampling
         """
 
@@ -203,7 +204,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
 
         self.load_cdf = load_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
-    def plot_crest_dist(self, log=True):
+    def plot_crest_dist(self, log=True) -> None:
         """ plot the stored crest distribution against theoretical """
         theor_cdf = crestd.rayleigh_cdf(self.crest_X, self.hs)**(self.sim_per_state*self.waves_per_sim)
         plt.figure()
@@ -215,7 +216,7 @@ class LoadDistEst():  # TODO: add option to specify structure height
             plt.plot(self.crest_X, theor_cdf, '-r')
         plt.show()
 
-    def plot_load_dist(self, log=True):
+    def plot_load_dist(self, log=True) -> None:
         """ plot the stored load distribution """
         plt.figure()
         if log:
