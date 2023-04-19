@@ -7,11 +7,11 @@ from dataclasses import dataclass
 import numpy as np
 
 
-def rayleigh_cdf(eta: np.ndarray, hs: float):
+def rayleigh_cdf(eta: np.ndarray, hs: float) -> np.ndarray:
     """returns the rayleigh cdf
 
     Args:
-        eta (np.ndarray): crest heights
+        eta (np.ndarray): evaluation points (crest heights)
         hs (float): sig wave height
 
     Returns:
@@ -23,12 +23,15 @@ def rayleigh_cdf(eta: np.ndarray, hs: float):
     return p
 
 
-def rayleigh_pdf(eta: np.ndarray, hs: float):
-    """_summary_
+def rayleigh_pdf(eta: np.ndarray, hs: float) -> np.ndarray:
+    """returns the rayleigh pdf
 
     Args:
-        eta (np.ndarray): _description_
-        hs (float): _description_
+        eta (np.ndarray): evaluation points (crest heights)
+        hs (float): significant wave height
+
+    Returns:
+        p (np.ndarray): rayleigh density
     """
 
     d = -np.exp(-8 * eta**2 / hs**2) * -8 * 2 * eta / hs**2

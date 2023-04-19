@@ -2,6 +2,8 @@
 Code for generating kinematics, wave velocity, wave accelerations
 
 '''
+
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
@@ -14,7 +16,7 @@ import matplotlib.pyplot as plt
 
 
 def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: np.ndarray, t: np.ndarray,
-                        x_range: np.ndarray, y_range: np.ndarray, h: float):
+                        x_range: np.ndarray, y_range: np.ndarray, h: float) -> np.ndarray:
     """returns random wave surface with frequency direction spectrum defined below
 
     Args:
@@ -69,33 +71,33 @@ class AbstractWaveKin(ABC):
     z_values: np.ndarray
 
     @property
-    def depth(self):
+    def depth(self) -> float:
         """ returns water depth as the minimun of z_values
         """
         return -np.min(self.z_values)
 
     @property
-    def nz(self):
+    def nz(self) -> int:
         """ retuns number of z values"""
         return len(self.z_values)
 
     @property
-    def dz(self):
+    def dz(self) -> float:
         """ returns steps in z-values """
         return self.z_values[1] - self.z_values[0]
 
     @property
-    def nt(self):
+    def nt(self) -> int:
         """ returns number of time points"""
         return len(self.t_values)
 
     @property
-    def zt_grid(self):
+    def zt_grid(self) -> np.ndarray:
         """ returns grid for plotting over"""
         return np.meshgrid(self.z_values, self.t_values)
 
     @abstractmethod
-    def compute_kinematics(self):
+    def compute_kinematics(self) -> AbstractWaveKin:
         """ compute kinematics for given time and z_values
 
         output stored in eta, u, w, du, dw
@@ -104,11 +106,11 @@ class AbstractWaveKin(ABC):
     def retrieve_kinematics(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         return self.eta, self.u, self.w, self.du, self.dw
 
-    def plot_kinematics(self):
+    def plot_kinematics(self) -> None:
         """plots wave kinematics calculuated in compute_kinematics
         """
         plt.figure()
-        # plt.subplot(2, 2, 1)
+        plt.subplot(2, 2, 1)
 
         plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
         plt.plot(self.t_values, self.eta, '-k')
@@ -117,29 +119,29 @@ class AbstractWaveKin(ABC):
         plt.ylabel('depth')
         plt.colorbar()
 
-        # plt.subplot(2, 2, 2)
-        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
-        # plt.plot(self.t_values, self.eta, '-k')
-        # plt.title('w')
-        # plt.xlabel('time')
-        # plt.ylabel('depth')
-        # plt.colorbar()
+        plt.subplot(2, 2, 2)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('w')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
 
-        # plt.subplot(2, 2, 3)
-        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
-        # plt.plot(self.t_values, self.eta, '-k')
-        # plt.title('du')
-        # plt.xlabel('time')
-        # plt.ylabel('depth')
-        # plt.colorbar()
+        plt.subplot(2, 2, 3)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('du')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
 
-        # plt.subplot(2, 2, 4)
-        # plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
-        # plt.plot(self.t_values, self.eta, '-k')
-        # plt.title('dw')
-        # plt.xlabel('time')
-        # plt.ylabel('depth')
-        # plt.colorbar()
+        plt.subplot(2, 2, 4)
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
+        plt.plot(self.t_values, self.eta, '-k')
+        plt.title('dw')
+        plt.xlabel('time')
+        plt.ylabel('depth')
+        plt.colorbar()
 
         plt.show()
 
@@ -154,9 +156,7 @@ class LinearKin(AbstractWaveKin):
 
     spctr: AbstractSpectrum
 
-    def compute_kinematics(self, cond: bool, a: float = 0):
-
-        # TODO: replace things here with moment functions of spectrum
+    def compute_kinematics(self, cond: bool, a: float = 0) -> LinearKin:
 
         A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
         B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
@@ -229,7 +229,7 @@ class DetWaveKin(AbstractWaveKin):
     theta: np.ndarray = 0  # always set to 0 for now TODO: implement this for all waves
 
     @property
-    def omega(self):
+    def omega(self) -> float:
         """ returns the angular freq
         """
         return 2*np.pi/self.T
@@ -240,12 +240,12 @@ class AiryKin(DetWaveKin):
     """ Airy kinematics class
     """
     @property
-    def k(self):
+    def k(self) -> float:
         """ returns wave number for kinematics calculation
         """
         return alt_solve_dispersion(self.omega, self.depth)
 
-    def compute_kinematics(self):
+    def compute_kinematics(self) -> AiryKin:
 
         self.eta = np.empty(self.nt)
         self.u = np.empty((self.nt, self.nz))
@@ -289,11 +289,11 @@ class StokesKin(DetWaveKin):
     """
 
     @property
-    def k(self):
+    def k(self) -> float:
         """ return k for stokes wave """
         return fDispersionSTOKES5(self.depth, self.H, self.omega)
 
-    def compute_kinematics(self):
+    def compute_kinematics(self) -> StokesKin:
 
         self.eta = np.empty(self.nt)
         self.u = np.empty((self.nt, self.nz))

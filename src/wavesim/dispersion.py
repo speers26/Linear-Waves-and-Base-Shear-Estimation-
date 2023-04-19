@@ -5,11 +5,12 @@ ADD REF HERE
 
 '''
 
+from __future__ import annotations
 import numpy as np
 from scipy import optimize
 
 
-def fDispersionSTOKES5(h, H, omega):
+def fDispersionSTOKES5(h, H, omega) -> float:
     """
     Solves the progressive wave dispersion equation
 
@@ -30,12 +31,12 @@ def fDispersionSTOKES5(h, H, omega):
     return k
 
 
-def _progressive_dispersion(k, H, omega):
+def _progressive_dispersion(k, H, omega) -> float:
     g = 9.81
     return 1 + (H ** 2 * k ** 2) / 8+(H ** 4 * k ** 4) / 128 - omega / ((g * k) ** 0.5)
 
 
-def alt_solve_dispersion(omega: np.ndarray, d: float):
+def alt_solve_dispersion(omega: np.ndarray, d: float) -> float:
     """uses method of (Guo, 2002) to solve dispersion relation for k
 
     Args:
@@ -58,7 +59,7 @@ def alt_solve_dispersion(omega: np.ndarray, d: float):
     return k
 
 
-def solve_dispersion(omega: float, h: float, upp: float):
+def solve_dispersion(omega: float, h: float, upp: float) -> float:
     """returns wave number k for given angular frequency omega
     Args:
         omega (float): angular frequency [s^-1]
@@ -74,7 +75,7 @@ def solve_dispersion(omega: float, h: float, upp: float):
     return k
 
 
-def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray):
+def dispersion_diff(k: np.ndarray, h: np.ndarray, omega: np.ndarray) -> float:
     """function to optimise in airy_dispersion
 
     Args:

@@ -2,6 +2,7 @@
 Code for generating Wave Spectra and associated functionality
 
 '''
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import numpy as np
@@ -28,31 +29,31 @@ class AbstractSpectrum(ABC):
     omega_density: np.ndarray = None
 
     @property
-    def omega(self):
+    def omega(self) -> np.ndarray:
         """returns omegas for given fs
         """
         return self.frequency * 2 * np.pi
 
     @property
-    def df(self):
+    def df(self) -> float:
         return self.frequency[1] - self.frequency[0]
 
     @property
-    def dom(self):
+    def dom(self) -> float:
         return self.omega[1] - self.omega[0]
 
     @property
-    def nf(self):
+    def nf(self) -> int:
         return len(self.frequency)
 
     @abstractmethod
-    def compute_density(self):
+    def compute_density(self) -> AbstractSpectrum:
         """returns density for given frequency range
 
         output stored in density
         """
 
-    def compute_omega_density(self):
+    def compute_omega_density(self) -> AbstractSpectrum:
         """ returns the density scaled for omega on the x axis
 
         output stored in omega_density
@@ -60,7 +61,7 @@ class AbstractSpectrum(ABC):
         self.omega_density = self.density / (2*np.pi)
         return self
 
-    def plot_density(self, ang=False):
+    def plot_density(self, ang=False) -> None:
         """plot density stored in density
         """
         plt.figure()
@@ -70,7 +71,7 @@ class AbstractSpectrum(ABC):
             plt.plot(self.frequency, self.density)
         plt.show()
 
-    def compute_kth_moment(self, k: int):
+    def compute_kth_moment(self, k: int) -> float:
         """function to return the kth moment of the given spectrum evaulated at given frequencies
 
         Args:
@@ -84,7 +85,7 @@ class AbstractSpectrum(ABC):
 
         return k_integral
 
-    def compute_random_waves_acf(self, tau: np.ndarray):
+    def compute_random_waves_acf(self, tau: np.ndarray) -> np.ndarray:
         """find acf function of the gaussian random wave surface with given spectrum
 
         Args:
@@ -118,16 +119,16 @@ class Jonswap(AbstractSpectrum):
     sigma_b: np.ndarray = 0.09
 
     @property
-    def fp(self):
+    def fp(self) -> float:
         """ Get peak frequency """
         return 1/self.tp
 
     @property
-    def omega_p(self):
+    def omega_p(self) -> float:
         """ Get peak angular frequecy """
         return 2 * np.pi / self.tp
 
-    def compute_density(self):
+    def compute_density(self) -> Jonswap:
 
         sigma = (self.frequency < self.fp) * self.sigma_a + (self.frequency >= self.fp) * self.sigma_b
 
