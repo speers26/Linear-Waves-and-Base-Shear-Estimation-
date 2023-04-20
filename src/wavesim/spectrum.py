@@ -190,7 +190,7 @@ class Jonswap(AbstractSpectrum):
 
         gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / self.fp - 1)/sigma) ** 2))
         self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
-            * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
+            * np.exp(-1.25 * (self.sea_state.tp*self.frequency) ** -4) * gamma_coeff
 
         area = sum(self.density*self.df)
 

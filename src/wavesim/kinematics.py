@@ -70,7 +70,6 @@ class AbstractWaveKin(ABC):
 
     sample_f: float
     period: float
-    t_values: np.ndarray
     z_values: np.ndarray
 
     @property

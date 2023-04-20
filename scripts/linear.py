@@ -1,14 +1,12 @@
 from wavesim import spectrum as spctr
 from wavesim import kinematics as kin
 from wavesim import loading as load
-import matplotlib.pyplot as plt
 import numpy as np
 
-hs = 15.
-tp = 12.
 a = 20.
 depth = 100
 cond = True
+ss1 = spctr.SeaState(hs=15, tp=12)
 
 np.random.seed(1)
 
@@ -25,7 +23,7 @@ dt = 1/freq  # time step is determined by frequency
 t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
 f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
 
-spectrum1 = spctr.Jonswap(frequency=f_range, hs=hs, tp=tp)
+spectrum1 = spctr.Jonswap(sea_state=ss1, frequency=f_range)
 spectrum1.compute_density()
 
 lin_wave = kin.LinearKin(t_values=t_range, z_values=z_range, spctr=spectrum1)
