@@ -80,6 +80,14 @@ class AbstractWaveKin(ABC):
             np.ndarray: time evaluation points
         """
 
+        freq = 4.00  # 3. / (2*np.pi)
+        period = 100  # total time range
+        nT = np.floor(period*freq)  # number of time points to evaluate
+
+        dt = 1/freq  # time step is determined by frequency
+        t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
+        f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
+
     @property
     def depth(self) -> float:
         """returns water depth as the minimun of z_values
