@@ -16,13 +16,17 @@ class SeaState():
     Args:
         hs (np.ndarray): significant wave height, [m]
         tp (np.ndarray): significant wave period [s]
-        H (np.ndarray): wave height (for deterministic waves)
-        T (np.ndarray): wave period (for deterministic waves)
+        H_det (np.ndarray): wave height (for deterministic waves)
+        T_det (np.ndarray): wave period (for deterministic waves)
+        theta (float): direction of propogation of wave (for deterministc waves)
+        g (float): acceleration due to gravity
     """
-    hs: np.ndarray
-    tp: np.ndarray
-    # T: np.ndarray = None
-    # H: np.ndarray = None
+    hs: np.ndarray = None
+    tp: np.ndarray = None
+    T_det: np.ndarray = None
+    H_det: np.ndarray = None
+    theta: float = 0
+    g: float = 9.81
 
     @property
     def num_SS(self) -> int:
@@ -31,6 +35,18 @@ class SeaState():
         Returns:
             int: num of sea states
         """
+
+        return len(self.hs)
+
+    @property
+    def omega_det(self) -> float:
+        """get the angular frequency (for deterministic wavesims)
+
+        Returns:
+            float: angular frequency
+        """
+
+        return 2*np.pi/self.T_det
 
 
 @dataclass
