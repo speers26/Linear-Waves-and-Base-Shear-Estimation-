@@ -10,8 +10,6 @@ ss1 = spctr.SeaState(hs=15, tp=12)
 
 np.random.seed(1)
 
-# TODO: put code to select t_values into linear wave class
-
 z_num = 150
 z_range = np.linspace(-depth, 50, z_num)
 freq = 4.00  # 3. / (2*np.pi)
