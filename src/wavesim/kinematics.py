@@ -208,26 +208,18 @@ class LinearKin(AbstractWaveKin):
 
         return f_range
 
-    @property
-    def spctr(self) -> spctr_type:
-        """computes the spectrum to use
-
-        Returns:
-            spctr_type: returns wave spectrum of specified type
-        """
-
-        return self.spctr_type(self.sea_state, self.frequency)
-
     def compute_spectrum(self) -> AbstractSpectrum:
         """computes the spectral density
 
         Returns:
             LinearKin: returns self
         """
+
+        self.spctr = self.spctr_type(self.sea_state, self.frequency)
         self.spctr.compute_density()
         self.spctr.compute_omega_density()
 
-        return self.spctr
+        return self
 
     def compute_kinematics(self, cond: bool, a: float = 0, NewWave: bool = False) -> LinearKin:
         """computes linear wave kinematics

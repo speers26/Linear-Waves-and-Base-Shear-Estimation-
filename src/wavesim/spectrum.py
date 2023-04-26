@@ -48,7 +48,7 @@ class AbstractSpectrum(ABC):
     sea_state: SeaState
     frequency: np.ndarray
     g: float = 9.81
-    density: np.ndarray = 1
+    density: np.ndarray = None
     omega_density: np.ndarray = None
 
     @property

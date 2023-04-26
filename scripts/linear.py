@@ -14,7 +14,6 @@ np.random.seed(1)
 
 z_num = 150
 z_range = np.linspace(-depth, 50, z_num)
-
 freq = 4.00  # 3. / (2*np.pi)
 period = 100  # total time range
 
