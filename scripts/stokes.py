@@ -1,20 +1,20 @@
 import numpy as np
 from wavesim import kinematics as kin
 from wavesim import loading as load
+from wavesim import spectrum as spctr
 
 if __name__ == '__main__':
 
-    h = 100  # depth
-    T = 20  # period
-    H = 35  # wave height
+    H = 25
+    T = 20
+    ss1 = spctr.SeaState(H_det=H, T_det=T)
 
-    n_depth = 151
-    z_range = np.linspace(-h, 50, n_depth)
+    z_num = 150
+    z_range = np.linspace(-100, 50, z_num)
+    freq = 1.00  # 3. / (2*np.pi)
+    period = 100  # total time range
 
-    n_time = 200
-    time = np.linspace(-20, 20, n_time)
-
-    stokes_wave = kin.StokesKin(t_values=time, z_values=z_range, H=H, T=T)
+    stokes_wave = kin.StokesKin(freq, period, z_range, ss1)
     stokes_wave.compute_kinematics()
     stokes_wave.plot_kinematics()
 

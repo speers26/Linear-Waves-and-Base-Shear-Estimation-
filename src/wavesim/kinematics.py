@@ -107,7 +107,7 @@ class AbstractWaveKin(ABC):
         Returns:
             int: number of time points to evaluate at
         """
-        return np.floor(self.period*self.sample_f)  # number of time points to evaluate
+        return int(np.floor(self.period*self.sample_f))  # number of time points to evaluate
 
     @property
     def t_values(self) -> np.ndarray:
@@ -291,37 +291,15 @@ class LinearKin(AbstractWaveKin):
 
 
 @dataclass
-class DetWaveKin(AbstractWaveKin):
-    """ deterministic wave sim class
+class AiryKin(AbstractWaveKin):
+    """ Airy kinematics class
 
     Args:
-        H (np.ndarray): wave height [m]
-        T (np.ndarray): wave period [s]
-        g (np.ndarray): acc due to gravity [ms^-2]
-        x (np.ndarray): point in space to evaluate kimematics at [m]
-        theta (np.ndarray): angle of propogation of the wave [radians]
-
+        x (np.ndarray): point in space to evaluate kimematics at [m] (placeholder)
     """
-    H: np.ndarray
-    T: np.ndarray
-    g: float = 9.81
+
     x: np.ndarray = 0  # always set this to 0 for now TODO: implement this for all waves
-    theta: np.ndarray = 0  # always set to 0 for now TODO: implement this for all waves
 
-    @property
-    def omega(self) -> float:
-        """returns the angular freq
-
-        Returns:
-            float: peak angular frequency
-        """
-        return 2*np.pi/self.T
-
-
-@dataclass
-class AiryKin(DetWaveKin):
-    """ Airy kinematics class
-    """
     @property
     def k(self) -> float:
         """returns wave number for kinematics calculation
@@ -329,7 +307,7 @@ class AiryKin(DetWaveKin):
         Returns:
             float: wave number
         """
-        return alt_solve_dispersion(self.omega, self.depth)
+        return alt_solve_dispersion(self.sea_state.omega_det, self.depth)
 
     def compute_kinematics(self) -> AiryKin:
         """computes airy wave kinematics and stores them in self
@@ -346,37 +324,42 @@ class AiryKin(DetWaveKin):
         for i_t, t in enumerate(self.t_values):
             for i_z, z in enumerate(self.z_values):
 
-                A = self.H / 2
+                A = self.sea_state.H_det / 2
 
-                self.eta[i_t] = A * np.sin(self.omega * t - self.k * self.x)
+                self.eta[i_t] = A * np.sin(self.sea_state.omega_det * t - self.k * self.x)
 
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
 
                 else:
-                    self.u[i_t, i_z] = self.omega * A * ((np.cosh(self.k * (self.depth + z))) /
-                                                         (np.sinh(self.k * self.depth))) \
-                                                        * np.sin(self.omega * t - self.k * self.x)
+                    self.u[i_t, i_z] = self.sea_state.omega_det * A * ((np.cosh(self.k * (self.depth + z))) /
+                                                                       (np.sinh(self.k * self.depth))) \
+                        * np.sin(self.sea_state.omega_det * t - self.k * self.x)
 
-                    self.w[i_t, i_z] = self.omega * A * ((np.sinh(self.k * (self.depth + z))) /
-                                                         (np.sinh(self.k * self.depth))) \
-                                                      * np.cos(self.omega * t - self.k * self.x)
+                    self.w[i_t, i_z] = self.sea_state.omega_det * A * ((np.sinh(self.k * (self.depth + z))) /
+                                                                       (np.sinh(self.k * self.depth))) \
+                        * np.cos(self.sea_state.omega_det * t - self.k * self.x)
 
-                    self.du[i_t, i_z] = self.omega ** 2 * A * ((np.cosh(self.k * (self.depth + z))) /
-                                                               (np.sinh(self.k * self.depth))) \
-                                                            * np.cos(self.omega * t - self.k * self.x)
+                    self.du[i_t, i_z] = self.sea_state.omega_det ** 2 * A * ((np.cosh(self.k * (self.depth + z))) /
+                                                                             (np.sinh(self.k * self.depth))) \
+                        * np.cos(self.sea_state.omega_det * t - self.k * self.x)
 
-                    self.dw[i_t, i_z] = -self.omega ** 2 * A * ((np.sinh(self.k * (self.depth + z))) /
-                                                                (np.sinh(self.k * self.depth))) \
-                                                             * np.sin(self.omega * t - self.k * self.x)
+                    self.dw[i_t, i_z] = -self.sea_state.omega_det ** 2 * A * ((np.sinh(self.k * (self.depth + z))) /
+                                                                              (np.sinh(self.k * self.depth))) \
+                        * np.sin(self.sea_state.omega_det * t - self.k * self.x)
 
         return self
 
 
 @dataclass
-class StokesKin(DetWaveKin):
+class StokesKin(AbstractWaveKin):
     """ Stokes kinematics class
+
+        Args:
+        x (np.ndarray): point in space to evaluate kimematics at [m] (placeholder)
     """
+
+    x: np.ndarray = 0  # always set this to 0 for now TODO: implement this for all waves
 
     @property
     def k(self) -> float:
@@ -385,7 +368,7 @@ class StokesKin(DetWaveKin):
         Returns:
             float: wave number
         """
-        return fDispersionSTOKES5(self.depth, self.H, self.omega)
+        return fDispersionSTOKES5(self.depth, self.sea_state.H_det, self.sea_state.omega_det)
 
     def compute_kinematics(self) -> StokesKin:
         """ computes Stokes wave kinematics and stores them in self
@@ -470,9 +453,9 @@ class StokesKin(DetWaveKin):
                 B55 = Bco[5]
                 C0 = Cco[0]
                 # Wave steepness
-                epsilon = self.H/2 * self.k
+                epsilon = self.sea_state.H_det/2 * self.k
                 #
-                psi = self.k * self.x - self.omega * t
+                psi = self.k * self.x - self.sea_state.omega_det * t
 
                 k_z_plus_h = self.k * (z + self.depth)
                 # z
@@ -487,7 +470,8 @@ class StokesKin(DetWaveKin):
 
                 else:
                     # u calculation
-                    self.u[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * (self.k * np.cos(self.theta)) \
+                    self.u[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) \
+                        * (self.k * np.cos(self.sea_state.theta)) \
                         * (A11 * epsilon * np.cosh(k_z_plus_h) * np.cos(psi)
                             + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
                             + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * np.cos(psi)
@@ -498,7 +482,7 @@ class StokesKin(DetWaveKin):
                             + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
                             + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
                     # w calculation
-                    self.w[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * self.k \
+                    self.w[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) * self.k \
                         * (A11 * epsilon * np.sinh(k_z_plus_h)*np.sin(psi)
                             + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
                             + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * np.sin(psi)
@@ -509,27 +493,40 @@ class StokesKin(DetWaveKin):
                             + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
                             + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * np.sin(5 * psi))
                     #  dudt horizontal acceleration
-                    self.du[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * (self.k * np.cos(self.theta)) \
-                        * (A11 * (epsilon) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
-                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
-                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.omega * np.sin(2 * psi)
-                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.omega * np.sin(4 * psi)
-                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.omega * np.sin(psi)
-                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.omega * np.sin(3 * psi)
-                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.omega * np.sin(5 * psi))
+                    self.du[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) \
+                        * (self.k * np.cos(self.sea_state.theta)) \
+                        * (A11 * (epsilon) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
+                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
+                            * np.sin(2 * psi)
+                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
+                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
+                            * np.sin(3 * psi)
+                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
+                            * np.sin(2 * psi)
+                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det
+                            * np.sin(4 * psi)
+                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
+                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
+                            * np.sin(3 * psi)
+                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det
+                            * np.sin(5 * psi))
                     # dwdt vertical acceleration
-                    self.dw[i_t, i_z] = (C0 * np.sqrt(self.g / self.k ** 3)) * self.k \
-                        * (A11 * epsilon * np.sinh(k_z_plus_h)*self.omega*-np.cos(psi)
-                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
-                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.omega * -np.cos(psi)
-                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
-                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.omega * -np.cos(2 * psi)
-                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.omega * -np.cos(4 * psi)
-                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.omega * - np.cos(psi)
-                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.omega * -np.cos(3 * psi)
-                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.omega * -np.cos(5 * psi))
+                    self.dw[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) * self.k \
+                        * (A11 * epsilon * np.sinh(k_z_plus_h)*self.sea_state.omega_det*-np.cos(psi)
+                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
+                            * -np.cos(2 * psi)
+                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.sea_state.omega_det * -np.cos(psi)
+                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
+                            * -np.cos(3 * psi)
+                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
+                            * -np.cos(2 * psi)
+                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det
+                            * -np.cos(4 * psi)
+                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.sea_state.omega_det * - np.cos(psi)
+                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
+                            * -np.cos(3 * psi)
+                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det
+                            * -np.cos(5 * psi))
 
                 if z > self.eta[i_t]:
                     self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0

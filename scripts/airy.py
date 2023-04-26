@@ -1,20 +1,20 @@
 import numpy as np
 from wavesim import kinematics as kin
 from wavesim import loading as load
+from wavesim import spectrum as spctr
 
 if __name__ == '__main__':
 
-    h = 100
+    H = 10
     T = 20
-    A = 20/2
+    ss1 = spctr.SeaState(H_det=H, T_det=T)
 
-    n_depth = 151
-    z_range = np.linspace(-h, 50, n_depth)
+    z_num = 150
+    z_range = np.linspace(-100, 50, z_num)
+    freq = 4.00  # 3. / (2*np.pi)
+    period = 100  # total time range
 
-    n_time = 200
-    time = np.linspace(-20, 20, n_time)
-
-    airy_wave = kin.AiryKin(t_values=time, z_values=z_range, H=A*2, T=T)
+    airy_wave = kin.AiryKin(sample_f=freq, period=period, z_values=z_range, sea_state=ss1)
     airy_wave.compute_kinematics()
     airy_wave.plot_kinematics()
 
