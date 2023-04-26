@@ -16,9 +16,13 @@ class SeaState():
     Args:
         hs (np.ndarray): significant wave height, [m]
         tp (np.ndarray): significant wave period [s]
+        H (np.ndarray): wave height (for deterministic waves)
+        T (np.ndarray): wave period (for deterministic waves)
     """
     hs: np.ndarray
     tp: np.ndarray
+    # T: np.ndarray = None
+    # H: np.ndarray = None
 
     @property
     def num_SS(self) -> int:
@@ -44,7 +48,7 @@ class AbstractSpectrum(ABC):
     sea_state: SeaState
     frequency: np.ndarray
     g: float = 9.81
-    density: np.ndarray = None
+    density: np.ndarray = 1
     omega_density: np.ndarray = None
 
     @property

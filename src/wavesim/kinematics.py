@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import numpy as np
 import math
 from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersionSTOKES5
-from wavesim.spectrum import AbstractSpectrum
+from wavesim.spectrum import AbstractSpectrum, SeaState
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
 
@@ -71,22 +71,7 @@ class AbstractWaveKin(ABC):
     sample_f: float
     period: float
     z_values: np.ndarray
-
-    @property
-    def t_values(self) -> np.ndarray:
-        """computes time evaluation points from sample_frequency and time period
-
-        Returns:
-            np.ndarray: time evaluation points
-        """
-
-        freq = 4.00  # 3. / (2*np.pi)
-        period = 100  # total time range
-        nT = np.floor(period*freq)  # number of time points to evaluate
-
-        dt = 1/freq  # time step is determined by frequency
-        t_range = np.linspace(-nT/2, nT/2 - 1, int(nT)) * dt  # centering time around 0
-        f_range = np.linspace(1e-3, nT - 1, int(nT)) / (nT / freq)  # selecting frequency range from 0 to freq
+    sea_state: SeaState
 
     @property
     def depth(self) -> float:
@@ -122,7 +107,17 @@ class AbstractWaveKin(ABC):
         Returns:
             int: number of time points to evaluate at
         """
-        return len(self.t_values)
+        return np.floor(self.period*self.sample_f)  # number of time points to evaluate
+
+    @property
+    def t_values(self) -> np.ndarray:
+        """returns the t_values to evaluate at
+
+        Returns:
+            np.ndarray: t_values
+        """
+        dt = 1/self.sample_f
+        return np.linspace(-self.nt/2, self.nt/2 - 1, int(self.nt)) * dt  # centering time around 0
 
     @property
     def zt_grid(self) -> np.ndarray:
@@ -196,10 +191,43 @@ class LinearKin(AbstractWaveKin):
     """ Linear Random Wave Kinematics Class
 
     Args:
-        spctr (Spectrum): desired spectral density of the wave surface
+        spctr_type (type): desired spectral type of the wave surface
     """
 
-    spctr: AbstractSpectrum
+    spctr_type: type
+
+    @property
+    def frequency(self) -> np.ndarray:
+        """calculates and returns the frequencies to evaluate the spectrum at for given period and sample f
+
+        Returns:
+            np.ndarray: contributing frequencies
+        """
+
+        f_range = np.linspace(1e-3, self.nt - 1, int(self.nt)) / (self.nt / self.sample_f)  # selecting frequency
+
+        return f_range
+
+    @property
+    def spctr(self) -> spctr_type:
+        """computes the spectrum to use
+
+        Returns:
+            spctr_type: returns wave spectrum of specified type
+        """
+
+        return self.spctr_type(self.sea_state, self.frequency)
+
+    def compute_spectrum(self) -> AbstractSpectrum:
+        """computes the spectral density
+
+        Returns:
+            LinearKin: returns self
+        """
+        self.spctr.compute_density()
+        self.spctr.compute_omega_density()
+
+        return self.spctr
 
     def compute_kinematics(self, cond: bool, a: float = 0, NewWave: bool = False) -> LinearKin:
         """computes linear wave kinematics
