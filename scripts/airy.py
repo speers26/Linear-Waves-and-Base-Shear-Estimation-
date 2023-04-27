@@ -5,14 +5,14 @@ from wavesim import spectrum as spctr
 
 if __name__ == '__main__':
 
-    H = 10
+    H = 25
     T = 20
     ss1 = spctr.SeaState(H_det=H, T_det=T)
 
     z_num = 150
     z_range = np.linspace(-100, 50, z_num)
     freq = 4.00  # 3. / (2*np.pi)
-    period = 100  # total time range
+    period = 60  # total time range
 
     airy_wave = kin.AiryKin(sample_f=freq, period=period, z_values=z_range, sea_state=ss1)
     airy_wave.compute_kinematics()
