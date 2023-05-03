@@ -237,6 +237,13 @@ class LinearKin(AbstractWaveKin):
         Returns:
             LinearKin: returns self
         """
+
+        self.eta = np.empty((self.spctr[0].nf, self.sea_state.num_SS))
+        self.u = np.empty((self.spctr[0].nf, len(self.z_values), self.sea_state.num_SS))
+        self.du = np.empty((self.spctr[0].nf, len(self.z_values), self.sea_state.num_SS))
+        self.w = np.empty((self.spctr[0].nf, len(self.z_values), self.sea_state.num_SS))
+        self.dw = np.empty((self.spctr[0].nf, len(self.z_values), self.sea_state.num_SS))
+
         for s in range(self.sea_state.num_SS):
 
             if NewWave:
@@ -253,7 +260,7 @@ class LinearKin(AbstractWaveKin):
                 c = self.spctr[s].df * self.spctr[s].density
                 d = self.spctr[s].df * self.spctr[s].density * self.spctr[s].omega
 
-                Q = (a - np.sum(A))/np.sum(c)
+                Q = (a[s] - np.sum(A))/np.sum(c)
                 R = (m - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
 
                 A = A + Q * c
@@ -262,15 +269,9 @@ class LinearKin(AbstractWaveKin):
             i = complex(0, 1)
             g1 = A + B * i
 
-            self.eta = np.empty((self.spctr[s].nf, self.sea_state.num_SS))
             self.eta[:, s] = np.real(fftshift(fft(g1)))[0]
 
             k = alt_solve_dispersion(self.spctr[s].omega, self.depth)
-
-            self.u = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
-            self.du = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
-            self.w = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
-            self.dw = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
 
             d = self.depth
             for i_z, z in enumerate(self.z_values):
