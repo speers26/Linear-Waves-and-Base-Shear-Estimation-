@@ -146,7 +146,7 @@ class AbstractWaveKin(ABC):
         """
         return self.eta, self.u, self.w, self.du, self.dw
 
-    def plot_kinematics(self, s: int = 1) -> None:
+    def plot_kinematics(self, s: int = 0) -> None:
         """plots wave kinematics calculuated in compute_kinematics
 
         Args:

@@ -5,8 +5,8 @@ from wavesim import spectrum as spctr
 
 if __name__ == '__main__':
 
-    H = 25
-    T = 20
+    H = np.array([15])
+    T = np.array([10])
     ss1 = spctr.SeaState(H_det=H, T_det=T)
 
     z_num = 150
