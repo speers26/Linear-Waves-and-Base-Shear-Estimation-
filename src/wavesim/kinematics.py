@@ -146,38 +146,42 @@ class AbstractWaveKin(ABC):
         """
         return self.eta, self.u, self.w, self.du, self.dw
 
-    def plot_kinematics(self) -> None:
+    def plot_kinematics(self, s: int = 1) -> None:
         """plots wave kinematics calculuated in compute_kinematics
+
+        Args:
+            s (int): index of sea state to plot
+
         """
         plt.figure()
         plt.subplot(2, 2, 1)
 
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.u[:, :, s].flatten())
+        plt.plot(self.t_values, self.eta[:, s], '-k')
         plt.title('u')
         plt.xlabel('time')
         plt.ylabel('depth')
         plt.colorbar()
 
         plt.subplot(2, 2, 2)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.w[:, :, s].flatten())
+        plt.plot(self.t_values, self.eta[:, s], '-k')
         plt.title('w')
         plt.xlabel('time')
         plt.ylabel('depth')
         plt.colorbar()
 
         plt.subplot(2, 2, 3)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.du[:, :, s].flatten())
+        plt.plot(self.t_values, self.eta[:, s], '-k')
         plt.title('du')
         plt.xlabel('time')
         plt.ylabel('depth')
         plt.colorbar()
 
         plt.subplot(2, 2, 4)
-        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw.flatten())
-        plt.plot(self.t_values, self.eta, '-k')
+        plt.scatter(self.zt_grid[1].flatten(), self.zt_grid[0].flatten(), s=1, c=self.dw[:, :, s].flatten())
+        plt.plot(self.t_values, self.eta[:, s], '-k')
         plt.title('dw')
         plt.xlabel('time')
         plt.ylabel('depth')
@@ -209,83 +213,87 @@ class LinearKin(AbstractWaveKin):
         return f_range
 
     def compute_spectrum(self) -> AbstractSpectrum:
-        """computes the spectral density
+        """computes the spectral densities
 
         Returns:
             LinearKin: returns self
         """
-
-        self.spctr = self.spctr_type(self.sea_state, self.frequency)
-        self.spctr.compute_density()
-        self.spctr.compute_omega_density()
-
+        self.spctr = []
+        for s in range(self.sea_state.num_SS):
+            spctr = self.spctr_type(self.sea_state.hs[s], self.sea_state.tp[s], self.frequency)
+            spctr.compute_density()
+            spctr.compute_omega_density()
+            self.spctr.append(spctr)
         return self
 
-    def compute_kinematics(self, cond: bool, a: float = 0, NewWave: bool = False) -> LinearKin:
+    def compute_kinematics(self, cond: bool, a: np.ndarray = 0, NewWave: bool = False) -> LinearKin:
         """computes linear wave kinematics
 
         Args:
             cond (bool): Set to True to generate a conditioned wave series
-            a (float, optional): Conditioned crest elevation at t=0. Defaults to 0.
+            a (np.ndarray, optional): Conditioned crest elevation at t=0. Defaults to 0.
             NewWave (bool, optional): Set to True to generate a NewWave. Defaults to False.
 
         Returns:
             LinearKin: returns self
         """
-        if NewWave:
-            A = np.zeros(shape=(1, self.spctr.nf))
-            B = np.zeros(shape=(1, self.spctr.nf))
+        for s in range(self.sea_state.num_SS):
 
-        else:
-            A = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
-            B = np.random.normal(0, 1, size=(1, self.spctr.nf)) * np.sqrt(self.spctr.density*self.spctr.df)
+            if NewWave:
+                A = np.zeros(shape=(1, self.spctr[s].nf))
+                B = np.zeros(shape=(1, self.spctr[s].nf))
 
-        if cond:
-            m = 0
+            else:
+                A = np.random.normal(0, 1, size=(1, self.spctr[s].nf)) * np.sqrt(self.spctr[s].density*self.spctr[s].df)
+                B = np.random.normal(0, 1, size=(1, self.spctr[s].nf)) * np.sqrt(self.spctr[s].density*self.spctr[s].df)
 
-            c = self.spctr.df * self.spctr.density
-            d = self.spctr.df * self.spctr.density * self.spctr.omega
+            if cond:
+                m = 0
 
-            Q = (a - np.sum(A))/np.sum(c)
-            R = (m - np.sum(self.spctr.omega * B))/np.sum(d*self.spctr.omega)
+                c = self.spctr[s].df * self.spctr[s].density
+                d = self.spctr[s].df * self.spctr[s].density * self.spctr[s].omega
 
-            A = A + Q * c
-            B = B + R * d
+                Q = (a - np.sum(A))/np.sum(c)
+                R = (m - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
 
-        i = complex(0, 1)
-        g1 = A + B * i
+                A = A + Q * c
+                B = B + R * d
 
-        self.eta = np.real(fftshift(fft(g1)))[0]
+            i = complex(0, 1)
+            g1 = A + B * i
 
-        k = alt_solve_dispersion(self.spctr.omega, self.depth)
+            self.eta = np.empty((self.spctr[s].nf, self.sea_state.num_SS))
+            self.eta[:, s] = np.real(fftshift(fft(g1)))[0]
 
-        self.u = np.empty((self.spctr.nf, len(self.z_values)))
-        self.du = np.empty((self.spctr.nf, len(self.z_values)))
-        self.w = np.empty((self.spctr.nf, len(self.z_values)))
-        self.dw = np.empty((self.spctr.nf, len(self.z_values)))
+            k = alt_solve_dispersion(self.spctr[s].omega, self.depth)
 
-        d = self.depth
-        for i_z, z in enumerate(self.z_values):
+            self.u = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
+            self.du = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
+            self.w = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
+            self.dw = np.empty((self.spctr[s].nf, len(self.z_values), self.sea_state.num_SS))
 
-            z_init = z
-            if z > -1:
-                z = -1
+            d = self.depth
+            for i_z, z in enumerate(self.z_values):
 
-            qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
-            qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
+                z_init = z
+                if z > -1:
+                    z = -1
 
-            qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
-            qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1
+                qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
+                qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
-            g2 = (A+B*i) * 2*np.pi*self.spctr.frequency * qf1
-            g3 = (B-A*i) * (2*np.pi*self.spctr.frequency)**2 * qf1
-            g4 = (B-A*i) * (2*np.pi*self.spctr.frequency) * qf2
-            g5 = (-A-B*i) * (2*np.pi*self.spctr.frequency)**2 * qf2
+                qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
+                qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1
 
-            self.u[:, i_z] = np.real(fftshift(fft(g2))) * (z_init < self.eta)  # * (z_init < 0)
-            self.du[:, i_z] = np.real(fftshift(fft(g3))) * (z_init < self.eta)  # * (z_init < 0)
-            self.w[:, i_z] = np.real(fftshift(fft(g4))) * (z_init < self.eta)  # * (z_init < 0)
-            self.dw[:, i_z] = np.real(fftshift(fft(g5))) * (z_init < self.eta)  # * (z_init < 0)
+                g2 = (A+B*i) * 2*np.pi*self.spctr[s].frequency * qf1
+                g3 = (B-A*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf1
+                g4 = (B-A*i) * (2*np.pi*self.spctr[s].frequency) * qf2
+                g5 = (-A-B*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf2
+
+                self.u[:, i_z, s] = np.real(fftshift(fft(g2))) * (z_init < self.eta[:, s])  # * (z_init < 0)
+                self.du[:, i_z, s] = np.real(fftshift(fft(g3))) * (z_init < self.eta[:, s])  # * (z_init < 0)
+                self.w[:, i_z, s] = np.real(fftshift(fft(g4))) * (z_init < self.eta[:, s])  # * (z_init < 0)
+                self.dw[:, i_z, s] = np.real(fftshift(fft(g5))) * (z_init < self.eta[:, s])  # * (z_init < 0)
 
         return self
 

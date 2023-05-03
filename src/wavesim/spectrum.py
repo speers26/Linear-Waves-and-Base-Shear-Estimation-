@@ -61,7 +61,8 @@ class AbstractSpectrum(ABC):
         density (np.ndarray): spectral density for frequency
         omega_density (np.ndarray): spectral density for angular frequency
     """
-    sea_state: SeaState
+    hs: float
+    tp: float
     frequency: np.ndarray
     g: float = 9.81
     density: np.ndarray = None
@@ -188,7 +189,7 @@ class Jonswap(AbstractSpectrum):
         Returns:
             float: peak frequency
         """
-        return 1/self.sea_state.tp
+        return 1/self.tp
 
     @property
     def omega_p(self) -> float:
@@ -197,7 +198,7 @@ class Jonswap(AbstractSpectrum):
         Returns:
             float: peak angular frequency
         """
-        return 2 * np.pi / self.sea_state.tp
+        return 2 * np.pi / self.tp
 
     def compute_density(self) -> Jonswap:
         """compute the spectral density for given frequencies
@@ -210,11 +211,11 @@ class Jonswap(AbstractSpectrum):
 
         gamma_coeff = self.gamma ** np.exp(-0.5 * (((self.frequency / self.fp - 1)/sigma) ** 2))
         self.density = self.g ** 2 * (2 * np.pi) ** -4 * self.frequency ** -5 \
-            * np.exp(-1.25 * (self.sea_state.tp*self.frequency) ** -4) * gamma_coeff
+            * np.exp(-1.25 * (self.tp*self.frequency) ** -4) * gamma_coeff
 
         area = sum(self.density*self.df)
 
-        self.density *= self.sea_state.hs ** 2 / (16 * area)
+        self.density *= self.hs ** 2 / (16 * area)
 
         return self
 
