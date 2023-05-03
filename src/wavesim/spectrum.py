@@ -35,8 +35,11 @@ class SeaState():
         Returns:
             int: num of sea states
         """
+        if self.hs is None:
+            return len(self.H_det)
 
-        return len(self.hs)
+        else:
+            return len(self.hs)
 
     @property
     def omega_det(self) -> float:
