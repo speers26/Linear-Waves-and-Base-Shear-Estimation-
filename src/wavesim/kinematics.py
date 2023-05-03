@@ -343,20 +343,20 @@ class AiryKin(AbstractWaveKin):
                         self.u[i_t, i_z, s] = self.w[i_t, i_z, s] = self.du[i_t, i_z, s] = self.dw[i_t, i_z, s] = 0
 
                     else:
-                        self.u[i_t, i_z, s] = self.sea_state.omega_det[s] * A * ((np.cosh(self.k[s] * (self.depth + z))) /
-                                                                           (np.sinh(self.k[s] * self.depth))) \
+                        self.u[i_t, i_z, s] = self.sea_state.omega_det[s] * A * ((np.cosh(self.k[s] * (self.depth + z)))
+                                                                                 / (np.sinh(self.k[s] * self.depth))) \
                             * np.sin(self.sea_state.omega_det[s] * t - self.k[s] * self.x)
 
-                        self.w[i_t, i_z, s] = self.sea_state.omega_det[s] * A * ((np.sinh(self.k[s] * (self.depth + z))) /
-                                                                           (np.sinh(self.k[s] * self.depth))) \
+                        self.w[i_t, i_z, s] = self.sea_state.omega_det[s] * A * ((np.sinh(self.k[s] * (self.depth + z)))
+                                                                                 / (np.sinh(self.k[s] * self.depth))) \
                             * np.cos(self.sea_state.omega_det[s] * t - self.k[s] * self.x)
 
-                        self.du[i_t, i_z, s] = self.sea_state.omega_det[s] ** 2 * A * ((np.cosh(self.k[s] * (self.depth + z))) /
-                                                                                 (np.sinh(self.k[s] * self.depth))) \
+                        self.du[i_t, i_z, s] = self.sea_state.omega_det[s] ** 2 * A * \
+                            ((np.cosh(self.k[s] * (self.depth + z))) / (np.sinh(self.k[s] * self.depth))) \
                             * np.cos(self.sea_state.omega_det[s] * t - self.k[s] * self.x)
 
-                        self.dw[i_t, i_z, s] = -self.sea_state.omega_det[s] ** 2 * A * ((np.sinh(self.k[s] * (self.depth + z))) /
-                                                                                  (np.sinh(self.k[s] * self.depth))) \
+                        self.dw[i_t, i_z, s] = -self.sea_state.omega_det[s] ** 2 * A * \
+                            ((np.sinh(self.k[s] * (self.depth + z))) / (np.sinh(self.k[s] * self.depth))) \
                             * np.sin(self.sea_state.omega_det[s] * t - self.k[s] * self.x)
 
         return self
