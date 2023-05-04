@@ -3,10 +3,10 @@ from wavesim import kinematics as kin
 from wavesim import loading as load
 import numpy as np
 
-a = np.array([25])
+a = np.array([25, 35])
 depth = 100
 cond = True
-ss1 = spctr.SeaState(hs=np.array([15]), tp=np.array([10]))
+ss1 = spctr.SeaState(hs=np.array([15, 25]), tp=np.array([10, 12]))
 
 np.random.seed(1)
 
@@ -22,4 +22,4 @@ lin_wave.plot_kinematics()
 
 lin_load = load.MorisonLoad(lin_wave)
 lin_load.compute_load()
-lin_load.plot_load()
+lin_load.plot_load(s=[0, 1])

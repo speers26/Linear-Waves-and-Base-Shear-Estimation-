@@ -331,7 +331,6 @@ class AiryKin(AbstractWaveKin):
         self.dw = np.empty((self.nt, self.nz, self.sea_state.num_SS))
 
         for s in range(self.sea_state.num_SS):
-
             for i_t, t in enumerate(self.t_values):
                 for i_z, z in enumerate(self.z_values):
 
