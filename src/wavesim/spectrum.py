@@ -14,19 +14,23 @@ class SeaState():
     """Sea state dataclass, can be multiple sea states
 
     Args:
-        hs (np.ndarray): significant wave height, [m]
-        tp (np.ndarray): significant wave period [s]
+        hs (np.ndarray): significant wave height, [m] (for random waves)
+        tp (np.ndarray): significant wave period [s] (for random waves)
         H_det (np.ndarray): wave height (for deterministic waves)
         T_det (np.ndarray): wave period (for deterministic waves)
+        spctr_type (AbstractSpectrum): type of wave spectra (for random waves)
         theta (float): direction of propogation of wave (for deterministc waves)
         g (float): acceleration due to gravity
+        hours (float): length of each sea state [hours]
     """
     hs: np.ndarray = None
     tp: np.ndarray = None
     T_det: np.ndarray = None
     H_det: np.ndarray = None
+    spctr_type: AbstractSpectrum = None
     theta: float = 0
     g: float = 9.81
+    hours: float = 3.00
 
     @property
     def num_SS(self) -> int:
