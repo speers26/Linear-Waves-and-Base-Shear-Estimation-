@@ -3,7 +3,7 @@ from wavesim.spectrum import SeaState, Jonswap
 from wavesim.loading import MorisonLoad
 import numpy as np
 
-num_sea_states = 50
+num_sea_states = 1000
 hs = np.tile(15, num_sea_states)
 tp = np.tile(10, num_sea_states)
 z_values = np.linspace(-100, 50, 150)
