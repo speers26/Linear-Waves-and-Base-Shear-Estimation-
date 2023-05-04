@@ -194,11 +194,7 @@ class AbstractWaveKin(ABC):
 class LinearKin(AbstractWaveKin):
     """ Linear Random Wave Kinematics Class
 
-    Args:
-        spctr_type (type): desired spectral type of the wave surface
     """
-
-    spctr_type: type
 
     @property
     def frequency(self) -> np.ndarray:
@@ -220,7 +216,7 @@ class LinearKin(AbstractWaveKin):
         """
         self.spctr = []
         for s in range(self.sea_state.num_SS):
-            spctr = self.spctr_type(self.sea_state.hs[s], self.sea_state.tp[s], self.frequency)
+            spctr = self.sea_state.spctr_type(self.sea_state.hs[s], self.sea_state.tp[s], self.frequency)
             spctr.compute_density()
             spctr.compute_omega_density()
             self.spctr.append(spctr)
