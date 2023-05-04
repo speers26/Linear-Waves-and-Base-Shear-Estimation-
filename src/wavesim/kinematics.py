@@ -379,7 +379,12 @@ class StokesKin(AbstractWaveKin):
         Returns:
             float: wave number
         """
-        return fDispersionSTOKES5(self.depth, self.sea_state.H_det, self.sea_state.omega_det)
+        # TODO: vectorise this
+        k = np.empty(self.sea_state.num_SS)
+        for s in range(self.sea_state.num_SS):
+            k[s] = fDispersionSTOKES5(self.depth, self.sea_state.H_det[s], self.sea_state.omega_det[s])
+
+        return k
 
     def compute_kinematics(self) -> StokesKin:
         """ computes Stokes wave kinematics and stores them in self
@@ -387,158 +392,164 @@ class StokesKin(AbstractWaveKin):
         Returns:
             StokesKin: returns self
         """
-        self.eta = np.empty(self.nt)
-        self.u = np.empty((self.nt, self.nz))
-        self.w = np.empty((self.nt, self.nz))
-        self.du = np.empty((self.nt, self.nz))
-        self.dw = np.empty((self.nt, self.nz))
+        self.eta = np.empty((self.nt, self.sea_state.num_SS))
+        self.u = np.empty((self.nt, self.nz, self.sea_state.num_SS))
+        self.w = np.empty((self.nt, self.nz, self.sea_state.num_SS))
+        self.du = np.empty((self.nt, self.nz, self.sea_state.num_SS))
+        self.dw = np.empty((self.nt, self.nz, self.sea_state.num_SS))
 
-        for i_t, t in enumerate(self.t_values):
-            for i_z, z in enumerate(self.z_values):
+        for s in range(self.sea_state.num_SS):
+            for i_t, t in enumerate(self.t_values):
+                for i_z, z in enumerate(self.z_values):
 
-                kd = self.k * self.depth
-                # !e Initialisation
-                S = 1 / np.cosh(2 * kd)
-                # Calculation of the A coefficients
-                Aco = np.empty(9)
-                Aco[0] = 1 / np.sinh(kd)
-                Aco[1] = 3 * (S ** 2) / (2 * ((1. - S) ** 2))
-                Aco[2] = (-4 - 20 * S + 10 * (S ** 2) - 13 * (S ** 3)) / (8 * np.sinh(kd) * ((1 - S) ** 3))
-                Aco[3] = (-2 * (S ** 2) + 11 * (S ** 3)) / (8 * np.sinh(kd) * ((1.-S) ** 3))
-                Aco[4] = (12 * S - 14 * (S ** 2) - 264 * (S ** 3) - 45 * (S ** 4) - 13 * (S ** 5)) / (24*((1.-S)**5))
-                Aco[5] = (10 * (S ** 3) - 174 * (S ** 4) + 291 * (S ** 5) + 278 * (S ** 6)) / (48 * (3 + 2 * S)
-                                                                                               * ((1 - S) ** 5))
-                Aco[6] = (-1184 + 32 * S + 13232 * (S ** 2) + 21712 * (S ** 3) + 20940 * (S ** 4) + 12554 * (S ** 5)
-                          - 500 * (S ** 6) - 3341 * (S ** 7) - 670 * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S)
-                                                                                  * (4 + S) * ((1 - S) ** 6))
-                Aco[7] = (4 * S + 105 * (S ** 2) + 198 * (S ** 3) - 1376 * (S ** 4) - 1302 * (S ** 5) - 117 * (S ** 6) +
-                          58 * (S ** 7))/(32 * np.sinh(kd) * (3 + 2 * S) * ((1 - S) ** 6))
-                Aco[8] = (-6 * (S ** 3) + 272 * (S ** 4) - 1552 * (S ** 5) + 852 * (S ** 6) + 2029 * (S ** 7) + 430
-                          * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
-                # Calculation of the B coefficients
-                Bco = np.empty(6)
-                Bco[0] = (1 / np.tanh(kd)) * (1 + 2 * S) / (2 * (1 - S))
-                Bco[1] = -3 * (1 + 3 * S + 3 * (S ** 2) + 2 * (S ** 3)) / (8 * ((1 - S) ** 3))
-                Bco[2] = (1 / np.tanh(kd)) * (6 - 26 * S - 182 * (S ** 2) - 204 * (S ** 3) - 25 * (S ** 4) + 26
-                                              * (S ** 5)) / (6 * (3 + 2 * S) * ((1 - S) ** 4))
-                Bco[3] = (1./np.tanh(kd)) * (24 + 92 * S + 122 * (S ** 2) + 66 * (S ** 3) + 67 * (S ** 4) + 34
-                                             * (S ** 5)) / (24 * (3 + 2 * S) * ((1 - S) ** 4))
-                Bco[4] = 9 * (132 + 17 * S - 2216 * (S ** 2) - 5897 * (S ** 3) - 6292 * (S ** 4) - 2687 * (S ** 5)
-                              + 194 * (S ** 6) + 467 * (S ** 7) + 82 * (S ** 8)) / (128 * (3 + 2 * S) * (4 + S)
-                                                                                    * ((1 - S) ** 6))
-                Bco[5] = 5 * (300 + 1579 * S + 3176 * (S ** 2) + 2949 * (S ** 3) + 1188 * (S ** 4) + 675 * (S ** 5)
-                              + 1326 * (S ** 6) + 827 * (S ** 7) + 130 * (S ** 8)) / (384 * (3 + 2 * S) * (4 + S)
-                                                                                      * ((1 - S) ** 6))
-                # Calculation of the C coefficients
-                Cco = np.empty(3)
-                Cco[0] = np.sqrt(np.tanh(kd))
-                Cco[1] = (np.sqrt(np.tanh(kd)) * (2 + 7 * S ** 2)) / (4 * (1-S) ** 2)
-                Cco[2] = (np.sqrt(np.tanh(kd)) * (4 + 32 * S - 116 * S ** 2 - 400 * S ** 3 - 71 * S ** 4 + 146
-                                                  * S ** 5)) / (32 * (1 - S) ** 5)
-                # Calculation of the D coefficients
-                Dco = np.empty(2)
-                Dco[0] = -0.5 * np.sqrt(1 / np.tanh(kd))
-                Dco[1] = (np.sqrt(1 / np.tanh(kd)) * (2 + 4 * S + S ** 2 + 2 * S ** 3)) / (8 * (1 - S) ** 3)
-                # Calculation of the E coefficients
-                Eco = np.empty(2)
-                Eco[0] = (np.tanh(kd) * (2 + 2 * S + 5 * S ** 2)) / (4 * (1 - S) ** 2)
-                Eco[1] = (np.tanh(kd) * (8 + 12 * S - 152 * S ** 2 - 308 * S ** 3 - 42 * S ** 4 + 77 * S ** 5)) \
-                    / (32 * (1 - S) ** 5)
+                    kd = self.k[s] * self.depth
+                    # !e Initialisation
+                    S = 1 / np.cosh(2 * kd)
+                    # Calculation of the A coefficients
+                    Aco = np.empty(9)
+                    Aco[0] = 1 / np.sinh(kd)
+                    Aco[1] = 3 * (S ** 2) / (2 * ((1. - S) ** 2))
+                    Aco[2] = (-4 - 20 * S + 10 * (S ** 2) - 13 * (S ** 3)) / (8 * np.sinh(kd) * ((1 - S) ** 3))
+                    Aco[3] = (-2 * (S ** 2) + 11 * (S ** 3)) / (8 * np.sinh(kd) * ((1.-S) ** 3))
+                    Aco[4] = (12 * S - 14 * (S ** 2) - 264 * (S ** 3) - 45 * (S ** 4) - 13
+                              * (S ** 5)) / (24*((1.-S)**5))
+                    Aco[5] = (10 * (S ** 3) - 174 * (S ** 4) + 291 * (S ** 5) + 278 * (S ** 6)) / (48 * (3 + 2 * S)
+                                                                                                   * ((1 - S) ** 5))
+                    Aco[6] = (-1184 + 32 * S + 13232 * (S ** 2) + 21712 * (S ** 3) + 20940 * (S ** 4) + 12554 * (S ** 5)
+                              - 500 * (S ** 6) - 3341 * (S ** 7) - 670 * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S)
+                                                                                      * (4 + S) * ((1 - S) ** 6))
+                    Aco[7] = (4 * S + 105 * (S ** 2) + 198 * (S ** 3) - 1376 * (S ** 4) - 1302 * (S ** 5) - 117
+                              * (S ** 6) + 58 * (S ** 7))/(32 * np.sinh(kd) * (3 + 2 * S) * ((1 - S) ** 6))
+                    Aco[8] = (-6 * (S ** 3) + 272 * (S ** 4) - 1552 * (S ** 5) + 852 * (S ** 6) + 2029 * (S ** 7) + 430
+                              * (S ** 8)) / (64 * np.sinh(kd) * (3 + 2 * S) * (4 + S) * ((1 - S) ** 6))
+                    # Calculation of the B coefficients
+                    Bco = np.empty(6)
+                    Bco[0] = (1 / np.tanh(kd)) * (1 + 2 * S) / (2 * (1 - S))
+                    Bco[1] = -3 * (1 + 3 * S + 3 * (S ** 2) + 2 * (S ** 3)) / (8 * ((1 - S) ** 3))
+                    Bco[2] = (1 / np.tanh(kd)) * (6 - 26 * S - 182 * (S ** 2) - 204 * (S ** 3) - 25 * (S ** 4) + 26
+                                                  * (S ** 5)) / (6 * (3 + 2 * S) * ((1 - S) ** 4))
+                    Bco[3] = (1./np.tanh(kd)) * (24 + 92 * S + 122 * (S ** 2) + 66 * (S ** 3) + 67 * (S ** 4) + 34
+                                                 * (S ** 5)) / (24 * (3 + 2 * S) * ((1 - S) ** 4))
+                    Bco[4] = 9 * (132 + 17 * S - 2216 * (S ** 2) - 5897 * (S ** 3) - 6292 * (S ** 4) - 2687 * (S ** 5)
+                                  + 194 * (S ** 6) + 467 * (S ** 7) + 82 * (S ** 8)) / (128 * (3 + 2 * S) * (4 + S)
+                                                                                        * ((1 - S) ** 6))
+                    Bco[5] = 5 * (300 + 1579 * S + 3176 * (S ** 2) + 2949 * (S ** 3) + 1188 * (S ** 4) + 675 * (S ** 5)
+                                  + 1326 * (S ** 6) + 827 * (S ** 7) + 130 * (S ** 8)) / (384 * (3 + 2 * S) * (4 + S)
+                                                                                          * ((1 - S) ** 6))
+                    # Calculation of the C coefficients
+                    Cco = np.empty(3)
+                    Cco[0] = np.sqrt(np.tanh(kd))
+                    Cco[1] = (np.sqrt(np.tanh(kd)) * (2 + 7 * S ** 2)) / (4 * (1-S) ** 2)
+                    Cco[2] = (np.sqrt(np.tanh(kd)) * (4 + 32 * S - 116 * S ** 2 - 400 * S ** 3 - 71 * S ** 4 + 146
+                                                      * S ** 5)) / (32 * (1 - S) ** 5)
+                    # Calculation of the D coefficients
+                    Dco = np.empty(2)
+                    Dco[0] = -0.5 * np.sqrt(1 / np.tanh(kd))
+                    Dco[1] = (np.sqrt(1 / np.tanh(kd)) * (2 + 4 * S + S ** 2 + 2 * S ** 3)) / (8 * (1 - S) ** 3)
+                    # Calculation of the E coefficients
+                    Eco = np.empty(2)
+                    Eco[0] = (np.tanh(kd) * (2 + 2 * S + 5 * S ** 2)) / (4 * (1 - S) ** 2)
+                    Eco[1] = (np.tanh(kd) * (8 + 12 * S - 152 * S ** 2 - 308 * S ** 3 - 42 * S ** 4 + 77 * S ** 5)) \
+                        / (32 * (1 - S) ** 5)
 
-                # calculate properties
-                # Initialising coefficients
-                A11 = Aco[0]
-                A22 = Aco[1]
-                A31 = Aco[2]
-                A33 = Aco[3]
-                A42 = Aco[4]
-                A44 = Aco[5]
-                A51 = Aco[6]
-                A53 = Aco[7]
-                A55 = Aco[8]
-                B22 = Bco[0]
-                B31 = Bco[1]
-                B42 = Bco[2]
-                B44 = Bco[3]
-                B53 = Bco[4]
-                B55 = Bco[5]
-                C0 = Cco[0]
-                # Wave steepness
-                epsilon = self.sea_state.H_det/2 * self.k
-                #
-                psi = self.k * self.x - self.sea_state.omega_det * t
+                    # calculate properties
+                    # Initialising coefficients
+                    A11 = Aco[0]
+                    A22 = Aco[1]
+                    A31 = Aco[2]
+                    A33 = Aco[3]
+                    A42 = Aco[4]
+                    A44 = Aco[5]
+                    A51 = Aco[6]
+                    A53 = Aco[7]
+                    A55 = Aco[8]
+                    B22 = Bco[0]
+                    B31 = Bco[1]
+                    B42 = Bco[2]
+                    B44 = Bco[3]
+                    B53 = Bco[4]
+                    B55 = Bco[5]
+                    C0 = Cco[0]
+                    # Wave steepness
+                    epsilon = self.sea_state.H_det[s]/2 * self.k[s]
+                    #
+                    psi = self.k[s] * self.x - self.sea_state.omega_det[s] * t
 
-                k_z_plus_h = self.k * (z + self.depth)
-                # z
-                self.eta[i_t] = (1 / self.k) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
-                                                + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
-                                                + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44 * np.cos(4 * psi))
-                                                + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53 * np.cos(3 * psi)
-                                                + B55 * np.cos(5 * psi)))
+                    k_z_plus_h = self.k[s] * (z + self.depth)
+                    # z
+                    self.eta[i_t, s] = (1 / self.k[s]) * (epsilon * np.cos(psi) + B22 * (epsilon ** 2) * np.cos(2 * psi)
+                                                          + B31 * (epsilon ** 3) * (np.cos(psi) - np.cos(3 * psi))
+                                                          + (epsilon ** 4) * (B42 * np.cos(2 * psi) + B44
+                                                                              * np.cos(4 * psi))
+                                                          + (epsilon ** 5) * (-(B53 + B55) * np.cos(psi) + B53
+                                                                              * np.cos(3 * psi)
+                                                          + B55 * np.cos(5 * psi)))
 
-                if z > self.eta[i_t]:
-                    self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
+                    if z > self.eta[i_t, s]:
+                        self.u[i_t, i_z, s] = self.w[i_t, i_z, s] = self.du[i_t, i_z, s] = self.dw[i_t, i_z, s] = 0
 
-                else:
-                    # u calculation
-                    self.u[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) \
-                        * (self.k * np.cos(self.sea_state.theta)) \
-                        * (A11 * epsilon * np.cosh(k_z_plus_h) * np.cos(psi)
-                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
-                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * np.cos(psi)
-                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
-                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
-                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * np.cos(4 * psi)
-                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * np.cos(psi)
-                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
-                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
-                    # w calculation
-                    self.w[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) * self.k \
-                        * (A11 * epsilon * np.sinh(k_z_plus_h)*np.sin(psi)
-                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
-                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * np.sin(psi)
-                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
-                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
-                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * np.sin(4 * psi)
-                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * np.sin(psi)
-                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
-                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * np.sin(5 * psi))
-                    #  dudt horizontal acceleration
-                    self.du[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) \
-                        * (self.k * np.cos(self.sea_state.theta)) \
-                        * (A11 * (epsilon) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
-                            + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
-                            * np.sin(2 * psi)
-                            + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
-                            + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
-                            * np.sin(3 * psi)
-                            + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
-                            * np.sin(2 * psi)
-                            + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det
-                            * np.sin(4 * psi)
-                            + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.sea_state.omega_det * np.sin(psi)
-                            + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
-                            * np.sin(3 * psi)
-                            + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det
-                            * np.sin(5 * psi))
-                    # dwdt vertical acceleration
-                    self.dw[i_t, i_z] = (C0 * np.sqrt(self.sea_state.g / self.k ** 3)) * self.k \
-                        * (A11 * epsilon * np.sinh(k_z_plus_h)*self.sea_state.omega_det*-np.cos(psi)
-                            + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
-                            * -np.cos(2 * psi)
-                            + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.sea_state.omega_det * -np.cos(psi)
-                            + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
-                            * -np.cos(3 * psi)
-                            + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det
-                            * -np.cos(2 * psi)
-                            + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det
-                            * -np.cos(4 * psi)
-                            + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.sea_state.omega_det * - np.cos(psi)
-                            + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det
-                            * -np.cos(3 * psi)
-                            + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det
-                            * -np.cos(5 * psi))
+                    else:
+                        # u calculation
+                        self.u[i_t, i_z, s] = (C0 * np.sqrt(self.sea_state.g / self.k[s] ** 3)) \
+                            * (self.k[s] * np.cos(self.sea_state.theta)) \
+                            * (A11 * epsilon * np.cosh(k_z_plus_h) * np.cos(psi)
+                                + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
+                                + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * np.cos(psi)
+                                + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
+                                + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * np.cos(2 * psi)
+                                + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * np.cos(4 * psi)
+                                + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * np.cos(psi)
+                                + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * np.cos(3 * psi)
+                                + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * np.cos(5 * psi))
+                        # w calculation
+                        self.w[i_t, i_z, s] = (C0 * np.sqrt(self.sea_state.g / self.k[s] ** 3)) * self.k[s] \
+                            * (A11 * epsilon * np.sinh(k_z_plus_h)*np.sin(psi)
+                                + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
+                                + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * np.sin(psi)
+                                + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
+                                + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * np.sin(2 * psi)
+                                + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * np.sin(4 * psi)
+                                + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * np.sin(psi)
+                                + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * np.sin(3 * psi)
+                                + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * np.sin(5 * psi))
+                        #  dudt horizontal acceleration
+                        self.du[i_t, i_z, s] = (C0 * np.sqrt(self.sea_state.g / self.k[s] ** 3)) \
+                            * (self.k[s] * np.cos(self.sea_state.theta)) \
+                            * (A11 * (epsilon) * np.cosh(k_z_plus_h) * self.sea_state.omega_det[s] * np.sin(psi)
+                                + A22 * (epsilon ** 2) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det[s]
+                                * np.sin(2 * psi)
+                                + A31 * (epsilon ** 3) * np.cosh(k_z_plus_h) * self.sea_state.omega_det[s] * np.sin(psi)
+                                + A33 * (epsilon ** 3) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det[s]
+                                * np.sin(3 * psi)
+                                + A42 * (epsilon ** 4) * np.cosh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det[s]
+                                * np.sin(2 * psi)
+                                + A44 * (epsilon ** 4) * np.cosh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det[s]
+                                * np.sin(4 * psi)
+                                + A51 * (epsilon ** 5) * np.cosh(k_z_plus_h) * self.sea_state.omega_det[s] * np.sin(psi)
+                                + A53 * (epsilon ** 5) * np.cosh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det[s]
+                                * np.sin(3 * psi)
+                                + A55 * (epsilon ** 5) * np.cosh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det[s]
+                                * np.sin(5 * psi))
+                        # dwdt vertical acceleration
+                        self.dw[i_t, i_z, s] = (C0 * np.sqrt(self.sea_state.g / self.k[s] ** 3)) * self.k[s] \
+                            * (A11 * epsilon * np.sinh(k_z_plus_h)*self.sea_state.omega_det[s]*-np.cos(psi)
+                                + A22 * (epsilon ** 2) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det[s]
+                                * -np.cos(2 * psi)
+                                + A31 * (epsilon ** 3) * np.sinh(k_z_plus_h) * self.sea_state.omega_det[s]
+                                * -np.cos(psi)
+                                + A33 * (epsilon ** 3) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det[s]
+                                * -np.cos(3 * psi)
+                                + A42 * (epsilon ** 4) * np.sinh(2 * k_z_plus_h) * 2 * self.sea_state.omega_det[s]
+                                * -np.cos(2 * psi)
+                                + A44 * (epsilon ** 4) * np.sinh(4 * k_z_plus_h) * 4 * self.sea_state.omega_det[s]
+                                * -np.cos(4 * psi)
+                                + A51 * (epsilon ** 5) * np.sinh(k_z_plus_h) * self.sea_state.omega_det[s]
+                                * - np.cos(psi)
+                                + A53 * (epsilon ** 5) * np.sinh(3 * k_z_plus_h) * 3 * self.sea_state.omega_det[s]
+                                * -np.cos(3 * psi)
+                                + A55 * (epsilon ** 5) * np.sinh(5 * k_z_plus_h) * 5 * self.sea_state.omega_det[s]
+                                * -np.cos(5 * psi))
 
-                if z > self.eta[i_t]:
-                    self.u[i_t, i_z] = self.w[i_t, i_z] = self.du[i_t, i_z] = self.dw[i_t, i_z] = 0
+                    if z > self.eta[i_t, s]:
+                        self.u[i_t, i_z, s] = self.w[i_t, i_z, s] = self.du[i_t, i_z, s] = self.dw[i_t, i_z, s] = 0
         return self
