@@ -43,11 +43,14 @@ class AbstractLoad(ABC):
         """
         return self.load
 
-    def plot_load(self) -> None:
+    def plot_load(self, s=0) -> None:
         """ plot the force stored in load
+
+        Args:
+            s (int): index of sea-state to plot load for
         """
         plt.plot()
-        plt.plot(self.kinematics.t_values, self.load)
+        plt.plot(self.kinematics.t_values, self.load[:, s])
         plt.ylabel("Force [MN]")
         plt.xlabel("Time")
         plt.show()

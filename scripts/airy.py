@@ -5,8 +5,8 @@ from wavesim import spectrum as spctr
 
 if __name__ == '__main__':
 
-    H = 25
-    T = 20
+    H = np.array([10])
+    T = np.array([10])
     ss1 = spctr.SeaState(H_det=H, T_det=T)
 
     z_num = 150
@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     airy_wave = kin.AiryKin(sample_f=freq, period=period, z_values=z_range, sea_state=ss1)
     airy_wave.compute_kinematics()
-    airy_wave.plot_kinematics()
+    airy_wave.plot_kinematics(s=0)
 
     airy_load = load.MorisonLoad(airy_wave)
     airy_load.compute_load()
