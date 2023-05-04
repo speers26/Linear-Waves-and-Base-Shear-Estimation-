@@ -89,18 +89,23 @@ class AbstractDistEst(ABC):
         """gets the relevant sea-state maxes
         """
 
-    def compute_is_distribution(self) -> None:
+    def compute_is_distribution(self, X: np.ndarray = None) -> None:
         """computes importance sampled distribution
+
+        Args:
+            X (np.ndarray): values to compute distribution at
         """
-        X = np.linspace(min(self.max_series), max(self.max_series), num=100)
-        self.crest_X = X
+
+        if X is None:
+            X = np.linspace(min(self.max_series), max(self.max_series), num=100)
+        self.X = X
 
         f = rayleigh_pdf(self.cond_crests, self.sea_state.hs)
         fog = f/self.g
 
-        crest_cdf_unnorm = np.sum((X[:, None] > self.max_series[None, :])*fog, axis=1)/np.sum(fog)
+        cdf_unnorm = np.sum((X[:, None] > self.max_series[None, :])*fog, axis=1)/np.sum(fog)
 
-        self.crest_cdf = crest_cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
+        self.cdf = cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
         return None
 
@@ -112,9 +117,9 @@ class AbstractDistEst(ABC):
         """
         plt.figure()
         if log:
-            plt.plot(self.crest_X, np.log10(1-self.crest_cdf))
+            plt.plot(self.X, np.log10(1-self.cdf))
         else:
-            plt.plot(self.crest_X, self.crest_cdf)
+            plt.plot(self.X, self.cdf)
         plt.show()
 
 

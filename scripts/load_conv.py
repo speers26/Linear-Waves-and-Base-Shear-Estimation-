@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-from wavesim.loading import LoadDistEst
+import wavesim.distest as dist
+import wavesim.spectrum as spctr
 import matplotlib.pyplot as plt
 
 env_probs = pd.read_csv('scripts/env_probs.csv')
 env_probs[env_probs.p != 0]
 
-num_sea_states = 2000
-sea_state_hours = 3
+num_sea_states = 20
 z_values = np.linspace(-100, 50, 50)
 
 x_num = 100
@@ -20,21 +20,19 @@ results = np.empty((env_probs.shape[0], x_num))
 for i_s in range(env_probs.shape[0]):
     print(i_s)
     row = env_probs.loc[i_s]
-    hs = row['hs']
-    s2 = row['s2']
+    hs = np.tile(row['hs'], num_sea_states)
+    s2 = np.tile(row['s2'], num_sea_states)
     tp = np.sqrt((hs*2*np.pi)/(s2*9.81))
+    ss = spctr.SeaState(hs=hs, tp=tp, spctr_type=spctr.Jonswap)
 
-    loadEst = LoadDistEst(hs=hs, tp=tp, num_sea_states=num_sea_states, sea_state_hours=sea_state_hours,
-                          z_values=z_values)
-
-    loadEst.compute_tf_values()
-    loadEst.compute_spectrum()
+    loadEst = dist.LoadDistEst(sea_state=ss, z_values=z_values)
     loadEst.compute_cond_crests()
+    loadEst.compute_kinematics()
+    loadEst.compute_load()
+    loadEst.compute_sea_state_max()
+    loadEst.compute_is_distribution(X=X)
 
-    loadEst.simulate_sea_states()
-    loadEst.compute_load_dist()
-
-    results[i_s, :] = loadEst.load_cdf
+    results[i_s, :] = loadEst.cdf
 
 np.savetxt("scripts/results.csv", results, delimiter=",")
 p_array = np.array(env_probs['p'])
