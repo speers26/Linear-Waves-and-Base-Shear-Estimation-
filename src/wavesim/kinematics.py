@@ -12,6 +12,7 @@ from wavesim.dispersion import alt_solve_dispersion, solve_dispersion, fDispersi
 from wavesim.spectrum import AbstractSpectrum, SeaState
 from scipy.fft import fft, fftshift
 import matplotlib.pyplot as plt
+import warnings
 
 # TODO: create classes for spatial waves
 
@@ -276,8 +277,10 @@ class LinearKin(AbstractWaveKin):
                 if z > -1:
                     z = -1
 
-                qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
-                qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
+                    qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
 
                 qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
                 qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1

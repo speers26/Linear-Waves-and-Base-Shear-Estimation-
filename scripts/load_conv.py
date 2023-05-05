@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 env_probs = pd.read_csv('scripts/env_probs.csv')
 env_probs[env_probs.p != 0]
 
-num_sea_states = 20
+num_sea_states = 1000
 z_values = np.linspace(-100, 50, 50)
 
 x_num = 1000
@@ -15,6 +15,7 @@ X = np.linspace(0, 20, num=x_num)
 
 np.random.seed(1)
 
+print(env_probs.shape[0])
 cnv_results = np.empty((env_probs.shape[0], x_num))
 
 for s in range(env_probs.shape[0]):
