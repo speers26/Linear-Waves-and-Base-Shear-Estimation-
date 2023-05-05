@@ -1,5 +1,7 @@
 '''
-Code here for distribution estimation classes
+Code here for condtioned on sea-state distribution estimation classes
+
+i.e. estimation of cdfs for C|θ, R|θ, etc
 
 '''
 
@@ -9,9 +11,9 @@ from abc import ABC, abstractmethod
 from wavesim.kinematics import LinearKin
 from wavesim.loading import AbstractLoad, MorisonLoad
 from wavesim.spectrum import SeaState
+from wavesim.crestdistributions import rayleigh_pdf
 from dataclasses import dataclass
 from scipy.signal import argrelextrema
-from wavesim.crestdistributions import rayleigh_cdf, rayleigh_pdf
 import matplotlib.pyplot as plt
 
 
