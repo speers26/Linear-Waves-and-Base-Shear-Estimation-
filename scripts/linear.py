@@ -22,4 +22,4 @@ lin_wave.plot_kinematics()
 
 lin_load = load.MorisonLoad(lin_wave)
 lin_load.compute_load()
-lin_load.plot_load(s=[0,1])
+lin_load.plot_load(s=[0, 1])
