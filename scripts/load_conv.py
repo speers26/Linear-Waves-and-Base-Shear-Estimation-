@@ -5,7 +5,7 @@ import wavesim.spectrum as spctr
 import matplotlib.pyplot as plt
 
 env_probs = pd.read_csv('scripts/env_probs.csv')
-env_probs[env_probs.p != 0]
+env_probs = env_probs[env_probs.p != 0].reset_index()
 
 num_sea_states = 1000
 z_values = np.linspace(-100, 50, 50)
@@ -40,8 +40,9 @@ p_array = np.array(env_probs['p'])
 f_cdf = np.sum(cnv_results * p_array[:, np.newaxis], axis=0)
 
 plt.figure()
-plt.subplot(2, 1, 1)
 plt.plot(X, f_cdf)
-plt.subplot(2, 1, 2)
+plt.show()
+
+plt.figure()
 plt.plot(X, np.log10(1-f_cdf))
 plt.show()
