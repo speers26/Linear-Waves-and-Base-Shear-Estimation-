@@ -120,8 +120,12 @@ class AbstractDistEst(ABC):
         plt.figure()
         if log:
             plt.plot(self.X, np.log10(1-self.cdf))
+            plt.xlabel('X')
+            plt.ylabel('log10(1-p)')
         else:
             plt.plot(self.X, self.cdf)
+            plt.xlabel('X')
+            plt.ylabel('p')
         plt.show()
 
 
