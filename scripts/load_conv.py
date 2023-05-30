@@ -41,8 +41,12 @@ f_cdf = np.sum(cnv_results * p_array[:, np.newaxis], axis=0)
 
 plt.figure()
 plt.plot(X, f_cdf)
+plt.xlabel('X')
+plt.ylabel('p')
 plt.show()
 
 plt.figure()
 plt.plot(X, np.log10(1-f_cdf))
+plt.xlabel('X')
+plt.ylabel('log10(1-p)')
 plt.show()
