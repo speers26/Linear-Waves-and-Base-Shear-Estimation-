@@ -19,5 +19,6 @@ loadEst.compute_sea_state_max()
 loadEst.compute_is_distribution()
 loadEst.compute_density()
 loadEst.plot_density()
+print(loadEst.eval_pdf(np.array([1, 2])))
 
 print(np.sum(loadEst.dx * loadEst.pdf))

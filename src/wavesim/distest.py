@@ -128,7 +128,7 @@ class AbstractDistEst(ABC):
     def eval_pdf(self, X: np.ndarray) -> float:
         """evaluate the stored pdf estimate at specified points
 
-        #TODO: make this work for n>1 points
+        #TODO: vectorise this
 
         Args:
             X (np.ndarray): evaluation points
@@ -137,10 +137,14 @@ class AbstractDistEst(ABC):
             float: estimated density at evaluation point
         """
 
-        abs_diffs = np.abs(self.mids-X)
-        close_mid_ind = np.where(abs_diffs == np.min(abs_diffs))
+        pdf = np.empty(len(X))
 
-        return self.pdf[close_mid_ind]
+        for i, x in enumerate(X):
+            abs_diffs = np.abs(self.mids-x)
+            close_mid_ind = np.where(abs_diffs == np.min(abs_diffs))
+            pdf[i] = self.pdf[close_mid_ind]
+
+        return pdf
 
     def plot_distribution(self, log=True) -> None:
         """ plot the stored distribution
