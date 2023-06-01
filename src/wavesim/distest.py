@@ -15,6 +15,7 @@ from wavesim.crestdistributions import rayleigh_pdf
 from dataclasses import dataclass
 from scipy.signal import argrelextrema
 import matplotlib.pyplot as plt
+from numpy import diff
 
 
 @dataclass
@@ -79,7 +80,7 @@ class AbstractDistEst(ABC):
         return None
 
     def compute_kinematics(self) -> None:
-        """get kinematics
+        """ get kinematics
         """
         self.kinematics = LinearKin(self.sim_frequency, self.sim_period, self.z_values, self.sea_state)
         self.kinematics.compute_spectrum()
@@ -111,6 +112,36 @@ class AbstractDistEst(ABC):
 
         return None
 
+    def compute_density(self) -> None:
+        """computes the pdf by numerically differentiating the importance sampled cdf
+
+        Args:
+            X (np.ndarray): evaluation points
+        """
+
+        self.dx = self.X[1] - self.X[0]
+        self.mids = (self.X[1:] + self.X[:-1]) / 2
+        self.pdf = diff(self.cdf)/self.dx
+
+        return None
+
+    def eval_pdf(self, X: np.ndarray) -> float:
+        """evaluate the stored pdf estimate at specified points
+
+        #TODO: make this work for n>1 points
+
+        Args:
+            X (np.ndarray): evaluation points
+
+        Returns:
+            float: estimated density at evaluation point
+        """
+
+        abs_diffs = np.abs(self.mids-X)
+        close_mid_ind = np.where(abs_diffs == np.min(abs_diffs))
+
+        return self.pdf[close_mid_ind]
+
     def plot_distribution(self, log=True) -> None:
         """ plot the stored distribution
 
@@ -126,6 +157,13 @@ class AbstractDistEst(ABC):
             plt.plot(self.X, self.cdf)
             plt.xlabel('X')
             plt.ylabel('p')
+        plt.show()
+
+    def plot_density(self) -> None:
+        """plots the stored density
+        """
+        plt.figure()
+        plt.plot(self.mids, self.pdf, 'o')
         plt.show()
 
 
