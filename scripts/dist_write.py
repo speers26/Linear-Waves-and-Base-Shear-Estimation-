@@ -41,6 +41,9 @@ if __name__ == '__main__':
         loadEst.compute_sea_state_max()
         loadEst.compute_is_distribution(X=X)
         loadEst.compute_density()
+        loadEst.kinematics = 0
+        loadEst.max_series = 0
+        loadEst.load = 0
 
         # save to vector
         cond_dists.append(loadEst)
