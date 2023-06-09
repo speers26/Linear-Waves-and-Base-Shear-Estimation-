@@ -115,13 +115,16 @@ class AbstractDistEst(ABC):
     def compute_density(self) -> None:
         """computes the pdf by numerically differentiating the importance sampled cdf
 
+        pdf is normalised to integrate to 1
+
         Args:
             X (np.ndarray): evaluation points
         """
 
         self.dx = self.X[1] - self.X[0]
         self.mids = (self.X[1:] + self.X[:-1]) / 2
-        self.pdf = diff(self.cdf)/self.dx
+        unn_pdf = diff(self.cdf)/self.dx
+        self.pdf = unn_pdf / (np.sum(unn_pdf * self.dx))
 
         return None
 
