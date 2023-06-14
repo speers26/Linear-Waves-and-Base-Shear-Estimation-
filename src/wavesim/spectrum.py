@@ -185,7 +185,7 @@ class Jonswap(AbstractSpectrum):
         sigma_a (np.ndarray): JONSWAP sigma for f<f_p
         sigma_b (np.ndarray): JONSWAP sigma for f>f_p
     """
-    gamma: np.ndarray = 2
+    gamma: np.ndarray = 3
     sigma_a: np.ndarray = 0.07
     sigma_b: np.ndarray = 0.09
 
