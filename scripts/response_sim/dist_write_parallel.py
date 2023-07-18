@@ -32,12 +32,12 @@ def compute_response_dist(s: list):
     loadEst.load = 0
 
     # save to vector
-    return loadEst
+    return s, loadEst
 
 
 if __name__ == '__main__':
 
-    env_probs = pd.read_csv('scripts/env_probs.csv')
+    env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
     env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
@@ -52,7 +52,8 @@ if __name__ == '__main__':
     cond_dists = []
 
     cl = mp.Pool(4)
-    cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
+    index_cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
 
     # pickle dump
-    save_object(cond_dists, 'scripts/cond_dists.pkl')
+
+    save_object(index_cond_dists, 'scripts/response_sim/cond_dists.pkl')
