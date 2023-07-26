@@ -72,6 +72,16 @@ class MorisonLoad(AbstractLoad):
     c_m: float = 1.0
     c_d: float = 1.0
 
+    @property
+    def c_m(self) -> np.ndarray:
+        """creates vector of varying c_m 
+
+        Returns:
+            np.ndarray: c_m constants
+        """
+
+        
+
     def compute_load(self) -> MorisonLoad:
         """compute base shear time series in MN using morison load on a cylinder
 
