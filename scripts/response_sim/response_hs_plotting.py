@@ -1,10 +1,8 @@
 import multiprocessing as mp
 import numpy as np
-import pandas as pd
 import wavesim.spectrum as spctr
 import wavesim.kinematics as kin
 import wavesim.loading as loading
-import pickle
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 from numpy import diff
@@ -50,7 +48,7 @@ if __name__ == "__main__":
 
     z_num = 150
     z_range = np.linspace(-depth, 50, z_num)
-    freq = 4.00  # 3. / (2*np.pi)
+    freq = 4.00
     period = 100  # total time range
 
     # pick cd, cdms
@@ -58,12 +56,12 @@ if __name__ == "__main__":
     cm_u = 100.0
     cd_l = 1.0
     cd_u = 100.0
-    deck_height = 25.0
+    deck_height = 20.0
 
     diffs = abs(z_range-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
-    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, z_num-deck_ind-3)))
-    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, z_num-deck_ind)))
+    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 2), np.tile(cm_l, z_num-deck_ind-2)))
+    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 2), np.tile(cd_l, z_num-deck_ind-2)))
 
     plt.subplot(1, 2, 1)
     plt.plot(z_range, c_m)
@@ -77,4 +75,6 @@ if __name__ == "__main__":
     loads = compute_max_response(a)
 
     plt.plot(a, loads)
+    plt.xlabel("crest height [m]")
+    plt.ylabel("reponse [MN]")
     plt.show()

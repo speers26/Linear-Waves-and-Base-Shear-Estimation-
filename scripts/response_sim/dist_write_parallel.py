@@ -42,7 +42,7 @@ if __name__ == '__main__':
     env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
-    z_values = np.linspace(-100, 50, 50)
+    z_values = np.linspace(-100, 50, 150)
 
     x_num = 1000
     X = np.linspace(0, 20, num=x_num)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     cm_u = 100.0
     cd_l = 1.0
     cd_u = 100.0
-    deck_height = 25.0
+    deck_height = 20.0
 
     diffs = abs(z_values-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
