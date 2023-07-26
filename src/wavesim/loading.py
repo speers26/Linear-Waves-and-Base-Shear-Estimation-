@@ -87,9 +87,6 @@ class MorisonLoad(AbstractLoad):
 
         deck_ind = np.where(diffs == np.min(diffs))[0][0]
 
-        print(deck_ind)
-        print(self.kinematics.nz-deck_ind)
-
         c_m = np.concatenate((np.tile(self.cm_l, deck_ind), np.tile(self.cm_u, self.kinematics.nz-deck_ind)))
 
         return c_m
