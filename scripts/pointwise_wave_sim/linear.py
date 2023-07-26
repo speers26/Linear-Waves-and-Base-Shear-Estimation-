@@ -14,7 +14,7 @@ np.random.seed(1)
 z_num = 150
 z_range = np.linspace(-depth, 50, z_num)
 freq = 4.00  # 3. / (2*np.pi)
-period = 100  # total time range
+period = 300  # total time range
 
 lin_wave = kin.LinearKin(sample_f=4.00, period=100, z_values=z_range, sea_state=ss1)
 lin_wave.compute_spectrum()
