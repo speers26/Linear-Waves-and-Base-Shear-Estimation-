@@ -56,10 +56,10 @@ if __name__ == '__main__':
 
     diffs = abs(z_values-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
-    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
-    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
-    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
-    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
+    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
+    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
 
     plt.subplot(1, 2, 1)
     plt.plot(z_values, c_m)
