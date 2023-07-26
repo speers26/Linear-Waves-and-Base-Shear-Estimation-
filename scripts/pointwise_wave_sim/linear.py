@@ -2,11 +2,12 @@ from wavesim import spectrum as spctr
 from wavesim import kinematics as kin
 from wavesim import loading as load
 import numpy as np
+import matplotlib.pyplot as plt
 
-a = np.array([25, 25])
+a = np.array([25])
 depth = 100
 cond = True
-ss1 = spctr.SeaState(hs=np.array([15, 15]), tp=np.array([10, 10]), spctr_type=spctr.Jonswap)
+ss1 = spctr.SeaState(hs=np.array([15]), tp=np.array([10]), spctr_type=spctr.Jonswap)
 
 np.random.seed(1)
 
@@ -21,5 +22,15 @@ lin_wave.compute_kinematics(cond=cond, a=a)
 lin_wave.plot_kinematics()
 
 lin_load = load.MorisonLoad(lin_wave)
+
+plt.subplot(1, 2, 1)
+plt.plot(lin_load.kinematics.z_values, lin_load.c_m)
+plt.title("c_m")
+
+plt.subplot(1, 2, 2)
+plt.plot(lin_load.kinematics.z_values, lin_load.c_d)
+plt.title("c_d")
+plt.show()
+
 lin_load.compute_load()
-lin_load.plot_load(s=[0, 1])
+lin_load.plot_load(s=[0])
