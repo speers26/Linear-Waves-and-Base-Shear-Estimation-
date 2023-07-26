@@ -204,11 +204,13 @@ class LoadDistEst(AbstractDistEst):
     """
 
     load_type: AbstractLoad = MorisonLoad
+    c_d: np.ndarray
+    c_m: np.ndarray
 
     def compute_load(self) -> None:
         """compute loading from kinematics
         """
-        self.load = MorisonLoad(self.kinematics)
+        self.load = AbstractLoad(self.kinematics, self.c_d, self.c_m)
         self.load.compute_load()
 
         return None

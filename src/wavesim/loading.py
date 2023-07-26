@@ -63,49 +63,14 @@ class MorisonLoad(AbstractLoad):
     Args:
         diameter (float): diameter of cylinder to calculate morison loading on
         rho (float): density of fluid
-        c_m (float): coefficient of mass
-        c_d (float): coefficient of drag
+        c_m (np.ndarray): coefficient of mass
+        c_d (np.ndarray): coefficient of drag
     """
 
+    c_d: np.ndarray
+    c_m: np.ndarray
     diameter: float = 1.0
     rho: float = 1024.0
-    cm_l: float = 1.0
-    cm_u: float = 100.0
-    cd_l: float = 1.0
-    cd_u: float = 100.0
-    deck_height: float = 25.0
-
-    @property
-    def c_m(self) -> np.ndarray:
-        """creates vector of varying c_m with a single changepoint (representing wave-in-deck loading)
-
-        Returns:
-            np.ndarray: c_m constant vector
-        """
-
-        diffs = abs(self.kinematics.z_values-self.deck_height)
-
-        deck_ind = np.where(diffs == np.min(diffs))[0][0]
-
-        c_m = np.concatenate((np.tile(self.cm_l, deck_ind), np.tile(self.cm_u, self.kinematics.nz-deck_ind)))
-
-        return c_m
-
-    @property
-    def c_d(self) -> np.ndarray:
-        """creates vector of varying c_m with a single changepoint (representing wave-in-deck loading)
-
-        Returns:
-            np.ndarray: c_d constant vector
-        """
-
-        diffs = np.abs(self.kinematics.z_values-self.deck_height)
-
-        deck_ind = np.where(diffs == np.min(diffs))[0][0]
-
-        c_d = np.concatenate((np.tile(self.cm_l, deck_ind), np.tile(self.cm_u, self.kinematics.nz-deck_ind)))
-
-        return c_d
 
     def compute_load(self) -> MorisonLoad:
         """compute base shear time series in MN using morison load on a cylinder
