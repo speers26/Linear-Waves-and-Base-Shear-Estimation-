@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 a = np.array([25])
 depth = 100
-cond = True
+cond = False
 ss1 = spctr.SeaState(hs=np.array([15]), tp=np.array([10]), spctr_type=spctr.Jonswap)
 
 np.random.seed(1)
@@ -26,7 +26,7 @@ cm_l = 1.0
 cm_u = 100.0
 cd_l = 1.0
 cd_u = 100.0
-deck_height = 26.0
+deck_height = 25.0
 
 diffs = abs(lin_wave.z_values-deck_height)
 deck_ind = np.where(diffs == np.min(diffs))[0][0]
