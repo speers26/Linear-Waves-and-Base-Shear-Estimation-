@@ -39,10 +39,10 @@ def compute_response_dist(s: list):
 if __name__ == '__main__':
 
     env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
-    env_probs = env_probs[env_probs.p != 0].reset_index()
+    # env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
-    z_values = np.linspace(-100, 50, 150)
+    z_values = np.linspace(-100, 50, 50)
 
     x_num = 1000
     X = np.linspace(0, 20, num=x_num)
@@ -56,10 +56,10 @@ if __name__ == '__main__':
 
     diffs = abs(z_values-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
-    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
-    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
-    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
-    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
+    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
+    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
 
     plt.subplot(1, 2, 1)
     plt.plot(z_values, c_m)
