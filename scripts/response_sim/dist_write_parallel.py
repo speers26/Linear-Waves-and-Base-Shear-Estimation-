@@ -4,6 +4,7 @@ import pandas as pd
 import wavesim.distest as dist
 import wavesim.spectrum as spctr
 import pickle
+import matplotlib.pyplot as plt
 
 
 def save_object(obj, filename):
@@ -20,7 +21,7 @@ def compute_response_dist(s: list):
     tp = np.sqrt((hs*2*np.pi)/(s2*9.81))
     ss = spctr.SeaState(hs=hs, tp=tp, spctr_type=spctr.Jonswap)
 
-    loadEst = dist.LoadDistEst(sea_state=ss, z_values=z_values)
+    loadEst = dist.MorisonDistEst(sea_state=ss, z_values=z_values, c_d=c_d, c_m=c_m)
     loadEst.compute_cond_crests()
     loadEst.compute_kinematics()
     loadEst.compute_load()
@@ -38,13 +39,42 @@ def compute_response_dist(s: list):
 if __name__ == '__main__':
 
     env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
-    # env_probs = env_probs[env_probs.p != 0].reset_index()
+    env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
     z_values = np.linspace(-100, 50, 50)
 
     x_num = 1000
     X = np.linspace(0, 20, num=x_num)
+
+    # pick cd, cdms
+    cm_l = 1.0
+    cm_u = 1.0
+    cd_l = 1.0
+    cd_u = 1.0
+    deck_height = 20.0
+
+    diffs = abs(z_values-deck_height)
+    deck_ind = np.where(diffs == np.min(diffs))[0][0]
+    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
+    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
+    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+
+    d = 43.15152
+    c = 0.6015152
+    b = 0.007739394
+    a = 0.00005939394
+    c_m = c_d = a * z_values**3 + b * z_values**2 + c * z_values + d
+
+    plt.subplot(1, 2, 1)
+    plt.plot(z_values, c_m)
+    plt.title("c_m")
+
+    plt.subplot(1, 2, 2)
+    plt.plot(z_values, c_d)
+    plt.title("c_d")
+    plt.show()
 
     np.random.seed(1)
 

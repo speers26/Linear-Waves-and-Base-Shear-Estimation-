@@ -45,6 +45,15 @@ class AbstractDistEst(ABC):
         return self.z_values[1] - self.z_values[0]
 
     @property
+    def nz(self) -> int:
+        """returns the number of z points to evaluate at
+
+        Returns:
+            int: number of z values
+        """
+        return len(self.z_values)
+
+    @property
     def sim_period(self) -> float:
         """returns the total length of time per sim
 
@@ -196,19 +205,21 @@ class CrestDistEst(AbstractDistEst):
 
 
 @dataclass
-class LoadDistEst(AbstractDistEst):
+class MorisonDistEst(AbstractDistEst):
     """sea-state max load distribution class
 
     Args:
-        load_type (AbstractLoad): type of loading to use
+        c_d (np.ndarray): drag coefficient array
+        c_m (np.ndarray): inertia coefficient array
     """
 
-    load_type: AbstractLoad = MorisonLoad
+    c_d: np.ndarray = 1
+    c_m: np.ndarray = 1
 
     def compute_load(self) -> None:
         """compute loading from kinematics
         """
-        self.load = MorisonLoad(self.kinematics)
+        self.load = MorisonLoad(self.kinematics, self.c_d, self.c_m)
         self.load.compute_load()
 
         return None

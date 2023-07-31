@@ -63,14 +63,14 @@ class MorisonLoad(AbstractLoad):
     Args:
         diameter (float): diameter of cylinder to calculate morison loading on
         rho (float): density of fluid
-        c_m (float): coefficient of mass
-        c_d (float): coefficient of drag
+        c_m (np.ndarray): coefficient of mass
+        c_d (np.ndarray): coefficient of drag
     """
 
+    c_d: np.ndarray
+    c_m: np.ndarray
     diameter: float = 1.0
     rho: float = 1024.0
-    c_m: float = 1.0
-    c_d: float = 1.0
 
     def compute_load(self) -> MorisonLoad:
         """compute base shear time series in MN using morison load on a cylinder
@@ -79,8 +79,8 @@ class MorisonLoad(AbstractLoad):
             MorisonLoad: returns self
         """
 
-        F = self.rho * self.c_m * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du\
-            + 0.5 * self.rho * self.c_d * self.diameter * self.kinematics.u\
+        F = self.rho * np.expand_dims(self.c_m, axis=(0, 2)) * (np.pi / 4) * (self.diameter ** 2) * self.kinematics.du\
+            + 0.5 * self.rho * np.expand_dims(self.c_d, axis=(0, 2)) * self.diameter * self.kinematics.u\
             * np.abs(self.kinematics.u)
 
         self.load = np.sum(F, axis=1) * self.kinematics.dz / 1e6  # 1e6 converts to MN from N
