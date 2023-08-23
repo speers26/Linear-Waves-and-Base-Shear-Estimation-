@@ -33,7 +33,7 @@ if __name__ == "__main__":
         max_u[i_s, :, 0] = np.abs(np.max(u[:, np.in1d(z_range, q_zs), 0], axis=0))
         max_du[i_s, :, 0] = np.abs(np.max(du[:, np.in1d(z_range, q_zs), 0], axis=0))
 
-    query_z = -10.0
+    query_z = 10.0
     plt.subplot(2, 1, 1)
     plt.plot(q_stps, max_u[:, np.where(z_range == query_z)[0], 0].reshape(50,))
     plt.subplot(2, 1, 2)
