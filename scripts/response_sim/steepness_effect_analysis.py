@@ -12,11 +12,10 @@ if __name__ == "__main__":
     depth = 100
     z_num = 151
     z_range = np.linspace(-depth, 50, z_num)
-    q_zs = z_range
     freq = 4.00
     period = 300  # total time range
-    max_u = np.empty((len(q_stps), len(q_zs), 1))
-    max_du = np.empty((len(q_stps), len(q_zs), 1))
+    max_u = np.empty((z_num, len(q_stps)))
+    max_du = np.empty((z_num, len(q_stps)))
 
     for i_s, stp in enumerate(q_stps):
 
@@ -30,12 +29,17 @@ if __name__ == "__main__":
         lin_wave.compute_spectrum()
         lin_wave.compute_kinematics(cond=False)
         _, u, _, du, _ = lin_wave.retrieve_kinematics()
-        max_u[i_s, :, 0] = np.abs(np.max(u[:, np.in1d(z_range, q_zs), 0], axis=0))
-        max_du[i_s, :, 0] = np.abs(np.max(du[:, np.in1d(z_range, q_zs), 0], axis=0))
+        max_u[:, i_s] = np.max(np.abs(u[:, :, 0]), axis=0)
+        max_du[:, i_s] = np.max(np.abs(du[:, :, 0]), axis=0)
 
-    query_z = 10.0
     plt.subplot(2, 1, 1)
-    plt.plot(q_stps, max_u[:, np.where(z_range == query_z)[0], 0].reshape(50,))
+    plt.plot(max_u, z_range+depth)
+    plt.xlabel("u [m/s]")
+    plt.ylabel("depth [m] (above sea bed)")
+
     plt.subplot(2, 1, 2)
-    plt.plot(q_stps, max_du[:, np.where(z_range == query_z)[0], 0].reshape(50,))
+    plt.plot(max_du, z_range+depth)
+    plt.xlabel("du [m/s]")
+    plt.ylabel("depth [m] (above sea bed)")
+
     plt.show()
