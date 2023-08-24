@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-    q_stps = np.linspace(start=0.01, stop=0.08, num=50)
-    hs = 15
-    a = 10
+    q_stps = np.linspace(start=0.01, stop=0.08, num=25)
+    hs = 30
+    a = 50
 
     depth = 100
     z_num = 151
