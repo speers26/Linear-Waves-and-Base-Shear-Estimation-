@@ -8,14 +8,15 @@ if __name__ == "__main__":
 
     q_stps = np.linspace(start=0.01, stop=0.08, num=50)
     hs = 15
+    a = 10
 
     depth = 100
     z_num = 151
     z_range = np.linspace(-depth, 50, z_num)
     freq = 4.00
     period = 300  # total time range
-    max_u = np.empty((z_num, len(q_stps)))
-    max_du = np.empty((z_num, len(q_stps)))
+    mid_u = np.empty((z_num, len(q_stps)))
+    mid_du = np.empty((z_num, len(q_stps)))
 
     for i_s, stp in enumerate(q_stps):
 
@@ -27,18 +28,22 @@ if __name__ == "__main__":
 
         lin_wave = kin.LinearKin(sample_f=4.00, period=100, z_values=z_range, sea_state=ss)
         lin_wave.compute_spectrum()
-        lin_wave.compute_kinematics(cond=False)
+        lin_wave.compute_kinematics(cond=True, a=[a])
         _, u, _, du, _ = lin_wave.retrieve_kinematics()
-        max_u[:, i_s] = np.max(np.abs(u[:, :, 0]), axis=0)
-        max_du[:, i_s] = np.max(np.abs(du[:, :, 0]), axis=0)
+        mid_u[:, i_s] = u[int(lin_wave.nt/2), :, 0]
+        mid_du[:, i_s] = du[int(lin_wave.nt/2), :, 0]
 
     plt.subplot(2, 1, 1)
-    plt.plot(max_u, z_range+depth)
+    plt.axhline(y=depth+a, color='r', linestyle='--')
+    plt.axhline(y=depth, color='r', linestyle='dashdot')
+    plt.plot(mid_u, z_range+depth)
     plt.xlabel("u [m/s]")
     plt.ylabel("depth [m] (above sea bed)")
 
     plt.subplot(2, 1, 2)
-    plt.plot(max_du, z_range+depth)
+    plt.axhline(y=depth+a, color='r', linestyle='--')
+    plt.axhline(y=depth, color='r', linestyle='dashdot')
+    plt.plot(mid_du, z_range+depth)
     plt.xlabel("du [m/s]")
     plt.ylabel("depth [m] (above sea bed)")
 

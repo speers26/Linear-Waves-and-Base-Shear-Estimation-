@@ -224,6 +224,8 @@ class Jonswap(AbstractSpectrum):
 
         self.density *= self.hs ** 2 / (16 * area)
 
+        self.density = self.density * (self.frequency < 5*self.fp)
+
         return self
 
 
