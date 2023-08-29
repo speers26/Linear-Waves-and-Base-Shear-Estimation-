@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-    q_stps = np.linspace(start=0.01, stop=0.08, num=25)
-    hs = 30
-    a = 50
+    q_stps = np.linspace(start=0.01, stop=0.08, num=3)
+    hs = 15
+    a = 30
 
     depth = 100
-    z_num = 151
+    z_num = 50
     z_range = np.linspace(-depth, 50, z_num)
     freq = 4.00
     period = 300  # total time range
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
         tp = np.sqrt((hs*2*np.pi)/(stp*9.81))
 
-        ss = spctr.SeaState(hs=np.array([hs]), tp=np.array([10]), spctr_type=spctr.Jonswap)
+        ss = spctr.SeaState(hs=np.array([hs]), tp=np.array([tp]), spctr_type=spctr.Jonswap)
 
         np.random.seed(1)
 

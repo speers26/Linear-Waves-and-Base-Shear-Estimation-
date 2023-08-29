@@ -7,7 +7,7 @@ import wavesim.distest as dist
 
 if __name__ == "__main__":
 
-    q_stps = np.linspace(start=0.01, stop=0.08, num=5)
+    q_stps = np.linspace(start=0.01, stop=0.08, num=3)
     hs = 30
 
     depth = 100
