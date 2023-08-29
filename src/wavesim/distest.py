@@ -228,10 +228,11 @@ class MorisonDistEst(AbstractDistEst):
         self.max_series = np.empty(self.sea_state.num_SS)
         for s in range(self.sea_state.num_SS):
 
-            load = self.load.retrieve_load()
-            load = load[:, s]
+            crests, _, _, _, _ = self.kinematics.retrieve_kinematics()
+            crests = crests[:, s]
+            load = self.load.retrieve_load()[:, s]
             # get maximums
-            mins = argrelextrema(load, np.less)[0]
+            mins = argrelextrema(crests, np.less)[0]
             lower_min = np.max(mins[mins < self.kinematics.nt/2])
             upper_min = np.min(mins[mins > self.kinematics.nt/2])
             slice = load[lower_min:upper_min]
