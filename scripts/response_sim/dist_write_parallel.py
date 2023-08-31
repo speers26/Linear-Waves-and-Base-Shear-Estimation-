@@ -45,14 +45,14 @@ if __name__ == '__main__':
     z_values = np.linspace(-100, 50, 50)
 
     x_num = 1000
-    X = np.linspace(0, 20, num=x_num)
+    X = np.linspace(0, 100, num=x_num)
 
     # pick cd, cdms
     cm_l = 1.0
-    cm_u = 1.0
+    cm_u = 100.0
     cd_l = 1.0
-    cd_u = 1.0
-    deck_height = 20.0
+    cd_u = 100.0
+    deck_height = -5.0
 
     diffs = abs(z_values-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     c = 0.6015152
     b = 0.007739394
     a = 0.00005939394
-    c_m = c_d = a * z_values**3 + b * z_values**2 + c * z_values + d
+    c_m = c_d = 101 - (a * z_values**3 + b * z_values**2 + c * z_values + d)
 
     plt.subplot(1, 2, 1)
     plt.plot(z_values, c_m)
@@ -79,11 +79,11 @@ if __name__ == '__main__':
     np.random.seed(1)
 
     print(env_probs.shape[0])
-    cond_dists = []
 
     cl = mp.Pool(4)
-    index_cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
+    cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
+    cl.close()
 
     # pickle dump
 
-    save_object(index_cond_dists, 'scripts/response_sim/cond_dists.pkl')
+    save_object(cond_dists, 'scripts/response_sim/cond_dists.pkl')
