@@ -39,14 +39,20 @@ def eval_pdf(x: np.ndarray, mids: np.ndarray, pdf: np.ndarray):
 
 if __name__ == "__main__":
 
+    # average number of storms per year
+    lamda = 100
+
+    # return period
+    period = 10000  # years
+
     # reading in conditioned distribution estimates
-    with open('scripts/cond_dists.pkl', 'rb') as inp:
+    with open('scripts/response_sim/cond_dists.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
+    cond_dists = [c[1] for c in cond_dists]
 
     # reading in environment density
-    env_probs = pd.read_csv('scripts/env_probs.csv')
+    env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
     nfull = len(env_probs['p'])
-    env_probs = env_probs[env_probs.p != 0]
 
     # getting marginal 3 hour response distribution
     cdf_array = np.empty((env_probs.shape[0], len(cond_dists[0].cdf)))
@@ -58,11 +64,9 @@ if __name__ == "__main__":
     X = np.linspace(min(cond_dists[0].X), max(cond_dists[0].X), num=x_num)
 
     # getting marginal annual response distribution
-    lamda = 100  # average number of storms per year
     cdf_an = np.exp(-lamda*(1-f_cdf))
 
     # getting return value
-    period = 10000  # years
     rp = np.round(return_level(period, cdf_an, X), 3)
 
     # getting 3 hour max density
@@ -89,3 +93,15 @@ if __name__ == "__main__":
     np.savetxt('/home/speersm/GitHub/environment-modelling/data/cond_dens.csv', f_theta_r_w0,
                delimiter='')
     np.savetxt('cond_dens.csv', f_theta_r_w0, delimiter=',')
+
+    # failure prob region
+    rc = rp
+
+    fail_ps = np.empty(len(cond_dists))
+    for i_c, c in enumerate(cond_dists):
+        fail_ps[i_c] = 1-eval_pdf(rc, X, cond_dists[i_c].cdf)
+
+    fail_ps_full = np.tile(0.0, nfull)
+    fail_ps_full[env_probs.index] = fail_ps
+
+    np.savetxt('/home/speersm/GitHub/environment-modelling/data/fail_ps.csv', fail_ps_full, delimiter='')
