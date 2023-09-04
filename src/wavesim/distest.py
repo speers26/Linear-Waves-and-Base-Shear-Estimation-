@@ -9,11 +9,12 @@ from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
 from wavesim.kinematics import LinearKin
-from wavesim.loading import AbstractLoad, MorisonLoad
+from wavesim.loading import MorisonLoad
 from wavesim.spectrum import SeaState
 from wavesim.crestdistributions import rayleigh_pdf
 from dataclasses import dataclass
 from scipy.signal import argrelextrema
+from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 from numpy import diff
 
@@ -115,25 +116,39 @@ class AbstractDistEst(ABC):
         f = rayleigh_pdf(self.cond_crests, self.sea_state.hs)
         fog = f/self.g
 
+        # add this line for use in compute_density
+        self.weights = fog
+
         cdf_unnorm = np.sum((X[:, None] > self.max_series[None, :])*fog, axis=1)/np.sum(fog)
 
         self.cdf = cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
 
         return None
 
-    def compute_density(self) -> None:
-        """computes the pdf by numerically differentiating the importance sampled cdf
+    # def compute_density(self) -> None:
+    #     """computes the pdf by numerically differentiating the importance sampled cdf
 
-        pdf is normalised to integrate to 1
+    #     pdf is normalised to integrate to 1
+
+    #     Args:
+    #         X (np.ndarray): evaluation points
+    #     """
+
+    #     self.dx = self.X[1] - self.X[0]
+    #     self.mids = (self.X[1:] + self.X[:-1]) / 2
+    #     unn_pdf = diff(self.cdf)/self.dx
+    #     self.pdf = unn_pdf / (np.sum(unn_pdf * self.dx))
+
+    #     return None
+
+    def compute_density(self) -> None:
+        """computes the pdf using a weighted kernel esimation method from the scipy package
 
         Args:
             X (np.ndarray): evaluation points
         """
 
-        self.dx = self.X[1] - self.X[0]
-        self.mids = (self.X[1:] + self.X[:-1]) / 2
-        unn_pdf = diff(self.cdf)/self.dx
-        self.pdf = unn_pdf / (np.sum(unn_pdf * self.dx))
+        self.pdf = gaussian_kde(dataset=self.max_series, weights=self.weights, bw_method='scott')
 
         return None
 
@@ -149,14 +164,7 @@ class AbstractDistEst(ABC):
             float: estimated density at evaluation point
         """
 
-        pdf = np.empty(len(X))
-
-        for i, x in enumerate(X):
-            abs_diffs = np.abs(self.mids-x)
-            close_mid_ind = np.where(abs_diffs == np.min(abs_diffs))
-            pdf[i] = self.pdf[close_mid_ind]
-
-        return pdf
+        return self.pdf(X)
 
     def plot_distribution(self, log=True) -> None:
         """ plot the stored distribution
@@ -169,17 +177,20 @@ class AbstractDistEst(ABC):
             plt.plot(self.X, np.log10(1-self.cdf))
             plt.xlabel('X')
             plt.ylabel('log10(1-p)')
+            plt.title("Distribution of Sea State Max")
         else:
             plt.plot(self.X, self.cdf)
             plt.xlabel('X')
             plt.ylabel('p')
+            plt.title("Distribution of Sea State Max")
         plt.show()
 
-    def plot_density(self) -> None:
+    def plot_density(self, X) -> None:
         """plots the stored density
         """
         plt.figure()
-        plt.plot(self.mids, self.pdf, 'o')
+        plt.plot(X, self.pdf(X))
+        plt.title("Density of Sea State Max")
         plt.show()
 
 
@@ -219,6 +230,7 @@ class MorisonDistEst(AbstractDistEst):
     def compute_load(self) -> None:
         """compute loading from kinematics
         """
+
         self.load = MorisonLoad(self.kinematics, self.c_d, self.c_m)
         self.load.compute_load()
 
