@@ -43,7 +43,7 @@ if __name__ == "__main__":
     lamda = 100
 
     # return period
-    period = 10000  # years
+    period = 1000  # years
 
     # reading in conditioned distribution estimates
     with open('scripts/response_sim/cond_dists.pkl', 'rb') as inp:
@@ -69,20 +69,20 @@ if __name__ == "__main__":
     # getting return value
     rp = np.round(return_level(period, cdf_an, X), 3)
 
-    # getting 3 hour max density
-    dx = X[1] - X[0]
-    mids = (X[1:] + X[:-1]) / 2
-    f_pdf = np.diff(f_cdf)/dx
-    f_pdf = f_pdf/(np.sum(f_pdf * dx))
+    # # getting 3 hour max density
+    # dx = X[1] - X[0]
+    # mids = (X[1:] + X[:-1]) / 2
+    # f_pdf = np.diff(f_cdf)/dx
+    # f_pdf = f_pdf/(np.sum(f_pdf * dx))
 
-    # getting conditioned density at rp
+    # getting conditioned density at rp (unormalised)
     rp_cond_theta = np.empty(len(cond_dists))
     for i in range(len(cond_dists)):
         rp_cond_theta[i] = cond_dists[i].eval_pdf(np.array([rp]))
 
-    rp_marg = np.tile(eval_pdf(rp, mids, f_pdf), len(cond_dists))
+    # rp_marg = np.tile(eval_pdf(rp, mids, f_pdf), len(cond_dists))
 
-    dens_quotient = rp_cond_theta / rp_marg
+    dens_quotient = rp_cond_theta / np.sum(rp_cond_theta)
     f_theta_r = np.array(env_probs['dens']) * dens_quotient
     p_theta_r = np.array(env_probs['p']) * dens_quotient
 
