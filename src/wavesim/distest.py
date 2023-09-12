@@ -16,7 +16,6 @@ from dataclasses import dataclass
 from scipy.signal import argrelextrema
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
-from numpy import diff
 
 
 @dataclass
