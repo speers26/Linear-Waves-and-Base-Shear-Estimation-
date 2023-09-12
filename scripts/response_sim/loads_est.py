@@ -2,6 +2,7 @@ from wavesim.distest import MorisonDistEst
 from wavesim.spectrum import SeaState, Jonswap
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.integrate import quad
 
 num_sea_states = 2000
 z_num = 50
@@ -10,13 +11,13 @@ tp = np.tile(15, num_sea_states)
 z_values = np.linspace(-100, 50, z_num)
 c_m = np.tile(1, z_num)
 c_d = np.tile(1, z_num)
-X = np.linspace(0, 10, num=1000)
+X = np.linspace(-5, 20, num=1000)
 
 ss = SeaState(hs=hs, tp=tp, spctr_type=Jonswap)
 
 np.random.seed(1)
 
-n_rep = 5
+n_rep = 3
 
 for k in range(n_rep):
 
@@ -26,14 +27,18 @@ for k in range(n_rep):
     loadEst.compute_kinematics()
     loadEst.compute_load()
     loadEst.compute_sea_state_max()
-    loadEst.compute_is_distribution()
-    loadEst.compute_density()
+    loadEst.compute_pdf()
+    loadEst.compute_cdf()
+
+    int_check = quad(loadEst.eval_pdf, -5, 20)
+    print(int_check)
 
     plt.plot(X, loadEst.eval_pdf(X))
     plt.xlabel("force [MN]")
     plt.ylabel("pdf")
 
 plt.show()
+
 
 # plt.plot(X, loadEst.eval_pdf(X))
 # plt.show()

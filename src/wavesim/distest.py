@@ -16,11 +16,72 @@ from dataclasses import dataclass
 from scipy.signal import argrelextrema
 from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
+from scipy.integrate import quad
+
+
+@dataclass
+class weighted_cdf():
+    """_computes the IS (weighted) ecdf for a given dataset and weights
+
+    Args:
+        dataset (np.ndarray): data
+        weights (np.ndarray): weights for IS
+    """
+
+    dataset: np.ndarray
+    weights: np.ndarray
+
+    def evaluate(self, X: np.ndarray):
+        """evaulate cdf at given points
+
+        Args:
+            X (np.ndarray): evaluation points
+        """
+
+        return np.sum((X[:, None] > self.dataset[None, :])*self.weights, axis=1)/np.sum(self.weights)
+
+    __call__ = evaluate
+
+
+@dataclass
+class intr_krnl_cdf():
+    """computes cdf by integration of a smoothed kernel density estimator of the pdf
+    """
+
+    kde: gaussian_kde
+
+    def evaluate(self, X: np.ndarray):
+        """evaluate the cdf at given points
+
+        Args:
+            X (np.ndarray): evaluation points
+
+        Returns:
+            np.ndarray: _description_
+        """
+
+        multi_X = np.vectorize(self.__single_X)
+
+        return multi_X(X)
+
+    __call__ = evaluate
+
+    def __single_X(self, X: float):
+        """integrate the pdf up to a single X point
+
+        Args:
+            X (float): integration upper limit
+
+        Returns:
+            _type_: _description_
+        """
+
+        return quad(self.kde, -5, X)[0]
 
 
 @dataclass
 class AbstractDistEst(ABC):
-    """superclass for importance sampled distribution estimation
+    """superclass for max sea state feature importance sampled distribution estimation
 
     Args:
         sea_state (SeaState): sea states to use for kinematic calculation
@@ -86,6 +147,8 @@ class AbstractDistEst(ABC):
         self.CoH = np.sort(np.random.uniform(low=0, high=up_CoH, size=self.sea_state.num_SS))
         self.cond_crests = self.sea_state.hs[0] * self.CoH
         self.g = 1/(up_CoH*self.sea_state.hs[0])
+        f = rayleigh_pdf(self.cond_crests, self.sea_state.hs)
+        self.weights = f/self.g
         return None
 
     def compute_kinematics(self) -> None:
@@ -101,46 +164,27 @@ class AbstractDistEst(ABC):
         """gets the relevant sea-state maxes
         """
 
-    def compute_is_distribution(self, X: np.ndarray = None) -> None:
+    def compute_cdf(self) -> None:
         """computes importance sampled distribution
-
-        Args:
-            X (np.ndarray): values to compute distribution at
         """
 
-        if X is None:
-            X = np.linspace(min(self.max_series), max(self.max_series), num=100)
-        self.X = X
-
-        f = rayleigh_pdf(self.cond_crests, self.sea_state.hs)
-        fog = f/self.g
-
-        # add this line for use in compute_density
-        self.weights = fog
-
-        cdf_unnorm = np.sum((X[:, None] > self.max_series[None, :])*fog, axis=1)/np.sum(fog)
-
-        self.cdf = cdf_unnorm**(self.sim_per_state*self.waves_per_sim)
+        if self.pdf is None:
+            raise Exception("You must compute the pdf first")
+        # self.cdf = weighted_cdf(dataset=self.max_series, weights=self.weights)
+        self.cdf = intr_krnl_cdf(self.pdf)
 
         return None
 
-    # def compute_density(self) -> None:
-    #     """computes the pdf by numerically differentiating the importance sampled cdf
+    def eval_cdf(self, X: np.ndarray):
+        """evaluates stored cdf and scales as needed
 
-    #     pdf is normalised to integrate to 1
+        Args:
+            X (np.ndarray): evaluation points
+        """
 
-    #     Args:
-    #         X (np.ndarray): evaluation points
-    #     """
+        return self.cdf(X)**(self.sim_per_state*self.waves_per_sim)
 
-    #     self.dx = self.X[1] - self.X[0]
-    #     self.mids = (self.X[1:] + self.X[:-1]) / 2
-    #     unn_pdf = diff(self.cdf)/self.dx
-    #     self.pdf = unn_pdf / (np.sum(unn_pdf * self.dx))
-
-    #     return None
-
-    def compute_density(self) -> None:
+    def compute_pdf(self) -> np.ndarray:
         """computes the pdf using a weighted kernel esimation method from the scipy package
 
         Args:
@@ -152,9 +196,7 @@ class AbstractDistEst(ABC):
         return None
 
     def eval_pdf(self, X: np.ndarray) -> float:
-        """evaluate the stored pdf estimate at specified points
-
-        #TODO: vectorise this
+        """evaluate and rescale the stored pdf estimate at specified points
 
         Args:
             X (np.ndarray): evaluation points
@@ -163,22 +205,25 @@ class AbstractDistEst(ABC):
             float: estimated density at evaluation point
         """
 
-        return self.pdf(X)
+        Q = self.sim_per_state * self.waves_per_sim
 
-    def plot_distribution(self, log=True) -> None:
+        return self.pdf(X) * Q * self.cdf(X) ** (Q - 1)
+
+    def plot_distribution(self, X: np.ndarray, log=True) -> None:
         """ plot the stored distribution
 
         Args:
+            X (np.ndarray): evaluation points
             log (bool): boolean which decides if we plot cdf or log cdf
         """
         plt.figure()
         if log:
-            plt.plot(self.X, np.log10(1-self.cdf))
+            plt.plot(X, np.log10(1-self.eval_cdf(X)))
             plt.xlabel('X')
             plt.ylabel('log10(1-p)')
             plt.title("Distribution of Sea State Max")
         else:
-            plt.plot(self.X, self.cdf)
+            plt.plot(X, self.eval_cdf(X))
             plt.xlabel('X')
             plt.ylabel('p')
             plt.title("Distribution of Sea State Max")
@@ -188,7 +233,7 @@ class AbstractDistEst(ABC):
         """plots the stored density
         """
         plt.figure()
-        plt.plot(X, self.pdf(X))
+        plt.plot(X, self.eval_pdf(X))
         plt.title("Density of Sea State Max")
         plt.show()
 
