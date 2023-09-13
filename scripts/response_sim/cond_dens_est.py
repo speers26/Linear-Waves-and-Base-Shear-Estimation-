@@ -55,13 +55,15 @@ if __name__ == "__main__":
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution
-    cdf_array = np.empty((env_probs.shape[0], len(cond_dists[0].cdf)))
+    X = np.linspace(-5, 1000, num=1000)
+    cdf_array = np.empty((env_probs.shape[0], len(X)))
     for i in range(len(cond_dists)):
-        cdf_array[i, :] = cond_dists[i].cdf
+        print(i)
+        cdf_array[i, :] = cond_dists[i].eval_cdf(X, smooth=True)
     p_array = np.array(env_probs['p'])
     f_cdf = np.sum(cdf_array * p_array[:, np.newaxis], axis=0)
-    x_num = len(f_cdf)
-    X = np.linspace(min(cond_dists[0].X), max(cond_dists[0].X), num=x_num)
+    # x_num = len(f_cdf)
+    # X = np.linspace(min(cond_dists[0].X), max(cond_dists[0].X), num=x_num)
 
     # getting marginal annual response distribution
     cdf_an = np.exp(-lamda*(1-f_cdf))
@@ -78,10 +80,9 @@ if __name__ == "__main__":
     # getting conditioned density at rp (unormalised)
     rp_cond_theta = np.empty(len(cond_dists))
     for i in range(len(cond_dists)):
-        rp_cond_theta[i] = cond_dists[i].eval_pdf(np.array([rp]))
+        rp_cond_theta[i] = cond_dists[i].eval_pdf(np.array([rp]), smooth=True)
 
     # rp_marg = np.tile(eval_pdf(rp, mids, f_pdf), len(cond_dists))
-
     dens_quotient = rp_cond_theta / np.sum(rp_cond_theta)
     f_theta_r = np.array(env_probs['dens']) * dens_quotient
     p_theta_r = np.array(env_probs['p']) * dens_quotient
@@ -99,7 +100,9 @@ if __name__ == "__main__":
 
     fail_ps = np.empty(len(cond_dists))
     for i_c, c in enumerate(cond_dists):
-        fail_ps[i_c] = 1-eval_pdf(rc, X, cond_dists[i_c].cdf)
+        print(i_c)
+        fail_ps[i_c] = 1-cond_dists[i_c].eval_cdf(np.array([rc]), smooth=False)
+        # eval_pdf(rc, X, cond_dists[i_c].cdf)
 
     fail_ps_full = np.tile(0.0, nfull)
     fail_ps_full[env_probs.index] = fail_ps

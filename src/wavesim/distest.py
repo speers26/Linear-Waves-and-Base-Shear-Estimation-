@@ -165,24 +165,28 @@ class AbstractDistEst(ABC):
         """
 
     def compute_cdf(self) -> None:
-        """computes importance sampled distribution
+        """computes both versions of importance sampled distribution
         """
 
         if self.pdf is None:
             raise Exception("You must compute the pdf first")
-        # self.cdf = weighted_cdf(dataset=self.max_series, weights=self.weights)
-        self.cdf = intr_krnl_cdf(self.pdf)
+        self.cdf = weighted_cdf(dataset=self.max_series, weights=self.weights)
+        self.cdf_smooth = intr_krnl_cdf(self.pdf)
 
         return None
 
-    def eval_cdf(self, X: np.ndarray):
+    def eval_cdf(self, X: np.ndarray, smooth: bool = True):
         """evaluates stored cdf and scales as needed
 
         Args:
             X (np.ndarray): evaluation points
+            smooth (bool): if true then we use the kde integrand smoothed version of the cdf
         """
 
-        return self.cdf(X)**(self.sim_per_state*self.waves_per_sim)
+        if smooth:
+            return self.cdf_smooth(X)**(self.sim_per_state*self.waves_per_sim)
+        else:
+            return self.cdf(X)**(self.sim_per_state*self.waves_per_sim)
 
     def compute_pdf(self) -> np.ndarray:
         """computes the pdf using a weighted kernel esimation method from the scipy package
@@ -195,11 +199,12 @@ class AbstractDistEst(ABC):
 
         return None
 
-    def eval_pdf(self, X: np.ndarray) -> float:
+    def eval_pdf(self, X: np.ndarray, smooth: bool = True) -> float:
         """evaluate and rescale the stored pdf estimate at specified points
 
         Args:
             X (np.ndarray): evaluation points
+            smooth (bool): if true then we use the kde integrand smoothed version of the cdf
 
         Returns:
             float: estimated density at evaluation point
@@ -207,7 +212,10 @@ class AbstractDistEst(ABC):
 
         Q = self.sim_per_state * self.waves_per_sim
 
-        return self.pdf(X) * Q * self.cdf(X) ** (Q - 1)
+        if smooth:
+            return self.pdf(X) * Q * self.cdf_smooth(X) ** (Q - 1)
+        else:
+            return self.pdf(X) * Q * self.cdf(X) ** (Q - 1)
 
     def plot_distribution(self, X: np.ndarray, log=True) -> None:
         """ plot the stored distribution

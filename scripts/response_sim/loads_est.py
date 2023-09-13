@@ -2,7 +2,7 @@ from wavesim.distest import MorisonDistEst
 from wavesim.spectrum import SeaState, Jonswap
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import quad
+import time
 
 num_sea_states = 2000
 z_num = 50
@@ -17,23 +17,43 @@ ss = SeaState(hs=hs, tp=tp, spctr_type=Jonswap)
 
 np.random.seed(1)
 
-n_rep = 3
+n_rep = 1
 
 for k in range(n_rep):
 
-    print(k)
+    # print(k)
+    start = time.time()
     loadEst = MorisonDistEst(sea_state=ss, z_values=z_values, c_d=c_d, c_m=c_m)
     loadEst.compute_cond_crests()
     loadEst.compute_kinematics()
     loadEst.compute_load()
     loadEst.compute_sea_state_max()
+    end = time.time()
+    print("max series done in " + str(end-start) + " seconds")
+
+    start = time.time()
     loadEst.compute_pdf()
+    end = time.time()
+    print("pdf done in " + str(end-start) + " seconds")
+
+    start = time.time()
     loadEst.compute_cdf()
+    end = time.time()
+    print("cdf done in " + str(end-start) + " seconds")
 
-    int_check = quad(loadEst.eval_pdf, -5, 20)
-    print(int_check)
+    # int_check = quad(loadEst.eval_pdf, -5, 20)
+    # print(int_check)
 
-    plt.plot(X, loadEst.eval_pdf(X))
+    start = time.time()
+    plt.plot(X, loadEst.eval_pdf(X, smooth=False))
+    end = time.time()
+    print("plotting non smoothed done in " + str(end-start) + " seconds")
+
+    start = time.time()
+    plt.plot(X, loadEst.eval_pdf(X, smooth=True))
+    end = time.time()
+    print("plotting smoothed done in " + str(end-start) + " seconds")
+
     plt.xlabel("force [MN]")
     plt.ylabel("pdf")
 
