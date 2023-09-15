@@ -56,8 +56,6 @@ class intr_krnl_cdf():
         Args:
             X (np.ndarray): evaluation points
 
-        Returns:
-            np.ndarray: _description_
         """
 
         multi_X = np.vectorize(self.__single_X)
@@ -73,7 +71,7 @@ class intr_krnl_cdf():
             X (float): integration upper limit
 
         Returns:
-            _type_: _description_
+            float: cdf
         """
 
         return quad(self.kde, -5, X)[0]
@@ -141,12 +139,18 @@ class AbstractDistEst(ABC):
         """
         return self.sim_period / self.sea_state.tp[0]
 
-    def compute_cond_crests(self, up_CoH: np.ndarray = 2) -> None:
+    def compute_cond_crests(self, alpha: float = -6) -> None:
         """ get crests to condition on
         """
-        self.CoH = np.sort(np.random.uniform(low=0, high=up_CoH, size=self.sea_state.num_SS))
+
+        U = np.array([10**alpha, 1-10**alpha])
+        Q = 1 - U**(1/(self.waves_per_sim*self.sim_per_state))
+        CoHbounds = np.sqrt(-1/8 * np.log(Q))
+        CoHrange = np.diff(CoHbounds)
+
+        self.CoH = np.sort(np.random.uniform(low=CoHbounds[0], high=CoHbounds[1], size=self.sea_state.num_SS))
         self.cond_crests = self.sea_state.hs[0] * self.CoH
-        self.g = 1/(up_CoH*self.sea_state.hs[0])
+        self.g = 1/((CoHrange)*self.sea_state.hs[0])
         f = rayleigh_pdf(self.cond_crests, self.sea_state.hs)
         self.weights = f/self.g
         return None
@@ -181,6 +185,9 @@ class AbstractDistEst(ABC):
         Args:
             X (np.ndarray): evaluation points
             smooth (bool): if true then we use the kde integrand smoothed version of the cdf
+
+        Returns:
+            float: estimated distribution function at evaluation point
         """
 
         if smooth:
@@ -190,9 +197,6 @@ class AbstractDistEst(ABC):
 
     def compute_pdf(self) -> np.ndarray:
         """computes the pdf using a weighted kernel esimation method from the scipy package
-
-        Args:
-            X (np.ndarray): evaluation points
         """
 
         self.pdf = gaussian_kde(dataset=self.max_series, weights=self.weights, bw_method='scott')

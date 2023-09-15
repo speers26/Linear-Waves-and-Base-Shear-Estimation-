@@ -89,7 +89,7 @@ if __name__ == "__main__":
     env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
     nfull = len(env_probs['p'])
 
-    # getting marginal 3 hour response distribution
+    # getting marginal 3 hour response distribution ----------------------------------------
     X = np.linspace(-5, 1000, num=1000)
 
     cl = mp.Pool(4)
@@ -103,12 +103,13 @@ if __name__ == "__main__":
     p_array = np.array(env_probs['p'])
     f_cdf = np.sum(cdf_array * p_array[:, np.newaxis], axis=0)
 
-    # getting marginal annual response distribution
+    # getting marginal annual response distribution ----------------------------------------
     cdf_an = np.exp(-lamda*(1-f_cdf))
 
     # getting return value
     rp = np.round(return_level(period, cdf_an, X), 3)
 
+    # getting conditional density ----------------------------------------------------------
     cl = mp.Pool(4)
     rp_cond_theta = cl.starmap(evaluate_stored_pdf, [[i, np.array([rp])] for i in range(env_probs.shape[0])])
     cl.close()
@@ -121,12 +122,12 @@ if __name__ == "__main__":
     f_theta_r_w0 = np.tile(0.0, nfull)
     f_theta_r_w0[env_probs.index] = f_theta_r
 
-    # write to files
+    # write to files -----------------------------------------------------------------------
     np.savetxt('/home/speersm/GitHub/environment-modelling/data/cond_dens.csv', f_theta_r_w0,
                delimiter='')
     np.savetxt('cond_dens.csv', f_theta_r_w0, delimiter=',')
 
-    # failure prob region
+    # failure prob region ------------------------------------------------------------------
     rc = rp
 
     fail_ps = np.empty(len(cond_dists))
