@@ -26,11 +26,10 @@ def compute_response_dist(s: list):
     loadEst.compute_kinematics()
     loadEst.compute_load()
     loadEst.compute_sea_state_max()
-    loadEst.compute_is_distribution(X=X)
-    loadEst.compute_density()
-    loadEst.kinematics = 0
+    loadEst.compute_pdf()
+    loadEst.compute_cdf()
+
     loadEst.max_series = 0
-    loadEst.load = 0
 
     # save to vector
     return s, loadEst
@@ -58,14 +57,14 @@ if __name__ == '__main__':
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
     # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, len(z_values)-deck_ind)))
     # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, len(z_values)-deck_ind)))
-    # c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
-    # c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
 
-    d = 43.15152
-    c = 0.6015152
-    b = 0.007739394
-    a = 0.00005939394
-    c_m = c_d = 101 - (a * z_values**3 + b * z_values**2 + c * z_values + d)
+    # d = 43.15152
+    # c = 0.6015152
+    # b = 0.007739394
+    # a = 0.00005939394
+    # c_m = c_d = 101 - (a * z_values**3 + b * z_values**2 + c * z_values + d)
 
     plt.subplot(1, 2, 1)
     plt.plot(z_values, c_m)
