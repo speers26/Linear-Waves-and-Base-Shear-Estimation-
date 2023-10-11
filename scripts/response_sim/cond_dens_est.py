@@ -130,12 +130,12 @@ if __name__ == "__main__":
     # failure prob region ------------------------------------------------------------------
     rc = rp
 
-    fail_ps = np.empty(len(cond_dists))
-    # for i_c, c in enumerate(cond_dists):
-    #     print(i_c)
-    #     fail_ps[i_c] = 1-cond_dists[i_c].eval_cdf(np.array([rc]), smooth=False)
-    #     # eval_pdf(rc, X, cond_dists[i_c].cdf)
-
+    # this is messy and could be tidied up -------------------------------------------------
+    cl = mp.Pool(4)
+    fail_ps = cl.starmap(evaluate_stored_cdf, [[i, np.array([rp])] for i in range(env_probs.shape[0])])
+    fail_ps = [[1-i] for i in fail_ps]
+    fail_ps = np.array(fail_ps).reshape(len(env_probs['dens']),)
+    cl.close()
     fail_ps_full = np.tile(0.0, nfull)
     fail_ps_full[env_probs.index] = fail_ps
 
