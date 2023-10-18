@@ -21,23 +21,6 @@ def return_level(period: int, cdf: np.ndarray, X: np.ndarray):
     return float(rp)
 
 
-# def eval_pdf(x: np.ndarray, mids: np.ndarray, pdf: np.ndarray):
-#     """evaulates the gived pdf at a point x by assigning the
-#     density at the closest defined point
-
-#     Args:
-#         x (np.ndarray): point to evaluate at
-#         mids (np.ndarray): points pdf is defined at
-#         pdf (np.ndarray): densities defined at mids
-
-#     Returns:
-#         float: density
-#     """
-#     abs_diffs = np.abs(mids-x)
-#     close_mid_ind = np.where(abs_diffs == np.min(abs_diffs))
-#     return pdf[close_mid_ind]
-
-
 def evaluate_stored_cdf(s: list, X: np.ndarray):
     """for parallelisation
 
