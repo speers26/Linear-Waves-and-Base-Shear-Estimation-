@@ -98,7 +98,8 @@ if __name__ == "__main__":
     cl.close()
 
     # rp_marg = np.tile(eval_pdf(rp, mids, f_pdf), len(cond_dists))
-    dens_quotient = (rp_cond_theta / np.sum(rp_cond_theta)).reshape(len(env_probs['dens']),)
+    rp_cond_theta = np.concatenate(rp_cond_theta, axis=0)
+    dens_quotient = (rp_cond_theta / np.sum(rp_cond_theta * env_probs['p']))
     f_theta_r = np.array(env_probs['dens']) * dens_quotient
     p_theta_r = np.array(env_probs['p']) * dens_quotient
 
