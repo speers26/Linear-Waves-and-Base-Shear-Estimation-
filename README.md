@@ -1,4 +1,4 @@
-# Linear Waves and Base Shear Estimation-
+# Linear Waves and Base Shear Estimation
 
 Repository for wavesim package. Allows for the simulation of short term wave variability for given sea-state conditions, and the estimation of resulting maximum base shear response distributions on stick structures.
 
