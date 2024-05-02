@@ -64,12 +64,12 @@ if __name__ == "__main__":
     period = 1000  # years
 
     # reading in conditioned distribution estimates
-    with open('scripts/response_sim/cond_dists.pkl', 'rb') as inp:
+    with open('cond_dists.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
     cond_dists = [c[1] for c in cond_dists]
 
     # reading in environment density
-    env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
+    env_probs = pd.read_csv('env_probs.csv')
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution ----------------------------------------
