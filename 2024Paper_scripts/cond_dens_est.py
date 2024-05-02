@@ -64,12 +64,12 @@ if __name__ == "__main__":
     period = 1000  # years
 
     # reading in conditioned distribution estimates
-    with open('cond_dists.pkl', 'rb') as inp:
+    with open('2024Paper_scripts/cond_dists.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
     cond_dists = [c[1] for c in cond_dists]
 
     # reading in environment density
-    env_probs = pd.read_csv('env_probs.csv')
+    env_probs = pd.read_csv('2024Paper_scripts/env_probs.csv')
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution ----------------------------------------
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     f_theta_r_w0[env_probs.index] = f_theta_r
 
     # write to file
-    np.savetxt('cond_dens.csv', f_theta_r_w0, delimiter=',')
+    np.savetxt('2024Paper_scripts/cond_dens.csv', f_theta_r_w0, delimiter=',')
 
     # failure prob region ------------------------------------------------------------------
     rc = rp
@@ -121,4 +121,4 @@ if __name__ == "__main__":
     fail_ps_full[env_probs.index] = fail_ps
 
     # write to file
-    np.savetxt('fail_ps.csv', fail_ps_full, delimiter='')
+    np.savetxt('2024Paper_scripts/fail_ps.csv', fail_ps_full, delimiter='')

@@ -37,7 +37,7 @@ def compute_response_dist(s: list):
 
 if __name__ == '__main__':
 
-    env_probs = pd.read_csv('env_probs.csv')
+    env_probs = pd.read_csv('2024Paper_scripts/env_probs.csv')
     env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
@@ -79,4 +79,4 @@ if __name__ == '__main__':
 
     # pickle dump
 
-    save_object(cond_dists, 'scripts/response_sim/cond_dists.pkl')
+    save_object(cond_dists, '2024Paper_scripts/cond_dists.pkl')
