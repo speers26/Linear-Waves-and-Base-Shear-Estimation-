@@ -37,7 +37,7 @@ def compute_response_dist(s: list):
 
 if __name__ == '__main__':
 
-    env_probs = pd.read_csv('scripts/response_sim/env_probs.csv')
+    env_probs = pd.read_csv('env_probs.csv')
     env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
