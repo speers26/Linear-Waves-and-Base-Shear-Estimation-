@@ -73,8 +73,7 @@ if __name__ == "__main__":
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution ----------------------------------------
-    X = np.linspace(30, 60, num=1000) # for positive
-   # X = np.linspace(0, 10, num+=1000)
+    X = np.linspace(0, 60, num=1000)
 
     cl = mp.Pool(4)
     cdf_list = cl.starmap(evaluate_stored_cdf, [[i, X] for i in range(env_probs.shape[0])])
@@ -108,8 +107,6 @@ if __name__ == "__main__":
     f_theta_r_w0[env_probs.index] = f_theta_r
 
     # write to files -----------------------------------------------------------------------
-    np.savetxt('/home/speersm/GitHub/environment-modelling/data/cond_dens.csv', f_theta_r_w0,
-               delimiter='')
     np.savetxt('cond_dens.csv', f_theta_r_w0, delimiter=',')
 
     # failure prob region ------------------------------------------------------------------
@@ -124,4 +121,5 @@ if __name__ == "__main__":
     fail_ps_full = np.tile(0.0, nfull)
     fail_ps_full[env_probs.index] = fail_ps
 
-    np.savetxt('/home/speersm/GitHub/environment-modelling/data/fail_ps.csv', fail_ps_full, delimiter='')
+    # write to file ------------------------------------------------------------------------
+    np.savetxt('fail_ps.csv', fail_ps_full, delimiter='')
