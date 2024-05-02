@@ -73,7 +73,7 @@ if __name__ == "__main__":
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution ----------------------------------------
-    X = np.linspace(0, 60, num=1000) # this needs to be selected carefully
+    X = np.linspace(0, 60, num=1000)  # this needs to be selected carefully
 
     cl = mp.Pool(4)
     cdf_list = cl.starmap(evaluate_stored_cdf, [[i, X] for i in range(env_probs.shape[0])])
@@ -120,5 +120,5 @@ if __name__ == "__main__":
     fail_ps_full = np.tile(0.0, nfull)
     fail_ps_full[env_probs.index] = fail_ps
 
-    # write to file 
+    # write to file
     np.savetxt('fail_ps.csv', fail_ps_full, delimiter='')
