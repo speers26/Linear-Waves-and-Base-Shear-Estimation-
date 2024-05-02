@@ -58,7 +58,7 @@ def evaluate_stored_pdf(s: list, X: np.ndarray):
 if __name__ == "__main__":
 
     # average number of storms per year
-    lamda = 100
+    lamda = 73
 
     # return period
     period = 1000  # years
@@ -73,7 +73,8 @@ if __name__ == "__main__":
     nfull = len(env_probs['p'])
 
     # getting marginal 3 hour response distribution ----------------------------------------
-    X = np.linspace(0, 10, num=1000)
+    X = np.linspace(30, 60, num=1000) # for positive
+   # X = np.linspace(0, 10, num+=1000)
 
     cl = mp.Pool(4)
     cdf_list = cl.starmap(evaluate_stored_cdf, [[i, X] for i in range(env_probs.shape[0])])
