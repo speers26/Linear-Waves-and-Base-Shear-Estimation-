@@ -20,7 +20,8 @@ class SeaState():
         T_det (np.ndarray): wave period (for deterministic waves)
         spctr_type (AbstractSpectrum): type of wave spectra (for random waves)
         theta (float): direction of propogation of wave (for deterministc waves)
-        current (float): vector of current (+ve or -ve with direction of propogation of wave)
+        current (float): magnitude of current
+        current_incidence (float): angle of incidence between direction of motion and current [radians]
         g (float): acceleration due to gravity
         hours (float): length of each sea state [hours]
     """
@@ -31,6 +32,7 @@ class SeaState():
     spctr_type: AbstractSpectrum = None
     theta: float = 0
     current: float = 0
+    current_incidence: float = 0
     g: float = 9.81
     hours: float = 3.00
 
