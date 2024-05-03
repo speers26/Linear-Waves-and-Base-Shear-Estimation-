@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 a = np.array([25])
 depth = 100
 cond = False
-ss1 = spctr.SeaState(hs=np.array([15]), tp=np.array([10]), spctr_type=spctr.Jonswap)
+ss1 = spctr.SeaState(hs=np.array([15]), tp=np.array([10]), current=0.0, spctr_type=spctr.Jonswap)
 
 np.random.seed(1)
 
