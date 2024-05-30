@@ -290,10 +290,10 @@ class LinearKin(AbstractWaveKin):
                 g4 = (B-A*i) * (2*np.pi*self.spctr[s].frequency) * qf2
                 g5 = (-A-B*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf2
 
-                self.u[:, i_z, s] = np.real(fftshift(fft(g2))) * (z_init < self.eta[:, s])  # * (z_init < 0)
-                self.du[:, i_z, s] = np.real(fftshift(fft(g3))) * (z_init < self.eta[:, s])  # * (z_init < 0)
-                self.w[:, i_z, s] = np.real(fftshift(fft(g4))) * (z_init < self.eta[:, s])  # * (z_init < 0)
-                self.dw[:, i_z, s] = np.real(fftshift(fft(g5))) * (z_init < self.eta[:, s])  # * (z_init < 0)
+                self.u[:, i_z, s] = np.real(fftshift(fft(g2))) * (z_init < self.eta[:, s]) + np.cos(self.sea_state.current_incidence) * self.sea_state.current
+                self.du[:, i_z, s] = np.real(fftshift(fft(g3))) * (z_init < self.eta[:, s])
+                self.w[:, i_z, s] = np.real(fftshift(fft(g4))) * (z_init < self.eta[:, s])
+                self.dw[:, i_z, s] = np.real(fftshift(fft(g5))) * (z_init < self.eta[:, s])
 
         return self
 
