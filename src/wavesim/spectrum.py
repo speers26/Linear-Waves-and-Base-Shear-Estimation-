@@ -16,6 +16,7 @@ class SeaState():
     Args:
         hs (np.ndarray): significant wave height, [m] (for random waves)
         tp (np.ndarray): significant wave period [s] (for random waves)
+        theta_peak (np.ndarray): peak direction of wave [radians] (for random waves)
         H_det (np.ndarray): wave height (for deterministic waves)
         T_det (np.ndarray): wave period (for deterministic waves)
         spctr_type (AbstractSpectrum): type of wave spectra (for random waves)
@@ -27,6 +28,7 @@ class SeaState():
     """
     hs: np.ndarray = None
     tp: np.ndarray = None
+    theta_peak: np.ndarray = None
     T_det: np.ndarray = None
     H_det: np.ndarray = None
     spctr_type: AbstractSpectrum = None

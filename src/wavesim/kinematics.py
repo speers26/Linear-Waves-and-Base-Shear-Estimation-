@@ -60,6 +60,128 @@ def spatial_random_wave(om_range: np.ndarray, phi_range: np.ndarray, Dr_spctrm: 
     return eta
 
 
+# Directional Spectrum
+
+# nT = [same as time version] nTheta = 32 Theta = np.linspace(from = 0, by=11.25, to=348.75)
+
+# Defines S = [nT, nTheta]
+
+# S wrapped normal distribution in Theta dimension producted with JONSWAP in Freq/Dimension (Code from Jake)
+
+# A, B = randn( nT, nTheta) * S * dtheta * dt
+
+# This is bigger than time only e.g. nTheta=1
+
+# Adjust A, B as time case for conditional waves (no change)
+
+# Z = A + iB
+
+# k_x = cos()/sin stuff
+
+# k = k_x * x + k_y * y
+
+# Z = sum(exp(1i * k) .* Z,2)
+
+# eta = fftshift(real(fft(Z,Spec.nf,1)),1
+
+@dataclass 
+class SpatialLinearKin():
+    """_summary_
+
+    Returns:
+        _type_: _description_
+    """
+
+    sample_f: float
+    period: float
+    x_values: np.ndarray
+    y_values: np.ndarray
+    z_values: np.ndarray
+    sea_state: SeaState
+
+    @property
+    def depth(self) -> float:
+        """returns water depth as the minimun of z_values
+
+        Returns:
+            float: depth of sea bed
+        """
+        return -np.min(self.z_values)
+
+    @property
+    def nz(self) -> int:
+        """retuns number of z values
+
+        Returns:
+            int: number of depth values to evaluate at
+        """
+        return len(self.z_values)
+
+    @property
+    def dz(self) -> float:
+        """returns steps in z-values
+
+        Returns:
+            float: depth step size (homogenous)
+        """
+        return self.z_values[1] - self.z_values[0]
+
+    @property
+    def ny(self) -> int:
+        """retuns number of y values
+
+        Returns:
+            int: number of y values to evaluate at
+        """
+        return len(self.y_values)
+
+    @property
+    def dy(self) -> float:
+        """returns steps in y-values
+
+        Returns:
+            float: y step size (homogenous)
+        """
+        return self.y_values[1] - self.y_values[0]
+
+    @property
+    def nx(self) -> int:
+        """retuns number of x values
+
+        Returns:
+            int: number of x values to evaluate at
+        """
+        return len(self.x_values)
+
+    @property
+    def dx(self) -> float:
+        """returns steps in x-values
+
+        Returns:
+            float: x step size (homogenous)
+        """
+        return self.x_values[1] - self.x_values[0]
+
+    @property
+    def nt(self) -> int:
+        """returns number of time points
+
+        Returns:
+            int: number of time points to evaluate at
+        """
+        return int(np.floor(self.period*self.sample_f))  # number of time points to evaluate
+
+    @property
+    def t_values(self) -> np.ndarray:
+        """returns the t_values to evaluate at
+
+        Returns:
+            np.ndarray: t_values
+        """
+        dt = 1/self.sample_f
+        return np.linspace(-self.nt/2, self.nt/2 - 1, int(self.nt)) * dt  # centering time around 0
+
+
 @dataclass
 class AbstractWaveKin(ABC):
     """ General wave kinematics class
