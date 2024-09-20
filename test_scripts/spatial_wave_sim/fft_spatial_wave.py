@@ -35,13 +35,13 @@ class FrqDrcSpectrum():
     omega_p: float
     phi_m: float
 
-    alpha = 0.7
+    alpha = 0.7 * 2.5**2
     gamma = 3.3  # make larger to decrease width of Jonswap
     r = 5.
     beta = 4.
     nu = 2.7
-    sig_l = 0.55  # make smaller to decrease directional spreading
-    sig_r = 0.26  # make zero to decrease directional spreading
+    sig_l = 0.15  # make smaller to decrease directional spreading
+    sig_r = 0 #0.26  # make zero to decrease directional spreading
 
     def compute_spectrum(self) -> np.ndarray:
         """returns frequency direction spectrum for a single angular frequency and direction.
@@ -55,7 +55,7 @@ class FrqDrcSpectrum():
         for i_om, om in enumerate(self.omega):
             for i_phi, phi in enumerate(self.phi):
                 S[i_om, i_phi] = frq_dr_spctrm(om, phi, self.alpha, self.omega_p, self.gamma, self.r, self.phi_m, self.beta, self.nu, self.sig_l, self.sig_r)
-
+        
         return S
 
 @dataclass 
@@ -251,11 +251,52 @@ class SpatialLinearKin():
         """
 
         # get directional spectrum values - will vectorise this later
-        S = self.spectrum.compute_spectrum()
+        S = self.spectrum.compute_spectrum() * self.domega * self.dphi
 
         # get random coefficients
-        A = np.random.randn(self.nt, self.nphi) * S * self.domega * self.dphi
-        B = np.random.randn(self.nt, self.nphi) * S * self.domega * self.dphi
+        A = np.random.randn(self.nt, self.nphi) * S 
+        B = np.random.randn(self.nt, self.nphi) * S 
+
+# %% Conditional Wave simulation
+
+#             if CndFlg
+
+#                 %Adjust A& B to
+
+#                 sum_A = sum(sum(A,1),2); %sum over frequencies and theta
+
+#                 % \sum_{i} A_{i}*\omega_{i} (over frequency)
+
+#                 sum_Bf = sum(sum(B .* Spec.f, 1), 2);
+
+#                 Spec = Spec.SpectralMoment([0,2]);
+
+#                 % \lambda^{2}
+
+#                 T_2sq = Spec.Moment.M0 ./ Spec.Moment.M2; % sample T2
+
+#                 A=A + (C_0 - sum_A) .* Spec.S ./ Spec.Moment.M0;
+
+#                 B=B - (T_2sq .* sum_Bf) .* (Spec.S .* fSim) ./ Spec.Moment.M0;
+
+#             end
+
+ 
+        if cond:
+
+            cond_crest = 20
+            m0 = np.sum(S)
+            m2 = np.sum(S * (self.omega_values.reshape(60, 1)**2)) / (2 * np.pi)**2
+            t2sqr = m0 / m2
+
+            c = S
+            d = S * self.omega_values 
+
+            Q = (cond_crest - np.sum(A))/np.sum(c)
+            R = (0 - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
+
+            A = A + Q * c
+            B = B + R * d
 
         i = complex(0, 1)
         Z = A + i*B
@@ -266,9 +307,9 @@ class SpatialLinearKin():
         ky = np.outer(np.sin(2*np.pi*self.phi_values), k)
 
         # do fft
-        k_star = np.outer(self.x_values, kx) + np.outer(self.y_values, ky)
-        Z_star = np.sum(np.exp(i * k_star) * np.ravel(Z), 1)
-        eta = np.fft.fftshift(np.real(np.fft.fft(Z, self.nt, 1)), 1)
+        k_vec = np.einsum('i,jk->ijk', self.x_values, kx) + np.einsum('i,jk->ijk', self.y_values, ky)
+        Z_vec = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, 32, 60), 1)
+        eta = np.fft.fftshift(np.real(np.fft.fft(Z_vec, self.nt, 1)), 1)
 
         return eta
 
@@ -309,7 +350,7 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float,
         sig_r (float): angular width shape
 
     Returns:
-        dens (np.ndarray): freq direction spectrum [] (??, ??)
+        dens (np.ndarray): freq direction spectrum 
     """
     dens = sprd_fnc(omega, phi, om_p, phi_m, beta, nu, sig_l, sig_r) * d_jonswap(omega, alpha, om_p, gamma, r)
 
@@ -401,21 +442,30 @@ if __name__ == "__main__":
     # define parameters
     sample_f = 1.00
     period = 60
-    x_range = np.linspace(-100, 100, 100)
-    y_range = np.linspace(-100, 100, 100)
-    z_range = np.linspace(-100, 100, 100)
+    x_range = np.linspace(-100, 100, 20)
+    y_range = np.linspace(-100, 100, 20)
+    z_range = np.linspace(-100, 100, 20)
+    x_grid, y_grid = np.meshgrid(x_range, y_range)
     tp = 10
-    phi_m = 0
+    phi_m = np.pi
 
     # create instance
-    spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_range, y_values=y_range, z_values=z_range, tp=tp, phi_m=phi_m)
+    spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, tp=tp, phi_m=phi_m)
 
     # get elevation
     eta = spatial_wave.compute_elevation(cond=False)
 
-    # plot elevation on 3d plot
+    # plot elevation on 3d plot at 6 different time plots
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(X=x_range, Y=y_range, Z=eta)
+    for i in range(5*6):
+        plt.subplot(5, 6, i+1)
+        plt.scatter(x_grid.flatten(), y_grid.flatten(), c=eta[:,i])
+        plt.colorbar()
     plt.show()
+
+    # # plot elevation on 3d plot
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,0].reshape(20,20))
+    # plt.show()
 
