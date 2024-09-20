@@ -97,7 +97,9 @@ class SpatialLinearKin():
     x_values: np.ndarray
     y_values: np.ndarray
     z_values: np.ndarray
-    sea_state: SeaState
+    hs: float
+    tp: float
+    theta_p: float
 
     @property
     def depth(self) -> float:
