@@ -253,8 +253,39 @@ class SpatialLinearKin():
         # get directional spectrum values - will vectorise this later
         S = self.spectrum.compute_spectrum()
 
+        # get random coefficients
         A = np.random.randn(self.nt, self.nphi) * S * self.domega * self.dphi
         B = np.random.randn(self.nt, self.nphi) * S * self.domega * self.dphi
+
+        i = complex(0, 1)
+        Z = A + i*B
+
+        # get wave numbers
+        k = alt_solve_dispersion(self.omega_values, self.depth)
+        kx = np.outer(np.cos(2*np.pi*self.phi_values), k)
+        ky = np.outer(np.sin(2*np.pi*self.phi_values), k)
+
+        # do fft
+        k_star = np.outer(self.x_values, kx) + np.outer(self.y_values, ky)
+        Z_star = np.sum(np.exp(i * k_star) * np.ravel(Z), 1)
+        eta = np.fft.fftshift(np.real(np.fft.fft(Z, self.nt, 1)), 1)
+
+        return eta
+
+
+        # get time values
+        print("pause")
+
+
+
+# k_x = cos()/sin stuff
+
+# k = k_x * x + k_y * y
+
+# Z = sum(exp(1i * k) .* Z,2)
+
+# eta = fftshift(real(fft(Z,Spec.nf,1)),1
+
 
         return A, B
 
@@ -284,39 +315,27 @@ def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float,
 
     return dens
 
+def alt_solve_dispersion(omega: np.ndarray, d: float) -> float:
+    """uses method of (Guo, 2002) to solve dispersion relation for k
 
-def solve_dispersion(omega: float, h: float, upp: float):
-    """returns wave number k for given angular frequency omega
     Args:
-        omega (float): angular frequency [s^-1]
-        h (float): water depth [metres]
-        upp (float): upper limit of interval to find k over []
+        omega (np.ndarray): angular frequency [s^-1]
+        d (float): water depth [m]
 
     Returns:
         k (float): wave number [m^-1]
     """
 
-    k = optimize.bisect(f=dispersion_diff, a=1e-7, b=upp, args=(h, omega))
+    g = 9.81
+    beta = 2.4901
+
+    x = d * omega / np.sqrt(g * d)
+
+    y = x**2 * (1 - np.exp(-x**beta))**(-1/beta)
+
+    k = y / d
 
     return k
-
-
-def dispersion_diff(k: float, h: float, omega: float):
-    """function to optimise in solve_dispersion
-    Args:
-        k (float): wave number
-        h (float): water depth
-        omega (float): angular frequency
-
-    Returns:
-        diff (float): difference to find zero in solve_dispersion
-    """
-    g = 9.81
-
-    diff = omega ** 2 - g * k * np.tanh(k * h)
-
-    return diff
-
 
 def sprd_fnc(omega: float, phi: float, om_p: float, phi_m: float, beta: float, nu: float,
              sig_l: float, sig_r: float):
@@ -391,8 +410,12 @@ if __name__ == "__main__":
     # create instance
     spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_range, y_values=y_range, z_values=z_range, tp=tp, phi_m=phi_m)
 
-    # compute elevation
-    A, B = spatial_wave.compute_elevation(cond=False)
+    # get elevation
+    eta = spatial_wave.compute_elevation(cond=False)
 
-    # print(A, B)
-    print("done")
+    # plot elevation on 3d plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(X=x_range, Y=y_range, Z=eta)
+    plt.show()
+
