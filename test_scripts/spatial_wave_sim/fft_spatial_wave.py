@@ -2,30 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 from dataclasses import dataclass
-
-# Directional Spectrum
-
-# nT = [same as time version] nTheta = 32 Theta = np.linspace(from = 0, by=11.25, to=348.75)
-
-# Defines S = [nT, nTheta]
-
-# S wrapped normal distribution in Theta dimension producted with JONSWAP in Freq/Dimension (Code from Jake)
-
-# A, B = randn( nT, nTheta) * S * dtheta * dt
-
-# This is bigger than time only e.g. nTheta=1
-
-# Adjust A, B as time case for conditional waves (no change)
-
-# Z = A + iB
-
-# k_x = cos()/sin stuff
-
-# k = k_x * x + k_y * y
-
-# Z = sum(exp(1i * k) .* Z,2)
-
-# eta = fftshift(real(fft(Z,Spec.nf,1)),1
+import os
 
 @dataclass 
 class FrqDrcSpectrum():
@@ -40,7 +17,7 @@ class FrqDrcSpectrum():
     r = 5.
     beta = 4.
     nu = 2.7
-    sig_l = 0.15  # make smaller to decrease directional spreading
+    sig_l = 0.05  # make smaller to decrease directional spreading
     sig_r = 0 #0.26  # make zero to decrease directional spreading
 
     def compute_spectrum(self) -> np.ndarray:
@@ -253,6 +230,7 @@ class SpatialLinearKin():
         # get directional spectrum values - will vectorise this later
         S = self.spectrum.compute_spectrum() * self.domega * self.dphi
 
+        np.random.seed(0)
         # get random coefficients
         A = np.random.randn(self.nt, self.nphi) * S 
         B = np.random.randn(self.nt, self.nphi) * S 
@@ -312,23 +290,6 @@ class SpatialLinearKin():
         eta = np.fft.fftshift(np.real(np.fft.fft(Z_vec, self.nt, 1)), 1)
 
         return eta
-
-
-        # get time values
-        print("pause")
-
-
-
-# k_x = cos()/sin stuff
-
-# k = k_x * x + k_y * y
-
-# Z = sum(exp(1i * k) .* Z,2)
-
-# eta = fftshift(real(fft(Z,Spec.nf,1)),1
-
-
-        return A, B
 
 
 def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float, gamma: float,
@@ -442,8 +403,8 @@ if __name__ == "__main__":
     # define parameters
     sample_f = 1.00
     period = 60
-    x_range = np.linspace(-100, 100, 20)
-    y_range = np.linspace(-100, 100, 20)
+    x_range = np.linspace(-100, 100, 40)
+    y_range = np.linspace(-100, 100, 40)
     z_range = np.linspace(-100, 100, 20)
     x_grid, y_grid = np.meshgrid(x_range, y_range)
     tp = 10
@@ -456,16 +417,29 @@ if __name__ == "__main__":
     eta = spatial_wave.compute_elevation(cond=False)
 
     # plot elevation on 3d plot at 6 different time plots
-    fig = plt.figure()
-    for i in range(5*6):
-        plt.subplot(5, 6, i+1)
-        plt.scatter(x_grid.flatten(), y_grid.flatten(), c=eta[:,i])
-        plt.colorbar()
-    plt.show()
-
-    # # plot elevation on 3d plot
     # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,0].reshape(20,20))
+    # for i in range(5*6):
+    #     plt.subplot(5, 6, i+1)
+    #     plt.scatter(x_grid.flatten(), y_grid.flatten(), c=eta[:,i])
+    #     plt.colorbar()
     # plt.show()
 
+    # make gif of 3d wave evolution over time usign 3d plot
+    for i in range(60):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(40,40))
+        ax.set_zlim(-7, 7)
+        plt.title(f"Time: {i}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.savefig(f"wave_{i:03}.png")
+        plt.close()
+
+    # use pngs to make gif
+    os.system('convert -delay 20 -loop 0 wave_*.png wave.gif')
+
+    # delete pngs
+    os.system('rm wave_*.png')
+
+   
