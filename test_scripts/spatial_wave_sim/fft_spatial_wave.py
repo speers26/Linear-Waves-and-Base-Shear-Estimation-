@@ -17,8 +17,8 @@ class FrqDrcSpectrum():
     r = 5.
     beta = 4.
     nu = 2.7
-    sig_l = 0.05  # make smaller to decrease directional spreading
-    sig_r = 0 #0.26  # make zero to decrease directional spreading
+    sig_l = 0.55  # make smaller to decrease directional spreading
+    sig_r = 0.26  # make zero to decrease directional spreading
 
     def compute_spectrum(self) -> np.ndarray:
         """returns frequency direction spectrum for a single angular frequency and direction.
@@ -230,7 +230,6 @@ class SpatialLinearKin():
         # get directional spectrum values - will vectorise this later
         S = self.spectrum.compute_spectrum() * self.domega * self.dphi
 
-        np.random.seed(0)
         # get random coefficients
         A = np.random.randn(self.nt, self.nphi) * S 
         B = np.random.randn(self.nt, self.nphi) * S 
@@ -264,7 +263,7 @@ class SpatialLinearKin():
 
             cond_crest = 20
             m0 = np.sum(S)
-            m2 = np.sum(S * (self.omega_values.reshape(60, 1)**2)) / (2 * np.pi)**2
+            m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2 * np.pi)**2
             t2sqr = m0 / m2
 
             c = S
@@ -286,7 +285,7 @@ class SpatialLinearKin():
 
         # do fft
         k_vec = np.einsum('i,jk->ijk', self.x_values, kx) + np.einsum('i,jk->ijk', self.y_values, ky)
-        Z_vec = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, 32, 60), 1)
+        Z_vec = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, self.nphi, self.nt), 1)
         eta = np.fft.fftshift(np.real(np.fft.fft(Z_vec, self.nt, 1)), 1)
 
         return eta
@@ -400,8 +399,10 @@ def d_jonswap(omega: float, alpha: float, om_p: float, gamma: float, r: float):
 
 if __name__ == "__main__":
 
+    np.random.seed(0)
+
     # define parameters
-    sample_f = 1.00
+    sample_f = 4.00
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
@@ -416,30 +417,25 @@ if __name__ == "__main__":
     # get elevation
     eta = spatial_wave.compute_elevation(cond=False)
 
-    # plot elevation on 3d plot at 6 different time plots
-    # fig = plt.figure()
-    # for i in range(5*6):
-    #     plt.subplot(5, 6, i+1)
-    #     plt.scatter(x_grid.flatten(), y_grid.flatten(), c=eta[:,i])
-    #     plt.colorbar()
-    # plt.show()
-
     # make gif of 3d wave evolution over time usign 3d plot
-    for i in range(60):
+    path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
+    os.system(f'mkdir -p {path}temp/')
+    for i in range(spatial_wave.nt):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(40,40))
+        ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
         ax.set_zlim(-7, 7)
         plt.title(f"Time: {i}")
         plt.xlabel("x")
         plt.ylabel("y")
-        plt.savefig(f"wave_{i:03}.png")
+        plt.savefig(f"{path}temp/wave_{i:03}.png")
         plt.close()
 
     # use pngs to make gif
-    os.system('convert -delay 20 -loop 0 wave_*.png wave.gif')
+    os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
 
     # delete pngs
-    os.system('rm wave_*.png')
+    os.system(f'rm {path}temp/*.png')
+    os.system(f'rmdir {path}temp/')
 
    
