@@ -17,14 +17,14 @@ class FrqDrcSpectrum():
     r = 5.
     beta = 4.
     nu = 2.7
-    sig_l = 0.55  # make smaller to decrease directional spreading
-    sig_r = 0.26  # make zero to decrease directional spreading
+    sig_l = 0.05  # make smaller to decrease directional spreading
+    sig_r = 0 # 0.26  # make zero to decrease directional spreading
 
     def compute_spectrum(self) -> np.ndarray:
         """returns frequency direction spectrum for a single angular frequency and direction.
 
         Returns:
-            dens (np.ndarray): freq direction spectrum [] (??, ??)
+            dens (np.ndarray): freq direction spectrum 
         """
 
         S = np.empty((len(self.omega), len(self.phi)))
@@ -221,7 +221,7 @@ class SpatialLinearKin():
         return FrqDrcSpectrum(omega=self.omega_values, phi=self.phi_values, omega_p=self.omega_p, phi_m=self.phi_m)
 
 
-    def compute_elevation(self, cond:bool) -> np.ndarray:
+    def compute_elevation(self, cond:bool, cond_crest:float) -> np.ndarray:
         """
         returns random wave surface with frequency direction spectrum defined below
 
@@ -231,8 +231,8 @@ class SpatialLinearKin():
         S = self.spectrum.compute_spectrum() * self.domega * self.dphi
 
         # get random coefficients
-        A = np.random.randn(self.nt, self.nphi) * S 
-        B = np.random.randn(self.nt, self.nphi) * S 
+        A = np.random.randn(self.nt, self.nphi) * S
+        B = np.random.randn(self.nt, self.nphi) * S
 
 # %% Conditional Wave simulation
 
@@ -258,22 +258,22 @@ class SpatialLinearKin():
 
 #             end
 
- 
         if cond:
 
-            cond_crest = 20
+            # Tp: 10
+        #    T1: 8.3885
+        #    T2: 7.9211
+
             m0 = np.sum(S)
-            m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2 * np.pi)**2
+            m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2*np.pi)**2
             t2sqr = m0 / m2
+            t2 = np.sqrt(t2sqr)
 
-            c = S
-            d = S * self.omega_values 
+            sum_A = np.sum(A)
+            sum_Bomega = np.sum(B * self.omega_values.reshape(self.nt, 1))
 
-            Q = (cond_crest - np.sum(A))/np.sum(c)
-            R = (0 - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
-
-            A = A + Q * c
-            B = B + R * d
+            A = A + (cond_crest - sum_A) * S / m0
+            B = B - (t2sqr * sum_Bomega) * (S * self.omega_values.reshape(self.nt, 1)) / m0
 
         i = complex(0, 1)
         Z = A + i*B
@@ -402,7 +402,7 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # define parameters
-    sample_f = 4.00
+    sample_f = 1.00
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
@@ -415,7 +415,8 @@ if __name__ == "__main__":
     spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, tp=tp, phi_m=phi_m)
 
     # get elevation
-    eta = spatial_wave.compute_elevation(cond=False)
+    c = 100
+    eta = spatial_wave.compute_elevation(cond=True, cond_crest=c)
 
     # make gif of 3d wave evolution over time usign 3d plot
     path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
@@ -424,7 +425,7 @@ if __name__ == "__main__":
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
-        ax.set_zlim(-7, 7)
+        ax.set_zlim(-7, c+5)
         plt.title(f"Time: {i}")
         plt.xlabel("x")
         plt.ylabel("y")
