@@ -431,7 +431,7 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # define parameters
-    sample_f = 4.00
+    sample_f = 1.00
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
@@ -445,11 +445,40 @@ if __name__ == "__main__":
     spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, hs=hs, tp=tp, phi_m=phi_m)
 
     # get elevation
-    c = 40
+    c = 50
     eta, u, du, w, dw = spatial_wave.compute_kinematics(cond=True, cond_crest=c)
 
     # plot a slice of the wave kinematics at time 0
+    # create grid
     zt_grid = np.meshgrid(z_range, spatial_wave.t_values)
+
+    # # create a mask where z values are above the eta line
+    # mask = zt_grid[0].flatten() > np.tile(eta[779, :], 100).reshape(spatial_wave.nt, spatial_wave.nz).flatten()
+
+    # # create color array
+    # colors_u = np.where(mask, 'white', u[779, :, :].flatten())
+    # colors_du = np.where(mask, 'white', du[779, :, :].flatten())
+    # colors_w = np.where(mask, 'white', w[779, :, :].flatten())
+    # colors_dw = np.where(mask, 'white', dw[779, :, :].flatten())
+
+    # import matplotlib.colors as mcolors
+
+    # # create a colormap
+    # cmap = plt.get_cmap('viridis')
+
+    # # set the color for NaN values
+    # cmap.set_bad(color='white')
+
+    # # create a Normalize instance
+    # norm = mcolors.Normalize(vmin=u.min(), vmax=u.max())
+
+    # # replace 'white' with NaN in the color arrays
+    # colors_u = np.where(mask, np.nan, u[779, :, :].flatten())
+    # colors_du = np.where(mask, np.nan, du[779, :, :].flatten())
+    # colors_w = np.where(mask, np.nan, w[779, :, :].flatten())
+    # colors_dw = np.where(mask, np.nan, dw[779, :, :].flatten())
+
+    # plot
     plt.figure()
     plt.subplot(2, 2, 1)
     plt.plot(spatial_wave.t_values, eta[779,:])
@@ -474,7 +503,7 @@ if __name__ == "__main__":
     plt.xlabel("t")
     plt.ylabel("z")
     plt.colorbar()
-    
+
     plt.subplot(2, 2, 4)
     plt.plot(spatial_wave.t_values, eta[779,:])
     plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=dw[779, :, :].flatten())
@@ -484,22 +513,27 @@ if __name__ == "__main__":
     plt.colorbar()
     plt.show()
 
+    # save figure
+    path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
+    save_path = path + 'wave_kinematics.png'
+    plt.savefig(save_path)
+    
     # make gif of 3d wave evolution over time usign 3d plot
-    # path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
-    # os.system(f'mkdir -p {path}temp/')
-    # for i in range(spatial_wave.nt):
-    #     fig = plt.figure()
-    #     ax = fig.add_subplot(111, projection='3d')
-    #     ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
-    #     ax.set_zlim(-7, c+5)
-    #     plt.title(f"Time: {i}")
-    #     plt.xlabel("x")
-    #     plt.ylabel("y")
-    #     plt.savefig(f"{path}temp/wave_{i:03}.png")
-    #     plt.close()
+    path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
+    os.system(f'mkdir -p {path}temp/')
+    for i in range(spatial_wave.nt):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
+        ax.set_zlim(-7, c+5)
+        plt.title(f"Time: {i}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.savefig(f"{path}temp/wave_{i:03}.png")
+        plt.close()
 
-    # # use pngs to make gif
-    # os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
+    # use pngs to make gif
+    os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
 
     # # delete pngs
     # os.system(f'rm {path}temp/*.png')
