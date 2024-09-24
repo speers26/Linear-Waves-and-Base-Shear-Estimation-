@@ -271,6 +271,9 @@ class SpatialLinearKin():
         # compute kinematics
         d = self.depth
         u = np.empty((self.nx, self.nt, self.nz))
+        w = np.empty((self.nx, self.nt, self.nz))
+        du = np.empty((self.nx, self.nt, self.nz))
+        dw = np.empty((self.nx, self.nt, self.nz))
         for i_z, z in enumerate(self.z_values):
 
             z_init = z
@@ -285,9 +288,25 @@ class SpatialLinearKin():
             qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
             qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1
 
-            Z_vec2 = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, self.nphi, self.nt) 
+            Z2 = A + B*i
+            Z_vec2 = np.sum(np.exp(i * k_vec) * np.transpose(Z2).reshape(1, self.nphi, self.nt) 
             * self.omega_values.reshape(1, 1, self.nt) * qf1.reshape(1, 1, self.nt), 1)
             u[:, :, i_z] = np.fft.fftshift(np.real(np.fft.fft(Z_vec2, self.nt, 1)), 1) * (z_init < eta)
+
+            Z3 = B - A*i
+            Z_vec3 = np.sum(np.exp(i * k_vec) * np.transpose(Z3).reshape(1, self.nphi, self.nt)
+            * (self.omega_values.reshape(1, 1, self.nt)**2) * qf1.reshape(1, 1, self.nt), 1)
+            du[:, :, i_z] = np.fft.fftshift(np.real(np.fft.fft(Z_vec3, self.nt, 1)), 1) * (z_init < eta)
+
+            Z4 = B - A*i
+            Z_vec4 = np.sum(np.exp(i * k_vec) * np.transpose(Z4).reshape(1, self.nphi, self.nt)
+            * self.omega_values.reshape(1, 1, self.nt) * qf2.reshape(1, 1, self.nt), 1)
+            w[:, :, i_z] = np.fft.fftshift(np.real(np.fft.fft(Z_vec4, self.nt, 1)), 1) * (z_init < eta)
+
+            Z5 = -A - B*i
+            Z_vec5 = np.sum(np.exp(i * k_vec) * np.transpose(Z5).reshape(1, self.nphi, self.nt)
+            * (self.omega_values.reshape(1, 1, self.nt)**2) * qf2.reshape(1, 1, self.nt), 1)
+            dw[:, :, i_z] = np.fft.fftshift(np.real(np.fft.fft(Z_vec5, self.nt, 1)), 1) * (z_init < eta)
 
             # g3 = (B-A*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf1
             # g4 = (B-A*i) * (2*np.pi*self.spctr[s].frequency) * qf2
@@ -298,7 +317,7 @@ class SpatialLinearKin():
             # self.w[:, i_z, s] = np.real(fftshift(fft(g4))) * (z_init < self.eta[:, s])
             # self.dw[:, i_z, s] = np.real(fftshift(fft(g5))) * (z_init < self.eta[:, s])
 
-        return eta, u
+        return eta, u, du, w, dw
 
 
 def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float, gamma: float,
@@ -427,13 +446,42 @@ if __name__ == "__main__":
 
     # get elevation
     c = 40
-    eta, u = spatial_wave.compute_kinematics(cond=True, cond_crest=c)
+    eta, u, du, w, dw = spatial_wave.compute_kinematics(cond=True, cond_crest=c)
 
     # plot a slice of the wave kinematics at time 0
     zt_grid = np.meshgrid(z_range, spatial_wave.t_values)
     plt.figure()
+    plt.subplot(2, 2, 1)
     plt.plot(spatial_wave.t_values, eta[779,:])
     plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=u[779, :, :].flatten())
+    plt.title("u")
+    plt.xlabel("t")
+    plt.ylabel("z")
+    plt.colorbar()
+
+    plt.subplot(2, 2, 2)
+    plt.plot(spatial_wave.t_values, eta[779,:])
+    plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=du[779, :, :].flatten())
+    plt.title("du")
+    plt.xlabel("t")
+    plt.ylabel("z")
+    plt.colorbar()
+
+    plt.subplot(2, 2, 3)
+    plt.plot(spatial_wave.t_values, eta[779,:])
+    plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=w[779, :, :].flatten())
+    plt.title("w")
+    plt.xlabel("t")
+    plt.ylabel("z")
+    plt.colorbar()
+    
+    plt.subplot(2, 2, 4)
+    plt.plot(spatial_wave.t_values, eta[779,:])
+    plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=dw[779, :, :].flatten())
+    plt.title("dw")
+    plt.xlabel("t")
+    plt.ylabel("z")
+    plt.colorbar()
     plt.show()
 
     # make gif of 3d wave evolution over time usign 3d plot
