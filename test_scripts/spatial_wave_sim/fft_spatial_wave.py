@@ -416,7 +416,7 @@ if __name__ == "__main__":
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
-    z_range = np.linspace(-100, 100, 40)
+    z_range = np.linspace(-100, 100, 100)
     x_grid, y_grid = np.meshgrid(x_range, y_range)
     hs = 12.4
     tp = 10
@@ -427,14 +427,13 @@ if __name__ == "__main__":
 
     # get elevation
     c = 20
-    eta, u = spatial_wave.compute_kinematics(cond=False, cond_crest=c)
+    eta, u = spatial_wave.compute_kinematics(cond=True, cond_crest=c)
 
     # plot a slice of the wave kinematics at time 0
+    zt_grid = np.meshgrid(z_range, spatial_wave.t_values)
     plt.figure()
-    plt.plot(x_range, u[0,0,:])
-    plt.xlabel("x")
-    plt.ylabel("u")
-    plt.title("u at time 0")
+    plt.plot(spatial_wave.t_values, eta[779,:])
+    plt.scatter(zt_grid[1].flatten(), zt_grid[0].flatten(), s=1, c=u[779, :, :].flatten())
     plt.show()
 
     # make gif of 3d wave evolution over time usign 3d plot
