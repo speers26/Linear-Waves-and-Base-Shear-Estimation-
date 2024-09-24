@@ -240,46 +240,8 @@ class SpatialLinearKin():
         A = np.random.randn(self.nt, self.nphi) * S
         B = np.random.randn(self.nt, self.nphi) * S
 
-# %% Conditional Wave simulation
-
-#             if CndFlg
-
-#                 %Adjust A& B to
-
-#                 sum_A = sum(sum(A,1),2); %sum over frequencies and theta
-
-#                 % \sum_{i} A_{i}*\omega_{i} (over frequency)
-
-#                 sum_Bf = sum(sum(B .* Spec.f, 1), 2);
-
-#                 Spec = Spec.SpectralMoment([0,2]);
-
-#                 % \lambda^{2}
-
-#                 T_2sq = Spec.Moment.M0 ./ Spec.Moment.M2; % sample T2
-
-#                 A=A + (C_0 - sum_A) .* Spec.S ./ Spec.Moment.M0;
-
-#                 B=B - (T_2sq .* sum_Bf) .* (Spec.S .* fSim) ./ Spec.Moment.M0;
-
-#             end
-
+        # if conditioning on a crest height at 0, 0, 0
         if cond:
-
-            # Tp: 10
-        #    T1: 8.3885
-        #    T2: 7.9211
-
-            # m0 = np.sum(S)
-            # m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2*np.pi)**2
-            # t2sqr = m0 / m2
-            # t2 = np.sqrt(t2sqr)
-
-            # sum_A = np.sum(A)
-            # sum_Bomega = np.sum(B * self.omega_values.reshape(self.nt, 1))
-
-            # A = A + (cond_crest - sum_A) * S / m0
-            # B = B - (t2sqr * sum_Bomega) * (S * self.omega_values.reshape(self.nt, 1)) / m0
 
             c = S
             d = S * self.omega_values.reshape(self.nt, 1)
