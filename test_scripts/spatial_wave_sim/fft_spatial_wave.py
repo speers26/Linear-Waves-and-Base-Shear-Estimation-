@@ -270,7 +270,7 @@ class SpatialLinearKin():
 
         # compute kinematics
         d = self.depth
-        u = np.empty((self.nx, self.nz, self.nt))
+        u = np.empty((self.nx, self.nt, self.nz))
         for i_z, z in enumerate(self.z_values):
 
             z_init = z
@@ -287,7 +287,7 @@ class SpatialLinearKin():
 
             Z_vec2 = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, self.nphi, self.nt) 
             * self.omega_values.reshape(1, 1, self.nt) * qf1.reshape(1, 1, self.nt), 1)
-            u[:, i_z, :] = np.fft.fftshift(np.real(np.fft.fft(Z_vec2, self.nt, 1)), 1) * (z_init < eta)
+            u[:, :, i_z] = np.fft.fftshift(np.real(np.fft.fft(Z_vec2, self.nt, 1)), 1) * (z_init < eta)
 
             # g3 = (B-A*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf1
             # g4 = (B-A*i) * (2*np.pi*self.spctr[s].frequency) * qf2
@@ -426,7 +426,7 @@ if __name__ == "__main__":
     spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, hs=hs, tp=tp, phi_m=phi_m)
 
     # get elevation
-    c = 20
+    c = 40
     eta, u = spatial_wave.compute_kinematics(cond=True, cond_crest=c)
 
     # plot a slice of the wave kinematics at time 0
