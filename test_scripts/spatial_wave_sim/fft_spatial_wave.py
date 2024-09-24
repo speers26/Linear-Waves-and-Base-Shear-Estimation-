@@ -11,8 +11,8 @@ class FrqDrcSpectrum():
     phi: np.ndarray
     omega_p: float
     phi_m: float
-
-    alpha = 0.7 * 2.5**2
+    alpha: float
+    
     gamma = 3.3  # make larger to decrease width of Jonswap
     r = 5.
     beta = 4.
@@ -48,6 +48,7 @@ class SpatialLinearKin():
     x_values: np.ndarray
     y_values: np.ndarray
     z_values: np.ndarray
+    hs: float
     tp: float
     phi_m: float
  
@@ -218,8 +219,13 @@ class SpatialLinearKin():
         Returns:
             FrqDrcSpectrum: frequency direction spectrum
         """
-        return FrqDrcSpectrum(omega=self.omega_values, phi=self.phi_values, omega_p=self.omega_p, phi_m=self.phi_m)
+        unnorm_spect = FrqDrcSpectrum(omega=self.omega_values, phi=self.phi_values, omega_p=self.omega_p, phi_m=self.phi_m, alpha=1.0)
+        m0 = np.sum(unnorm_spect.compute_spectrum() * self.domega * self.dphi)
+    
+        m0_target = self.hs**2 / 16
+        alpha = m0_target / m0
 
+        return FrqDrcSpectrum(omega=self.omega_values, phi=self.phi_values, omega_p=self.omega_p, phi_m=self.phi_m, alpha=alpha)
 
     def compute_elevation(self, cond:bool, cond_crest:float) -> np.ndarray:
         """
@@ -233,6 +239,20 @@ class SpatialLinearKin():
         # get random coefficients
         A = np.random.randn(self.nt, self.nphi) * S
         B = np.random.randn(self.nt, self.nphi) * S
+
+
+            # if cond:
+            #     m = 0
+
+            #     c = self.spctr[s].df * self.spctr[s].density
+            #     d = self.spctr[s].df * self.spctr[s].density * self.spctr[s].omega
+
+            #     Q = (a[s] - np.sum(A))/np.sum(c)
+            #     R = (m - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
+
+            #     A = A + Q * c
+            #     B = B + R * d
+
 
 # %% Conditional Wave simulation
 
@@ -402,17 +422,18 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # define parameters
-    sample_f = 1.00
+    sample_f = 4.00
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
     z_range = np.linspace(-100, 100, 20)
     x_grid, y_grid = np.meshgrid(x_range, y_range)
+    hs = 12.4
     tp = 10
     phi_m = np.pi
 
     # create instance
-    spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, tp=tp, phi_m=phi_m)
+    spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, hs=hs, tp=tp, phi_m=phi_m)
 
     # get elevation
     c = 100
