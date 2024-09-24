@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from scipy import optimize
 from dataclasses import dataclass
 import os
+import warnings
+import math
 
 @dataclass 
 class FrqDrcSpectrum():
@@ -227,9 +229,9 @@ class SpatialLinearKin():
 
         return FrqDrcSpectrum(omega=self.omega_values, phi=self.phi_values, omega_p=self.omega_p, phi_m=self.phi_m, alpha=alpha)
 
-    def compute_elevation(self, cond:bool, cond_crest:float) -> np.ndarray:
+    def compute_kinematics(self, cond:bool, cond_crest:float) -> np.ndarray:
         """
-        returns random wave surface with frequency direction spectrum defined below
+        returns random wave surface and kinematics with frequency direction spectrum defined below
 
         """
 
@@ -266,7 +268,37 @@ class SpatialLinearKin():
         Z_vec = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, self.nphi, self.nt), 1)
         eta = np.fft.fftshift(np.real(np.fft.fft(Z_vec, self.nt, 1)), 1)
 
-        return eta
+        # compute kinematics
+        d = self.depth
+        u = np.empty((self.nx, self.nz, self.nt))
+        for i_z, z in enumerate(self.z_values):
+
+            z_init = z
+            if z > -1:
+                z = -1
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                qf1 = (np.cosh(k*(z+d))) / (np.sinh(k*d))
+                qf2 = (np.sinh(k*(z+d))) / (np.sinh(k*d))
+
+            qf1[[i for i in range(len(qf1)) if math.isnan(qf1[i])]] = 1
+            qf2[[i for i in range(len(qf2)) if math.isnan(qf2[i])]] = 1
+
+            Z_vec2 = np.sum(np.exp(i * k_vec) * np.transpose(Z).reshape(1, self.nphi, self.nt) 
+            * self.omega_values.reshape(1, 1, self.nt) * qf1.reshape(1, 1, self.nt), 1)
+            u[:, i_z, :] = np.fft.fftshift(np.real(np.fft.fft(Z_vec2, self.nt, 1)), 1) * (z_init < eta)
+
+            # g3 = (B-A*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf1
+            # g4 = (B-A*i) * (2*np.pi*self.spctr[s].frequency) * qf2
+            # g5 = (-A-B*i) * (2*np.pi*self.spctr[s].frequency)**2 * qf2
+
+            # self.u[:, i_z, s] = np.real(fftshift(fft(g2))) * (z_init < self.eta[:, s]) + np.cos(self.sea_state.current_incidence) * self.sea_state.current
+            # self.du[:, i_z, s] = np.real(fftshift(fft(g3))) * (z_init < self.eta[:, s])
+            # self.w[:, i_z, s] = np.real(fftshift(fft(g4))) * (z_init < self.eta[:, s])
+            # self.dw[:, i_z, s] = np.real(fftshift(fft(g5))) * (z_init < self.eta[:, s])
+
+        return eta, u
 
 
 def frq_dr_spctrm(omega: np.ndarray, phi: np.ndarray, alpha: float, om_p: float, gamma: float,
@@ -384,7 +416,7 @@ if __name__ == "__main__":
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
-    z_range = np.linspace(-100, 100, 20)
+    z_range = np.linspace(-100, 100, 40)
     x_grid, y_grid = np.meshgrid(x_range, y_range)
     hs = 12.4
     tp = 10
@@ -395,27 +427,35 @@ if __name__ == "__main__":
 
     # get elevation
     c = 20
-    eta = spatial_wave.compute_elevation(cond=True, cond_crest=c)
+    eta, u = spatial_wave.compute_kinematics(cond=False, cond_crest=c)
+
+    # plot a slice of the wave kinematics at time 0
+    plt.figure()
+    plt.plot(x_range, u[0,0,:])
+    plt.xlabel("x")
+    plt.ylabel("u")
+    plt.title("u at time 0")
+    plt.show()
 
     # make gif of 3d wave evolution over time usign 3d plot
-    path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
-    os.system(f'mkdir -p {path}temp/')
-    for i in range(spatial_wave.nt):
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
-        ax.set_zlim(-7, c+5)
-        plt.title(f"Time: {i}")
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.savefig(f"{path}temp/wave_{i:03}.png")
-        plt.close()
+    # path = '/home/speersm/GitHub/force_calculation_and_wave_sim/test_scripts/spatial_wave_sim/'
+    # os.system(f'mkdir -p {path}temp/')
+    # for i in range(spatial_wave.nt):
+    #     fig = plt.figure()
+    #     ax = fig.add_subplot(111, projection='3d')
+    #     ax.plot_surface(X=x_grid, Y=y_grid, Z=eta[:,i].reshape(len(x_range),len(y_range)))
+    #     ax.set_zlim(-7, c+5)
+    #     plt.title(f"Time: {i}")
+    #     plt.xlabel("x")
+    #     plt.ylabel("y")
+    #     plt.savefig(f"{path}temp/wave_{i:03}.png")
+    #     plt.close()
 
-    # use pngs to make gif
-    os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
+    # # use pngs to make gif
+    # os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
 
-    # delete pngs
-    os.system(f'rm {path}temp/*.png')
-    os.system(f'rmdir {path}temp/')
+    # # delete pngs
+    # os.system(f'rm {path}temp/*.png')
+    # os.system(f'rmdir {path}temp/')
 
    
