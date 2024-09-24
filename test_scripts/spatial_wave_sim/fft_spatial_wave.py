@@ -240,20 +240,6 @@ class SpatialLinearKin():
         A = np.random.randn(self.nt, self.nphi) * S
         B = np.random.randn(self.nt, self.nphi) * S
 
-
-            # if cond:
-            #     m = 0
-
-            #     c = self.spctr[s].df * self.spctr[s].density
-            #     d = self.spctr[s].df * self.spctr[s].density * self.spctr[s].omega
-
-            #     Q = (a[s] - np.sum(A))/np.sum(c)
-            #     R = (m - np.sum(self.spctr[s].omega * B))/np.sum(d*self.spctr[s].omega)
-
-            #     A = A + Q * c
-            #     B = B + R * d
-
-
 # %% Conditional Wave simulation
 
 #             if CndFlg
@@ -284,16 +270,26 @@ class SpatialLinearKin():
         #    T1: 8.3885
         #    T2: 7.9211
 
-            m0 = np.sum(S)
-            m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2*np.pi)**2
-            t2sqr = m0 / m2
-            t2 = np.sqrt(t2sqr)
+            # m0 = np.sum(S)
+            # m2 = np.sum(S * (self.omega_values.reshape(self.nt, 1)**2)) / (2*np.pi)**2
+            # t2sqr = m0 / m2
+            # t2 = np.sqrt(t2sqr)
 
-            sum_A = np.sum(A)
-            sum_Bomega = np.sum(B * self.omega_values.reshape(self.nt, 1))
+            # sum_A = np.sum(A)
+            # sum_Bomega = np.sum(B * self.omega_values.reshape(self.nt, 1))
 
-            A = A + (cond_crest - sum_A) * S / m0
-            B = B - (t2sqr * sum_Bomega) * (S * self.omega_values.reshape(self.nt, 1)) / m0
+            # A = A + (cond_crest - sum_A) * S / m0
+            # B = B - (t2sqr * sum_Bomega) * (S * self.omega_values.reshape(self.nt, 1)) / m0
+
+            c = S
+            d = S * self.omega_values.reshape(self.nt, 1)
+
+            Q = (cond_crest - np.sum(A))/np.sum(c)
+            R = (0 - np.sum(self.omega_values.reshape(self.nt, 1) * B))/np.sum(d*self.omega_values.reshape(self.nt, 1))
+
+            A = A + Q * c
+            B = B + R * d
+
 
         i = complex(0, 1)
         Z = A + i*B
@@ -436,7 +432,7 @@ if __name__ == "__main__":
     spatial_wave = SpatialLinearKin(sample_f=sample_f, period=period, x_values=x_grid.flatten(), y_values=y_grid.flatten(), z_values=z_range, hs=hs, tp=tp, phi_m=phi_m)
 
     # get elevation
-    c = 100
+    c = 20
     eta = spatial_wave.compute_elevation(cond=True, cond_crest=c)
 
     # make gif of 3d wave evolution over time usign 3d plot
