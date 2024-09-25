@@ -431,7 +431,7 @@ if __name__ == "__main__":
     np.random.seed(0)
 
     # define parameters
-    sample_f = 1.00
+    sample_f = 4.00
     period = 60
     x_range = np.linspace(-100, 100, 40)
     y_range = np.linspace(-100, 100, 40)
@@ -451,32 +451,6 @@ if __name__ == "__main__":
     # plot a slice of the wave kinematics at time 0
     # create grid
     zt_grid = np.meshgrid(z_range, spatial_wave.t_values)
-
-    # # create a mask where z values are above the eta line
-    # mask = zt_grid[0].flatten() > np.tile(eta[779, :], 100).reshape(spatial_wave.nt, spatial_wave.nz).flatten()
-
-    # # create color array
-    # colors_u = np.where(mask, 'white', u[779, :, :].flatten())
-    # colors_du = np.where(mask, 'white', du[779, :, :].flatten())
-    # colors_w = np.where(mask, 'white', w[779, :, :].flatten())
-    # colors_dw = np.where(mask, 'white', dw[779, :, :].flatten())
-
-    # import matplotlib.colors as mcolors
-
-    # # create a colormap
-    # cmap = plt.get_cmap('viridis')
-
-    # # set the color for NaN values
-    # cmap.set_bad(color='white')
-
-    # # create a Normalize instance
-    # norm = mcolors.Normalize(vmin=u.min(), vmax=u.max())
-
-    # # replace 'white' with NaN in the color arrays
-    # colors_u = np.where(mask, np.nan, u[779, :, :].flatten())
-    # colors_du = np.where(mask, np.nan, du[779, :, :].flatten())
-    # colors_w = np.where(mask, np.nan, w[779, :, :].flatten())
-    # colors_dw = np.where(mask, np.nan, dw[779, :, :].flatten())
 
     # plot
     plt.figure()
@@ -535,8 +509,8 @@ if __name__ == "__main__":
     # use pngs to make gif
     os.system(f'convert -delay 20 -loop 0 {path}temp/wave_*.png {path}wave.gif')
 
-    # # delete pngs
-    # os.system(f'rm {path}temp/*.png')
-    # os.system(f'rmdir {path}temp/')
+    # delete pngs
+    os.system(f'rm {path}temp/*.png')
+    os.system(f'rmdir {path}temp/')
 
    
