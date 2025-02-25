@@ -21,7 +21,7 @@ def compute_response_dist(s: list):
     tp = np.sqrt((hs*2*np.pi)/(s2*9.81))
     ss = spctr.SeaState(hs=hs, tp=tp, spctr_type=spctr.Jonswap)
 
-    loadEst = dist.MorisonDistEstDuo(sea_state=ss, z_values=z_values, c_d_1=c_d_1, c_m_1=c_m_1, c_d_2=c_d_2, c_m_2=c_m_2)
+    loadEst = dist.MorisonDuoDistEst(sea_state=ss, z_values=z_values, c_d_1=c_d_1, c_m_1=c_m_1, c_d_2=c_d_2, c_m_2=c_m_2)
     loadEst.compute_cond_crests()
     loadEst.compute_kinematics()
     loadEst.compute_load()
