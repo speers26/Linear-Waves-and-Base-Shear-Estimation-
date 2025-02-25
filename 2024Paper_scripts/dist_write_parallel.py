@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
     print(env_probs.shape[0])
 
-    cl = mp.Pool(89)
+    cl = mp.Pool(75)
     cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
     cl.close()
 

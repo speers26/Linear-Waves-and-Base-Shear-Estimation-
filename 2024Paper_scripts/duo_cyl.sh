@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -J duo_cyl-job
-#SBATCH -c 90
+#SBATCH -c 76
 #SBATCH -o duo_cyl.out
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=m.speers@lancaster.ac.uk
