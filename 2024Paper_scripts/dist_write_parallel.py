@@ -37,7 +37,7 @@ def compute_response_dist(s: list):
 
 if __name__ == '__main__':
 
-    env_probs = pd.read_csv('2024Paper_scripts/env_probs.csv')
+    env_probs = pd.read_csv('env_probs.csv')
     env_probs = env_probs[env_probs.p != 0].reset_index()
 
     num_sea_states = 2000
@@ -60,41 +60,23 @@ if __name__ == '__main__':
     c_m_1 = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
     c_d_1 = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
 
-    plt.subplot(1, 2, 1)
-    plt.plot(z_values, c_m_1)
-    plt.title("c_m_1")
-
-    plt.subplot(1, 2, 2)
-    plt.plot(z_values, c_d_1)
-    plt.title("c_d_1")
-    plt.show()
-
+    # set all to 1.0 for structure A
     cm_l = 1.0
     cm_u = 100.0
     cd_l = 1.0
     cd_u = 100.0
-    deck_height = 5.0  # change to 5 for structure B
+    deck_height = 5.0  # change to -5 for structure C
 
     c_m_2 = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
     c_d_2 = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(z_values, c_m_2)
-    plt.title("c_m_2")
-
-    plt.subplot(1, 2, 2)
-    plt.plot(z_values, c_d_2)
-    plt.title("c_d_2")
-    plt.show()
 
     np.random.seed(1)
 
     print(env_probs.shape[0])
 
-    cl = mp.Pool(4)
+    cl = mp.Pool(89)
     cond_dists = cl.map(compute_response_dist, [i for i in range(env_probs.shape[0])])
     cl.close()
 
     # pickle dump
-
-    save_object(cond_dists, '2024Paper_scripts/cond_dists_duo.pkl')
+    save_object(cond_dists, 'cond_dists_duo.pkl')

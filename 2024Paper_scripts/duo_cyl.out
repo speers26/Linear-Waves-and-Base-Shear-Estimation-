@@ -1,0 +1,4 @@
+6354
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd-dantzig: error: *** JOB 73900 ON dantzig CANCELLED AT 2025-02-25T17:16:04 ***
+slurmstepd-dantzig: error: *** STEP 73900.0 ON dantzig CANCELLED AT 2025-02-25T17:16:04 ***
