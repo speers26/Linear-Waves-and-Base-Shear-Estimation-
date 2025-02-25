@@ -21,7 +21,7 @@ def compute_response_dist(s: list):
     tp = np.sqrt((hs*2*np.pi)/(s2*9.81))
     ss = spctr.SeaState(hs=hs, tp=tp, spctr_type=spctr.Jonswap)
 
-    loadEst = dist.MorisonDistEst(sea_state=ss, z_values=z_values, c_d=c_d, c_m=c_m)
+    loadEst = dist.MorisonDistEstDuo(sea_state=ss, z_values=z_values, c_d_1=c_d_1, c_m_1=c_m_1, c_d_2=c_d_2, c_m_2=c_m_2)
     loadEst.compute_cond_crests()
     loadEst.compute_kinematics()
     loadEst.compute_load()
@@ -57,16 +57,34 @@ if __name__ == '__main__':
     diffs = abs(z_values-deck_height)
     deck_ind = np.where(diffs == np.min(diffs))[0][0]
 
-    c_m = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
-    c_d = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+    c_m_1 = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    c_d_1 = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
 
     plt.subplot(1, 2, 1)
-    plt.plot(z_values, c_m)
-    plt.title("c_m")
+    plt.plot(z_values, c_m_1)
+    plt.title("c_m_1")
 
     plt.subplot(1, 2, 2)
-    plt.plot(z_values, c_d)
-    plt.title("c_d")
+    plt.plot(z_values, c_d_1)
+    plt.title("c_d_1")
+    plt.show()
+
+    cm_l = 1.0
+    cm_u = 100.0
+    cd_l = 1.0
+    cd_u = 100.0
+    deck_height = 5.0  # change to 5 for structure B
+
+    c_m_2 = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
+    c_d_2 = np.concatenate((np.tile(cd_l, deck_ind), np.tile(cd_u, 3), np.tile(cd_l, len(z_values)-deck_ind-3)))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(z_values, c_m_2)
+    plt.title("c_m_2")
+
+    plt.subplot(1, 2, 2)
+    plt.plot(z_values, c_d_2)
+    plt.title("c_d_2")
     plt.show()
 
     np.random.seed(1)
@@ -79,4 +97,4 @@ if __name__ == '__main__':
 
     # pickle dump
 
-    save_object(cond_dists, '2024Paper_scripts/cond_dists.pkl')
+    save_object(cond_dists, '2024Paper_scripts/cond_dists_duo.pkl')

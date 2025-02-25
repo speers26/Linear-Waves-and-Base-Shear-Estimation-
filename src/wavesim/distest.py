@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 from abc import ABC, abstractmethod
 from wavesim.kinematics import LinearKin
-from wavesim.loading import MorisonLoad
+from wavesim.loading import MorisonLoad, MorisonLoadDuo
 from wavesim.spectrum import SeaState
 from wavesim.crestdistributions import rayleigh_pdf
 from dataclasses import dataclass
@@ -288,6 +288,50 @@ class MorisonDistEst(AbstractDistEst):
         """
 
         self.load = MorisonLoad(self.kinematics, self.c_d, self.c_m)
+        self.load.compute_load()
+
+        return None
+
+    def compute_sea_state_max(self) -> None:
+        self.max_series = np.empty(self.sea_state.num_SS)
+        for s in range(self.sea_state.num_SS):
+
+            crests, _, _, _, _ = self.kinematics.retrieve_kinematics()
+            crests = crests[:, s]
+            load = self.load.retrieve_load()[:, s]
+            # get maximums
+            mins = argrelextrema(crests, np.less)[0]
+            lower_min = np.max(mins[mins < self.kinematics.nt/2])
+            upper_min = np.min(mins[mins > self.kinematics.nt/2])
+            slice = load[lower_min:upper_min]
+            self.max_series[s] = max(slice)
+
+        return None
+    
+
+@dataclass 
+class MorisonDuoDistEst(AbstractDistEst):
+    """
+    sea-state max load distribution class, for two cyclinders at a single location
+    
+    Args:
+        c_d_1 (np.ndarray): drag coefficient array for first cylinder
+        c_m_1 (np.ndarray): inertia coefficient array for first cylinder
+        c_d_2 (np.ndarray): drag coefficient array for second cylinder
+        c_m_2 (np.ndarray): inertia coefficient array for second cylinder
+
+    """
+
+    c_d_1: np.ndarray = 1
+    c_m_1: np.ndarray = 1
+    c_d_2: np.ndarray = 1
+    c_m_2: np.ndarray = 1
+
+    def compute_load(self) -> None:
+        """compute loading from kinematics
+        """
+
+        self.load = MorisonLoadDuo(self.kinematics, self.c_d_1, self.c_m_1, self.c_d_2, self.c_m_2)
         self.load.compute_load()
 
         return None
