@@ -30,6 +30,9 @@ def compute_response_dist(s: list):
     loadEst.compute_cdf()
 
     loadEst.max_series = 0
+    loadEst.kinematics = 0
+    loadEst.load = 0
+    loadEst.cond_crests = 0
 
     # save to vector
     return s, loadEst
