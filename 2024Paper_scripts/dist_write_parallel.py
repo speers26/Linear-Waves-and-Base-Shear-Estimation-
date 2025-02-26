@@ -52,9 +52,9 @@ if __name__ == '__main__':
     # pick cd, cdms
     # set all to 1.0 for structure A
     cm_l = 1.0
-    cm_u = 100.0
+    cm_u = 200.0
     cd_l = 1.0
-    cd_u = 100.0
+    cd_u = 200.0
     deck_height = -5.0  # change to 5 for structure B
 
     diffs = abs(z_values-deck_height)
@@ -82,4 +82,4 @@ if __name__ == '__main__':
     cl.close()
 
     # pickle dump
-    save_object(cond_dists, 'cond_dists_duo.pkl')
+    save_object(cond_dists, 'cond_dists_duo_200_100.pkl')
