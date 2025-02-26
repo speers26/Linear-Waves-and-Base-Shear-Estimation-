@@ -71,6 +71,7 @@ if __name__ == "__main__":
     # reading in environment density
     env_probs = pd.read_csv('2024Paper_scripts/env_probs.csv')
     nfull = len(env_probs['p'])
+    env_probs = env_probs[env_probs.p != 0].reset_index()
 
     # getting marginal 3 hour response distribution ----------------------------------------
     X = np.linspace(0, 60, num=1000)  # this needs to be selected carefully
@@ -107,7 +108,7 @@ if __name__ == "__main__":
     f_theta_r_w0[env_probs.index] = f_theta_r
 
     # write to file
-    np.savetxt('2024Paper_scripts/cond_dens.csv', f_theta_r_w0, delimiter=',')
+    np.savetxt('2024Paper_scripts/cond_dens_duo.csv', f_theta_r_w0, delimiter=',')
 
     # failure prob region ------------------------------------------------------------------
     rc = rp
@@ -121,4 +122,4 @@ if __name__ == "__main__":
     fail_ps_full[env_probs.index] = fail_ps
 
     # write to file
-    np.savetxt('2024Paper_scripts/fail_ps.csv', fail_ps_full, delimiter='')
+    np.savetxt('2024Paper_scripts/fail_ps_duo.csv', fail_ps_full, delimiter='')
