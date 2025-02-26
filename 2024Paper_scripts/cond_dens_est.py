@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import multiprocessing as mp
 
-
 def return_level(period: int, cdf: np.ndarray, X: np.ndarray):
     """gives return level for given period and numeric cdf
 
@@ -64,7 +63,7 @@ if __name__ == "__main__":
     period = 1000  # years
 
     # reading in conditioned distribution estimates
-    with open('2024Paper_scripts/cond_dists_duo.pkl', 'rb') as inp:
+    with open('2024Paper_scripts/cond_dists_duo_200_100.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
     cond_dists = [c[1] for c in cond_dists]
 
@@ -108,7 +107,7 @@ if __name__ == "__main__":
     f_theta_r_w0[env_probs.index] = f_theta_r
 
     # write to file
-    np.savetxt('2024Paper_scripts/cond_dens_duo.csv', f_theta_r_w0, delimiter=',')
+    np.savetxt('2024Paper_scripts/cond_dens_duo_200_100.csv', f_theta_r_w0, delimiter=',')
 
     # failure prob region ------------------------------------------------------------------
     rc = rp
@@ -122,4 +121,4 @@ if __name__ == "__main__":
     fail_ps_full[env_probs.index] = fail_ps
 
     # write to file
-    np.savetxt('2024Paper_scripts/fail_ps_duo.csv', fail_ps_full, delimiter='')
+    np.savetxt('2024Paper_scripts/fail_ps_duo_200_100.csv', fail_ps_full, delimiter='')
