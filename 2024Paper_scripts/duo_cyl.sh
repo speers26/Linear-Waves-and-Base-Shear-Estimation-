@@ -5,7 +5,7 @@
 #SBATCH -o duo_cyl.out
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=m.speers@lancaster.ac.uk
-#SBATCH --mem 400000
+#SBATCH --mem 300000
 
 source ~/start-pyenv
 source /beegfs/client/default/speersm/force_calculation_and_wave_sim/.venv/bin/activate

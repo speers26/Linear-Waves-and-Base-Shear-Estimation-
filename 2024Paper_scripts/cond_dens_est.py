@@ -64,7 +64,7 @@ if __name__ == "__main__":
     period = 1000  # years
 
     # reading in conditioned distribution estimates
-    with open('2024Paper_scripts/cond_dists.pkl', 'rb') as inp:
+    with open('2024Paper_scripts/cond_dists_duo.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
     cond_dists = [c[1] for c in cond_dists]
 
