@@ -7,13 +7,12 @@ env_probs = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estima
 cde = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estimation-/2024Paper_scripts/cond_dens_duo.csv', header=None)
 
 # plot heatmap of cde over env_probs x and y
-x = np.array(sorted(set(env_probs['x'])))
-y = np.array(sorted(set(env_probs['y'])))
-cde = np.array(cde).reshape(len(y), len(x))
+cde = np.array(cde)
+x = np.array(env_probs['x'])
+y = np.array(env_probs['y'])
 
-X, Y = np.meshgrid(x, y)
-plt.contourf(X, Y, cde)
+plt.scatter(x, y, c=cde, cmap='hot_r', marker='s')
+plt.colorbar(label='CDE')
 plt.xlabel('Hs [m]')
 plt.ylabel('Tp [s]')
-plt.colorbar()
 plt.show()
