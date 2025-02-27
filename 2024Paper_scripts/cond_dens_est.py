@@ -73,7 +73,7 @@ if __name__ == "__main__":
     env_probs = env_probs[env_probs.p != 0]
 
     # getting marginal 3 hour response distribution ----------------------------------------
-    X = np.linspace(0, 160, num=1000)  # this needs to be selected carefully
+    X = np.linspace(0, 300, num=1000)  # this needs to be selected carefully
 
     cl = mp.Pool(4)
     cdf_list = cl.starmap(evaluate_stored_cdf, [[i, X] for i in range(env_probs.shape[0])])

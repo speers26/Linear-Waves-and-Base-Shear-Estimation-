@@ -4,7 +4,7 @@ import numpy as np
 
 # load csvs
 env_probs = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estimation-/2024Paper_scripts/env_probs.csv')
-cde = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estimation-/2024Paper_scripts/cond_dens_duo.csv', header=None)
+cde = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estimation-/2024Paper_scripts/cond_dens_duo_200_100.csv', header=None)
 
 # plot heatmap of cde over env_probs x and y
 cde = np.array(cde)
