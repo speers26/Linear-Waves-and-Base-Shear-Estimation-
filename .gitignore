@@ -166,3 +166,8 @@ base_shear_con.txt
 base_shear.txt
 saved_sim_data
 2024Paper_scripts/cond_dists_duo.pkl
+2024Paper_scripts/cond_dists_duo_200_100.pkl
+2024Paper_scripts/cond_dists_duo_300_100.pkl
+2024Paper_scripts/cond_dists_duo_500_100.pkl
+2024Paper_scripts/cond_dists_duo_700_100.pkl
+2024Paper_scripts/cond_dists_duo_1500_100.pkl
