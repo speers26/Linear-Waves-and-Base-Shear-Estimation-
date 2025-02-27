@@ -62,8 +62,11 @@ if __name__ == "__main__":
     # return period
     period = 1000  # years
 
+    # set cd_cm for structure C
+    cd_cm = 300
+
     # reading in conditioned distribution estimates
-    with open('2024Paper_scripts/cond_dists_duo_200_100.pkl', 'rb') as inp:
+    with open(f'2024Paper_scripts/cond_dists_duo_{cd_cm}_100.pkl', 'rb') as inp:
         cond_dists = pickle.load(inp)
     cond_dists = [c[1] for c in cond_dists]
 
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     f_theta_r_w0[env_probs.index] = f_theta_r
 
     # write to file
-    np.savetxt('2024Paper_scripts/cond_dens_duo_200_100.csv', f_theta_r_w0, delimiter=',')
+    np.savetxt(f'2024Paper_scripts/cond_dens_duo_{cd_cm}_100.csv', f_theta_r_w0, delimiter=',')
 
     # failure prob region ------------------------------------------------------------------
     rc = rp
@@ -121,4 +124,4 @@ if __name__ == "__main__":
     fail_ps_full[env_probs.index] = fail_ps
 
     # write to file
-    np.savetxt('2024Paper_scripts/fail_ps_duo_200_100.csv', fail_ps_full, delimiter='')
+    np.savetxt(f'2024Paper_scripts/fail_ps_duo_{cd_cm}_100.csv', fail_ps_full, delimiter='')
