@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # structure C cdcm
-cdcm = 1500
+cdcm = 10000
 
 # load csvs
 env_probs = pd.read_csv('/home/speersm/GitHub/Linear-Waves-and-Base-Shear-Estimation-/2024Paper_scripts/env_probs.csv')

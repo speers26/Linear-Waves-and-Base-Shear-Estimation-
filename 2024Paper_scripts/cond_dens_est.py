@@ -63,7 +63,7 @@ if __name__ == "__main__":
     period = 1000  # years
 
     # set cd_cm for structure C
-    cd_cm = 1500
+    cd_cm = 10000
 
     # reading in conditioned distribution estimates
     with open(f'2024Paper_scripts/cond_dists_duo_{cd_cm}_100.pkl', 'rb') as inp:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     env_probs = env_probs[env_probs.p != 0]
 
     # getting marginal 3 hour response distribution ----------------------------------------
-    X = np.linspace(0, 1500, num=3000)  # this needs to be selected carefully # original = 160, 200=300, 300=300, 500 = 500, 1500=3000
+    X = np.linspace(0, 10000, num=3000)  # this needs to be selected carefully # original = 160, 200=300, 300=300, 500 = 500, 1500=3000, 10000=10000
 
     cl = mp.Pool(4)
     cdf_list = cl.starmap(evaluate_stored_cdf, [[i, X] for i in range(env_probs.shape[0])])
