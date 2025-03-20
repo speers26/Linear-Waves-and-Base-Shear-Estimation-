@@ -189,7 +189,7 @@ class Jonswap(AbstractSpectrum):
         sigma_a (np.ndarray): JONSWAP sigma for f<f_p
         sigma_b (np.ndarray): JONSWAP sigma for f>f_p
     """
-    gamma: np.ndarray = 3
+    gamma: np.ndarray = 3.3
     sigma_a: np.ndarray = 0.07
     sigma_b: np.ndarray = 0.09
 
@@ -228,7 +228,7 @@ class Jonswap(AbstractSpectrum):
 
         self.density *= self.hs ** 2 / (16 * area)
 
-        self.density = self.density * (self.frequency < 5*self.fp)
+        self.density = self.density * (self.frequency < 2.5*self.fp)
 
         return self
 
