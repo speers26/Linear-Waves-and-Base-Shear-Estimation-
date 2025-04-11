@@ -53,9 +53,9 @@ if __name__ == '__main__':
     # pick cd, cdms
     # set all to 1.0 for structure A
     cm_l = 1.0
-    cm_u = 1500.0
+    cm_u = 10000.0
     cd_l = 1.0
-    cd_u = 1500.0
+    cd_u = 10000.0
     deck_height = -5.0  # change to 5 for structure B
 
     diffs = abs(z_values-deck_height)
@@ -67,9 +67,9 @@ if __name__ == '__main__':
     ##### STRUCTURE B #####
     # set all to 1.0 for structure A
     cm_l = 1.0
-    cm_u = 100.0
+    cm_u = 1.0
     cd_l = 1.0
-    cd_u = 100.0
+    cd_u = 1.0
     deck_height = 5.0  # change to -5 for structure C
 
     c_m_2 = np.concatenate((np.tile(cm_l, deck_ind), np.tile(cm_u, 3), np.tile(cm_l, len(z_values)-deck_ind-3)))
@@ -84,4 +84,4 @@ if __name__ == '__main__':
     cl.close()
 
     # pickle dump
-    save_object(cond_dists, 'cond_dists_duo_1500_100.pkl')
+    save_object(cond_dists, 'cond_dists_duo_10000_1.pkl')
